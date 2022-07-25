@@ -30,14 +30,15 @@
 #include "gif_lib.h"
 
 #include <QColor>
+#include <QPixmap>
 #include <QVector>
 
 class QGifFrameInfoData {
 public:
   QGifFrameInfoData() : delayTime(-1), interlace(false) {}
   QImage image;
-  QPoint offset; // offset info of QImage will lost when convert from One format
-                 // to another.
+  // QPoint offset;
+  //  offset info of QImage will lost when convert from One format to another.
   int delayTime;
   bool interlace;
   QColor transparentColor;

@@ -2,7 +2,6 @@
 #define MAINWINDOW_H
 
 #include "QtGifImage/gifimage/qgifimage.h"
-#include "gifeditorscene.h"
 #include <DGraphicsView>
 #include <DLabel>
 #include <DMainWindow>
@@ -52,6 +51,7 @@ private:
   void on_open();
   void on_save();
   void on_saveas();
+  void on_export();
   void on_exit();
 
   void on_undo();
@@ -90,6 +90,7 @@ private:
   void on_flipv();
   void on_clockwise();
   void on_anticlockwise();
+  void on_exportapply();
   void on_applypic();
 
   void on_about();

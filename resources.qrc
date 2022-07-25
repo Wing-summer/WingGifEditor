@@ -45,5 +45,16 @@
         <file>images/setdelay.png</file>
         <file>images/scaledelay.png</file>
         <file>images/icon.png</file>
+        <file>sponsor.png</file>
+        <file>images/export.png</file>
+        <file>images/scale.png</file>
+        <file>images/cutpic.png</file>
+        <file>images/fliph.png</file>
+        <file>images/flipv.png</file>
+        <file>images/rotatel.png</file>
+        <file>images/rotater.png</file>
+        <file>images/reverseplus.png</file>
+        <file>images/blank.png</file>
+        <file>images/model.png</file>
     </qresource>
 </RCC>

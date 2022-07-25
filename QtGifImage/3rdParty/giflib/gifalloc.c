@@ -52,7 +52,7 @@ GifMakeMapObject(int ColorCount, const GifColorType *ColorMap)
         return ((ColorMapObject *) NULL);
     }
 
-    Object->Colors = (GifColorType *)calloc(ColorCount, sizeof(GifColorType));
+    Object->Colors = (GifColorType *)calloc((ulong)ColorCount, sizeof(GifColorType));
     if (Object->Colors == (GifColorType *) NULL) {
 	free(Object);
         return ((ColorMapObject *) NULL);
@@ -63,7 +63,7 @@ GifMakeMapObject(int ColorCount, const GifColorType *ColorMap)
 
     if (ColorMap != NULL) {
         memcpy((char *)Object->Colors,
-               (char *)ColorMap, ColorCount * sizeof(GifColorType));
+               (const char *)ColorMap, (ulong)ColorCount * sizeof(GifColorType));
     }
 
     return (Object);
@@ -158,11 +158,11 @@ GifUnionColorMap(const ColorMapObject *ColorIn1,
                 break;
 
         if (j < ColorIn1->ColorCount)
-            ColorTransIn2[i] = j;    /* color exists in Color1 */
+            ColorTransIn2[i] = (GifPixelType)j;    /* color exists in Color1 */
         else {
             /* Color is new - copy it to a new slot: */
             ColorUnion->Colors[CrntSlot] = ColorIn2->Colors[i];
-            ColorTransIn2[i] = CrntSlot++;
+            ColorTransIn2[i] = (GifPixelType)CrntSlot++;
         }
     }
 
@@ -188,7 +188,7 @@ GifUnionColorMap(const ColorMapObject *ColorIn1,
         /* perhaps we can shrink the map? */
         if (RoundUpTo < ColorUnion->ColorCount)
             ColorUnion->Colors = (GifColorType *)realloc(Map,
-                                 sizeof(GifColorType) * RoundUpTo);
+                                 sizeof(GifColorType) * (ulong)RoundUpTo);
     }
 
     ColorUnion->ColorCount = RoundUpTo;
@@ -227,7 +227,7 @@ GifAddExtensionBlock(int *ExtensionBlockCount,
     else
         *ExtensionBlocks = (ExtensionBlock *)realloc(*ExtensionBlocks,
                                       sizeof(ExtensionBlock) *
-                                      (*ExtensionBlockCount + 1));
+                                      (ulong)(*ExtensionBlockCount + 1));
 
     if (*ExtensionBlocks == NULL)
         return (GIF_ERROR);
@@ -235,8 +235,8 @@ GifAddExtensionBlock(int *ExtensionBlockCount,
     ep = &(*ExtensionBlocks)[(*ExtensionBlockCount)++];
 
     ep->Function = Function;
-    ep->ByteCount=Len;
-    ep->Bytes = (GifByteType *)malloc(ep->ByteCount);
+    ep->ByteCount=(int)Len;
+    ep->Bytes = (GifByteType *)malloc((ulong)ep->ByteCount);
     if (ep->Bytes == NULL)
         return (GIF_ERROR);
 
@@ -315,7 +315,7 @@ GifMakeSavedImage(GifFileType *GifFile, const SavedImage *CopyFrom)
         GifFile->SavedImages = (SavedImage *)malloc(sizeof(SavedImage));
     else
         GifFile->SavedImages = (SavedImage *)realloc(GifFile->SavedImages,
-                               sizeof(SavedImage) * (GifFile->ImageCount + 1));
+                               sizeof(SavedImage) * (ulong)(GifFile->ImageCount + 1));
 
     if (GifFile->SavedImages == NULL)
         return ((SavedImage *)NULL);
@@ -345,27 +345,27 @@ GifMakeSavedImage(GifFileType *GifFile, const SavedImage *CopyFrom)
 
             /* next, the raster */
             sp->RasterBits = (unsigned char *)malloc(sizeof(GifPixelType) *
-                                                   CopyFrom->ImageDesc.Height *
-                                                   CopyFrom->ImageDesc.Width);
+                                                   (ulong)(CopyFrom->ImageDesc.Height *
+                                                   CopyFrom->ImageDesc.Width));
             if (sp->RasterBits == NULL) {
                 FreeLastSavedImage(GifFile);
                 return (SavedImage *)(NULL);
             }
             memcpy(sp->RasterBits, CopyFrom->RasterBits,
-                   sizeof(GifPixelType) * CopyFrom->ImageDesc.Height *
-                   CopyFrom->ImageDesc.Width);
+                   sizeof(GifPixelType) * (ulong)(CopyFrom->ImageDesc.Height *
+                   CopyFrom->ImageDesc.Width));
 
             /* finally, the extension blocks */
             if (sp->ExtensionBlocks != NULL) {
                 sp->ExtensionBlocks = (ExtensionBlock *)malloc(
                                       sizeof(ExtensionBlock) *
-                                      CopyFrom->ExtensionBlockCount);
+                                     (ulong)CopyFrom->ExtensionBlockCount);
                 if (sp->ExtensionBlocks == NULL) {
                     FreeLastSavedImage(GifFile);
                     return (SavedImage *)(NULL);
                 }
                 memcpy(sp->ExtensionBlocks, CopyFrom->ExtensionBlocks,
-                       sizeof(ExtensionBlock) * CopyFrom->ExtensionBlockCount);
+                       sizeof(ExtensionBlock) *(ulong)(CopyFrom->ExtensionBlockCount));
             }
         }
 

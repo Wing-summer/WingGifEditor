@@ -27,6 +27,7 @@
 #include <QDebug>
 #include <QFile>
 #include <QImage>
+#include <QPainter>
 #include <QScopedPointer>
 
 namespace {
@@ -99,8 +100,8 @@ QSize QGifImagePrivate::getCanvasSize() const {
   int width = -1;
   int height = -1;
   for (QGifFrameInfoData info : frameInfos) {
-    int w = info.image.width() + info.offset.x();
-    int h = info.image.height() + info.offset.y();
+    int w = info.image.width();
+    int h = info.image.height();
     if (w > width)
       width = w;
     if (h > height)
@@ -144,6 +145,8 @@ bool QGifImagePrivate::load(QIODevice *device) {
   if (DGifSlurp(gifFile) == GIF_ERROR)
     return false;
 
+  frameInfos.clear(); // fixed by wingsummer
+
   canvasSize.setWidth(gifFile->SWidth);
   canvasSize.setHeight(gifFile->SHeight);
   if (gifFile->SColorMap) {
@@ -151,6 +154,8 @@ bool QGifImagePrivate::load(QIODevice *device) {
     if (gifFile->SBackGroundColor < globalColorTable.size())
       bgColor = QColor(globalColorTable[gifFile->SBackGroundColor]);
   }
+
+  QImage lastimg;
 
   for (int idx = 0; idx < gifFile->ImageCount; ++idx) {
     SavedImage gifImage = gifFile->SavedImages[idx];
@@ -178,7 +183,7 @@ bool QGifImagePrivate::load(QIODevice *device) {
       frameInfo.transparentColor = colorTable[transColorIndex];
     frameInfo.delayTime = gcb.DelayTime * 10; // convert to milliseconds
     frameInfo.interlace = gifImage.ImageDesc.Interlace;
-    frameInfo.offset = QPoint(left, top);
+    // frameInfo.offset = QPoint(left, top);
 
     QImage image(width, height, QImage::Format_Indexed8);
     image.setOffset(QPoint(left, top)); // Maybe useful for some users.
@@ -223,7 +228,19 @@ bool QGifImagePrivate::load(QIODevice *device) {
       }
     }
 
-    frameInfo.image = image;
+    if (idx) {
+      QImage pimg(canvasSize, QImage::Format_RGBA8888);
+      QPainter p(&pimg);
+      p.setRenderHint(QPainter::RenderHint::HighQualityAntialiasing);
+      pimg.fill(Qt::transparent);
+      p.drawImage(QPoint(), lastimg);
+      p.drawImage(QPoint(left, top), image);
+      lastimg.swap(pimg);
+    } else {
+      lastimg.swap(image);
+    }
+
+    frameInfo.image = lastimg;
     frameInfos.append(frameInfo);
   }
 
@@ -251,7 +268,9 @@ bool QGifImagePrivate::save(QIODevice *device,
   }
 
   gifFile->ImageCount = frameInfos.size();
-  gifFile->SavedImages = new SavedImage[ulong(frameInfos.size())];
+  gifFile->SavedImages =
+      (SavedImage *)calloc((size_t)frameInfos.size(), sizeof(SavedImage));
+
   for (int idx = 0; idx < frameInfos.size(); ++idx) {
     const QGifFrameInfoData frameInfo = frameInfos.at(idx);
     QImage image = frameInfo.image;
@@ -265,8 +284,8 @@ bool QGifImagePrivate::save(QIODevice *device,
 
     SavedImage *gifImage = gifFile->SavedImages + idx;
 
-    gifImage->ImageDesc.Left = frameInfo.offset.x();
-    gifImage->ImageDesc.Top = frameInfo.offset.y();
+    gifImage->ImageDesc.Left = 0;
+    gifImage->ImageDesc.Top = 0;
     gifImage->ImageDesc.Width = image.width();
     gifImage->ImageDesc.Height = image.height();
     gifImage->ImageDesc.Interlace = frameInfo.interlace;
@@ -458,7 +477,7 @@ void QGifImage::insertFrame(int index, const QImage &frame, int delay) {
   QGifFrameInfoData data;
   data.image = frame;
   data.delayTime = delay;
-  data.offset = frame.offset();
+  // data.offset = frame.offset();
 
   d->frameInfos.insert(index, data);
 }
@@ -473,16 +492,16 @@ void QGifImage::insertFrame(int index, const QImage &frame, int delay) {
    converted to the QImage::Format_Indexed8 format. Global color table will be
    used in the convertion if it has been set.
 */
-void QGifImage::insertFrame(int index, const QImage &frame,
-                            const QPoint &offset, int delay) {
-  Q_D(QGifImage);
-  QGifFrameInfoData data;
-  data.image = frame;
-  data.delayTime = delay;
-  data.offset = offset;
+// void QGifImage::insertFrame(int index, const QImage &frame,
+//                             const QPoint &offset, int delay) {
+//   Q_D(QGifImage);
+//   QGifFrameInfoData data;
+//   data.image = frame;
+//   data.delayTime = delay;
+//   data.offset = offset;
 
-  d->frameInfos.insert(index, data);
-}
+//  d->frameInfos.insert(index, data);
+//}
 
 /*!
     Append the QImage object \a frame with \a delay.
@@ -499,25 +518,26 @@ void QGifImage::addFrame(const QImage &frame, int delay) {
   QGifFrameInfoData data;
   data.image = frame;
   data.delayTime = delay;
-  data.offset = frame.offset();
+  // data.offset = frame.offset();
 
   d->frameInfos.append(data);
 }
 
 /*!
     \overload
-    Append the QImage object \a frame with the given \a offset and \a delay.
+    Append the QImage object \a frame with the given \a delay.
  */
-void QGifImage::addFrame(const QImage &frame, const QPoint &offset, int delay) {
-  Q_D(QGifImage);
+// void QGifImage::addFrame(const QImage &frame, const QPoint &offset, int
+// delay) {
+//   Q_D(QGifImage);
 
-  QGifFrameInfoData data;
-  data.image = frame;
-  data.delayTime = delay;
-  data.offset = offset;
+//  QGifFrameInfoData data;
+//  data.image = frame;
+//  data.delayTime = delay;
+//  //data.offset = offset;
 
-  d->frameInfos.append(data);
-}
+//  d->frameInfos.append(data);
+//}
 
 /*!
     Return frame count contained in the gif file.
@@ -541,23 +561,23 @@ QImage QGifImage::frame(int index) const {
 /*!
      Return the offset value of the frame at \a index
  */
-QPoint QGifImage::frameOffset(int index) const {
-  Q_D(const QGifImage);
-  if (index < 0 || index >= d->frameInfos.size())
-    return QPoint();
+// QPoint QGifImage::frameOffset(int index) const {
+//   Q_D(const QGifImage);
+//   if (index < 0 || index >= d->frameInfos.size())
+//     return QPoint();
 
-  return d->frameInfos[index].offset;
-}
+//  return d->frameInfos[index].offset;
+//}
 
 /*!
      Set the \a offset value for the frame at \a index
  */
-void QGifImage::setFrameOffset(int index, const QPoint &offset) {
-  Q_D(QGifImage);
-  if (index < 0 || index >= d->frameInfos.size())
-    return;
-  d->frameInfos[index].offset = offset;
-}
+// void QGifImage::setFrameOffset(int index, const QPoint &offset) {
+//   Q_D(QGifImage);
+//   if (index < 0 || index >= d->frameInfos.size())
+//     return;
+//   d->frameInfos[index].offset = offset;
+// }
 
 /*!
      Return the delay value of the frame at \a index
@@ -593,10 +613,11 @@ QColor QGifImage::frameTransparentColor(int index) const {
 
 /*!
     Sets the transparent \a color of the frame \a index. Unlike other image
-   formats that support alpha (e.g. PNG), GIF does not support semi-transparent
-   pixels. The way to achieve transparency is to set a color that will be
-   transparent when rendering the GIF. So, if you set the transparent color to
-   black, the black pixels in your gif file will be transparent.
+   formats that support alpha (e.g. PNG), GIF does not support
+   semi-transparent pixels. The way to achieve transparency is to set a color
+   that will be transparent when rendering the GIF. So, if you set the
+   transparent color to black, the black pixels in your gif file will be
+   transparent.
 */
 void QGifImage::setFrameTransparentColor(int index, const QColor &color) {
   Q_D(QGifImage);
@@ -627,6 +648,8 @@ int QGifImage::getLastError() { return _lasterr; }
 
 void QGifImage::removeFrame(int index) {
   Q_D(QGifImage);
+  if (index < 0 || index >= d->frameInfos.size())
+    return;
   d->frameInfos.removeAt(index);
 }
 
@@ -643,7 +666,7 @@ void QGifImage::flip(FlipDirection dir) {
     auto &img = item.image;
     switch (dir) {
     case FlipDirection::Horizontal:
-      img = img.mirrored();
+      img = img.mirrored(true, false);
       break;
     case FlipDirection::Vertical:
       img = img.mirrored(false, true);
@@ -656,11 +679,56 @@ void QGifImage::rotate(bool clockwise) {
   Q_D(QGifImage);
   d->canvasSize = d->canvasSize.transposed();
   QTransform trans;
-  trans.rotate(clockwise ? 90.0 : -90.0);
+  trans.rotate(clockwise ? -90.0 : 90.0);
   for (auto &item : d->frameInfos) {
     auto &img = item.image;
     img = img.transformed(trans);
   }
+}
+
+int QGifImage::width() {
+  Q_D(const QGifImage);
+  return d->canvasSize.width();
+}
+
+int QGifImage::height() {
+  Q_D(const QGifImage);
+  return d->canvasSize.height();
+}
+
+QSize QGifImage::size() {
+  Q_D(const QGifImage);
+  return d->canvasSize;
+}
+
+QPixmap QGifImage::frameimg(int index) const {
+  return QPixmap::fromImage(frame(index));
+}
+
+bool QGifImage::moveleft(int index) {
+  Q_D(QGifImage);
+  if (index < 1 || index >= d->frameInfos.size())
+    return false;
+  d->frameInfos.move(index, index - 1);
+  return true;
+}
+
+bool QGifImage::moveright(int index) {
+  Q_D(QGifImage);
+  if (index < 0 || index >= d->frameInfos.size() - 1)
+    return false;
+  d->frameInfos.move(index, index + 1);
+  return true;
+}
+
+void QGifImage::createReverse(int from, int to) {
+  Q_D(QGifImage);
+  auto &l = d->frameInfos;
+  if (from < 0 || from >= l.size() - 1)
+    return;
+  if (to < 0 || to >= l.size() - 1)
+    return;
+  std::reverse_copy(l.begin() + from, l.begin() + to, l.begin() + to);
 }
 
 /*!
@@ -677,9 +745,9 @@ bool QGifImage::save(QIODevice *device) const {
 }
 
 /*!
-    Loads an gif image from the file with the given \a fileName. Returns \c true
-   if the image was successfully loaded; otherwise invalidates the image and
-   returns \c false.
+    Loads an gif image from the file with the given \a fileName. Returns \c
+   true if the image was successfully loaded; otherwise invalidates the image
+   and returns \c false.
 */
 bool QGifImage::load(const QString &fileName) {
   Q_D(QGifImage);

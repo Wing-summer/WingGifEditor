@@ -10,9 +10,15 @@ TEMPLATE = app
 SOURCES += \
         main.cpp \
     mainwindow.cpp \
-    gifeditorscene.cpp
+    sponsordialog.cpp \
+    newdialog.cpp \
+    exportdialog.cpp \
+    createreversedialog.cpp
 
 RESOURCES += resources.qrc
 
 HEADERS += mainwindow.h \
-    gifeditorscene.h
+    sponsordialog.h \
+    newdialog.h \
+    exportdialog.h \
+    createreversedialog.h

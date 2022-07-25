@@ -1,10 +1,14 @@
 #include "mainwindow.h"
+#include "sponsordialog.h"
+#include <DInputDialog>
 #include <DMenu>
 #include <DMessageManager>
 #include <DTitlebar>
 #include <DToolBar>
+#include <DToolButton>
 #include <QFileDialog>
 #include <QListWidgetItem>
+#include <QMessageBox>
 #include <QShortcut>
 #include <QVBoxLayout>
 #include <QWidget>
@@ -12,7 +16,7 @@
 #define ICONRES(name) QIcon(":/images/" name ".png")
 
 MainWindow::MainWindow(DMainWindow *parent) : DMainWindow(parent) {
-  setMinimumSize(600, 500);
+  setMinimumSize(800, 600);
   setWindowTitle(tr("WingGifEditor"));
   setWindowIcon(ICONRES("icon"));
   auto w = new QWidget(this);
@@ -34,7 +38,7 @@ MainWindow::MainWindow(DMainWindow *parent) : DMainWindow(parent) {
 
   connect(imglist, &QListWidget::itemSelectionChanged, this, [=] {
     auto scene = new QGraphicsScene(editor);
-    scene->addPixmap(QPixmap::fromImage(gif.frame(imglist->currentRow())));
+    scene->addPixmap(gif.frameimg(imglist->currentRow()));
     editor->setScene(scene);
   });
 
@@ -72,6 +76,11 @@ MainWindow::MainWindow(DMainWindow *parent) : DMainWindow(parent) {
   auto keyscaledelay =
       QKeySequence(Qt::KeyboardModifier::ControlModifier |
                    Qt::KeyboardModifier::ShiftModifier | Qt::Key_T);
+  auto keyscalepic =
+      QKeySequence(Qt::KeyboardModifier::ShiftModifier | Qt::Key_T);
+  auto keycutpic =
+      QKeySequence(Qt::KeyboardModifier::ControlModifier |
+                   Qt::KeyboardModifier::ShiftModifier | Qt::Key_X);
 
 #define AddMenuIconAction(Icon, Title, Slot, Owner)                            \
   a = new QAction(Owner);                                                      \
@@ -111,6 +120,7 @@ MainWindow::MainWindow(DMainWindow *parent) : DMainWindow(parent) {
                         QKeySequence::Save);
   AddMenuShortcutAction("saveas", tr("SaveAs"), MainWindow::on_saveas, tm,
                         QKeySequence::SaveAs);
+  AddMenuIconAction("export", tr("Export"), MainWindow::on_export, tm);
   tm->addSeparator();
   AddMenuShortcutAction("close", tr("Close"), MainWindow::on_exit, tm,
                         QKeySequence::Close);
@@ -156,7 +166,7 @@ MainWindow::MainWindow(DMainWindow *parent) : DMainWindow(parent) {
   AddMenuShortcutAction("pause", tr("Stop"), MainWindow::on_stop, tm, keypause);
   AddMenuShortcutAction("foreword", tr("NextFrame"), MainWindow::on_next, tm,
                         keynextframe);
-  AddMenuShortcutAction("last", tr("EndFrame"), MainWindow::on_last, tm,
+  AddMenuShortcutAction("last", tr("EndFrame"), MainWindow::on_endframe, tm,
                         keylastframe);
   title->setMenu(menu);
 
@@ -176,12 +186,38 @@ MainWindow::MainWindow(DMainWindow *parent) : DMainWindow(parent) {
                         keymvr);
   AddMenuShortcutAction("reverse", tr("Reverse"), MainWindow::on_reverse, tm,
                         keyrev);
-  AddMenuAction(tr("CreateReverse"), MainWindow::on_createreverse, tm);
+  AddMenuIconAction("reverseplus", tr("CreateReverse"),
+                    MainWindow::on_createreverse, tm);
   tm->addSeparator();
   AddMenuShortcutAction("setdelay", tr("SetDelay"), MainWindow::on_setdelay, tm,
                         keysetdelay);
   AddMenuShortcutAction("scaledelay", tr("ScaleDelay"),
                         MainWindow::on_scaledelay, tm, keyscaledelay);
+  AddMenuIconAction("pics", tr("InsertPics"), MainWindow::on_insertpic, tm);
+  AddMenuIconAction("gifs", tr("MergeGIfs"), MainWindow::on_merge, tm);
+  AddMenuShortcutAction("scale", tr("ScaleGif"), MainWindow::on_scalepic, tm,
+                        keyscalepic);
+  AddMenuShortcutAction("cutpic", tr("CutGif"), MainWindow::on_cutpic, tm,
+                        keycutpic);
+  tm->addSeparator();
+  AddMenuIconAction("fliph", tr("FilpH"), MainWindow::on_fliph, tm);
+  AddMenuIconAction("flipv", tr("FlipV"), MainWindow::on_flipv, tm);
+  AddMenuIconAction("rotatel", tr("RotateLeft"), MainWindow::on_clockwise, tm);
+  AddMenuIconAction("rotater", tr("RotateR"), MainWindow::on_anticlockwise, tm);
+  tm->addSeparator();
+  AddMenuIconAction("blank", tr("ExportBlank"), MainWindow::on_exportapply, tm);
+  AddMenuIconAction("model", tr("ApplyModel"), MainWindow::on_applypic, tm);
+  menu->addMenu(tm);
+
+  tm = new DMenu(this);
+  tm->setTitle(tr("Author"));
+  tm->setIcon(ICONRES("author"));
+  AddMenuIconAction("soft", tr("About"), MainWindow::on_about, tm);
+  AddMenuIconAction("sponsor", tr("Sponsor"), MainWindow::on_sponsor, tm);
+  AddMenuIconAction("wiki", tr("Wiki"), MainWindow::on_wiki, tm);
+  a = new QAction(ICONRES("qt"), tr("AboutQT"), tm);
+  connect(a, &QAction::triggered, this, [=] { QMessageBox::aboutQt(this); });
+  tm->addAction(a);
   menu->addMenu(tm);
 
   auto toolbar = new DToolBar(this);
@@ -196,10 +232,89 @@ MainWindow::MainWindow(DMainWindow *parent) : DMainWindow(parent) {
 #define AddToolBarTool(Icon, Slot, ToolTip)                                    \
   AddToolBarAction(Icon, toolbar, Slot, ToolTip)
 
+  DToolButton *tbtn;
+  DMenu *tmenu;
+
+#define AddToolBtnBegin(DIcon)                                                 \
+  tbtn = new DToolButton(this);                                                \
+  tbtn->setIcon(ICONRES(DIcon));                                               \
+  tmenu = new DMenu(this);
+
+#define AddToolBtnBtn(Icon, Title, Slot)                                       \
+  a = new QAction(ICONRES(Icon), Title, this);                                 \
+  connect(a, &QAction::triggered, this, &Slot);                                \
+  tmenu->addAction(a);
+
+#define AddToolBtnEnd()                                                        \
+  tbtn->setMenu(tmenu);                                                        \
+  tbtn->setPopupMode(DToolButton::ToolButtonPopupMode::InstantPopup);          \
+  toolbar->addWidget(tbtn);
+
+  AddToolBtnBegin("new") {
+    AddToolBtnBtn("pics", tr("NewFromPics"), MainWindow::on_new_frompics);
+    AddToolBtnBtn("gifs", tr("NewFromGifs"), MainWindow::on_new_fromgifs);
+  }
+  AddToolBtnEnd();
+
   AddToolBarTool("open", MainWindow::on_open, tr("Open"));
+  AddToolBarTool("save", MainWindow::on_save, tr("Save"));
   AddToolBarTool("saveas", MainWindow::on_saveas, tr("SaveAs"));
-  AddToolBarTool("del", MainWindow::on_del, tr("Del"));
+  AddToolBarTool("export", MainWindow::on_export, tr("Export"));
+  toolbar->addSeparator();
+  AddToolBarTool("undo", MainWindow::on_undo, tr("Undo"));
+  AddToolBarTool("redo", MainWindow::on_redo, tr("Redo"));
+  AddToolBarTool("cut", MainWindow::on_cut, tr("Cut"));
+  AddToolBarTool("copy", MainWindow::on_copy, tr("Copy"));
+  AddToolBarTool("paste", MainWindow::on_paste, tr("Paste"));
+  AddToolBarTool("del", MainWindow::on_del, tr("Delete"));
+  AddToolBarTool("selall", MainWindow::on_selall, tr("SelectAll"));
+  AddToolBarTool("desel", MainWindow::on_desel, tr("Deselect"));
+  AddToolBarTool("selrev", MainWindow::on_selreverse, tr("ReverseSelection"));
+  AddToolBarTool("jmp", MainWindow::on_goto, tr("Goto"));
+  toolbar->addSeparator();
+  AddToolBarTool("soft", MainWindow::on_about, tr("About"));
+  AddToolBarTool("sponsor", MainWindow::on_sponsor, tr("Sponsor"));
+  AddToolBarTool("wiki", MainWindow::on_wiki, tr("Wiki"));
+  toolbar->setObjectName("main");
+  addToolBar(toolbar);
+
+  addToolBarBreak();
+
+  toolbar = new DToolBar(this);
+  AddToolBarTool("rmframe", MainWindow::on_decreaseframe, tr("ReduceFrame"));
+  AddToolBarTool("rml", MainWindow::on_delbefore, tr("DeleteBefore"));
+  AddToolBarTool("rmr", MainWindow::on_delafter, tr("DeleteAfter"));
+  AddToolBarTool("mvf", MainWindow::on_moveleft, tr("MoveLeft"));
+  AddToolBarTool("mvb", MainWindow::on_moveright, tr("MoveRight"));
   AddToolBarTool("reverse", MainWindow::on_reverse, tr("Reverse"));
+  AddToolBarTool("reverseplus", MainWindow::on_createreverse,
+                 tr("CreateReverse"));
+  toolbar->addSeparator();
+  AddToolBarTool("setdelay", MainWindow::on_setdelay, tr("SetDelay"));
+  AddToolBarTool("scaledelay", MainWindow::on_scaledelay, tr("ScaleDelay"));
+  AddToolBarTool("pics", MainWindow::on_insertpic, tr("InsertPics"));
+  AddToolBarTool("gifs", MainWindow::on_merge, tr("MergeGIfs"));
+  AddToolBarTool("scale", MainWindow::on_scalepic, tr("ScaleGif"));
+  AddToolBarTool("cutpic", MainWindow::on_cutpic, tr("CutGif"));
+  toolbar->addSeparator();
+  AddToolBarTool("fliph", MainWindow::on_fliph, tr("FilpH"));
+  AddToolBarTool("flipv", MainWindow::on_flipv, tr("FlipV"));
+  AddToolBarTool("rotatel", MainWindow::on_clockwise, tr("RotateLeft"));
+  AddToolBarTool("rotater", MainWindow::on_anticlockwise, tr("RotateR"));
+  toolbar->addSeparator();
+  AddToolBarTool("blank", MainWindow::on_exportapply, tr("ExportBlank"));
+  AddToolBarTool("model", MainWindow::on_applypic, tr("ApplyModel"));
+  toolbar->setObjectName("pic");
+  addToolBar(toolbar);
+
+  toolbar = new DToolBar(this);
+  AddToolBarTool("first", MainWindow::on_beginframe, tr("FirstFrame"));
+  AddToolBarTool("back", MainWindow::on_last, tr("LastFrame"));
+  AddToolBarTool("gifplay", MainWindow::on_play, tr("Play"));
+  AddToolBarTool("pause", MainWindow::on_stop, tr("Stop"));
+  AddToolBarTool("foreword", MainWindow::on_next, tr("NextFrame"));
+  AddToolBarTool("last", MainWindow::on_endframe, tr("EndFrame"));
+  toolbar->setObjectName("play");
   addToolBar(toolbar);
 
   status = new DStatusBar(this);
@@ -209,7 +324,7 @@ MainWindow::MainWindow(DMainWindow *parent) : DMainWindow(parent) {
 void MainWindow::refreshImglist() {
   imglist->clear();
   for (int i = 0; i < gif.frameCount(); i++) {
-    new QListWidgetItem(QIcon(QPixmap::fromImage(gif.frame(i))),
+    new QListWidgetItem(QIcon(gif.frameimg(i)),
                         QString("%1   %2 ms").arg(i).arg(gif.frameDelay(i)),
                         imglist);
   }
@@ -303,7 +418,8 @@ void MainWindow::on_del() {
   std::sort(indices.begin(), indices.end());
   int offset = 0;
   for (auto item : indices) {
-    gif.removeFrame(item - offset);
+    auto off = item - offset;
+    gif.removeFrame(off);
     offset++;
   }
   for (auto item : imglist->selectedItems()) {
@@ -331,7 +447,15 @@ void MainWindow::on_desel() {
   imglist->setCurrentRow(cur);
 }
 
-void MainWindow::on_goto() {}
+void MainWindow::on_goto() {
+  bool ok;
+  auto index =
+      DInputDialog::getInt(this, tr("Goto"), tr("PleaseInputIndex"),
+                           imglist->currentRow(), 0, imglist->count(), 1, &ok);
+  if (ok) {
+    imglist->setCurrentRow(index);
+  }
+}
 
 void MainWindow::on_beginframe() { imglist->setCurrentRow(0); }
 
@@ -361,10 +485,15 @@ void MainWindow::on_decreaseframe() {}
 void MainWindow::on_delbefore() {
   auto len = imglist->currentRow();
   for (auto i = 0; i < len; i++) {
-    gif.removeFrame(0);
-    auto del = imglist->item(i);
+    auto del = imglist->item(0);
     imglist->removeItemWidget(del);
     delete del;
+    gif.removeFrame(0);
+  }
+  len = imglist->count();
+  for (auto i = 0; i < len; i++) {
+    imglist->item(i)->setText(
+        QString("%1   %2 ms").arg(i).arg(gif.frameDelay(i)));
   }
 }
 
@@ -372,10 +501,10 @@ void MainWindow::on_delafter() {
   auto len = imglist->count() - imglist->currentRow() - 1;
   auto pos = imglist->currentRow() + 1;
   for (auto i = 0; i < len; i++) {
-    gif.removeFrame(pos);
     auto del = imglist->item(pos);
     imglist->removeItemWidget(del);
     delete del;
+    gif.removeFrame(pos);
   }
 }
 
@@ -393,6 +522,8 @@ void MainWindow::on_saveas() {
                                              formatErrCode(gif.getLastError()));
   }
 }
+
+void MainWindow::on_export() {}
 
 void MainWindow::on_exit() { close(); }
 
@@ -426,9 +557,33 @@ void MainWindow::on_reverse() {
   refreshImglist();
 }
 
-void MainWindow::on_moveleft() {}
+void MainWindow::on_moveleft() {
+  auto pos = imglist->currentRow();
+  if (gif.moveleft(pos)) {
+    auto p = imglist->item(pos);
+    p->setIcon(QIcon(gif.frameimg(pos)));
+    p->setText(QString("%1   %2 ms").arg(pos).arg(gif.frameDelay(pos)));
+    pos--;
+    p = imglist->item(pos);
+    p->setIcon(QIcon(gif.frameimg(pos)));
+    p->setText(QString("%1   %2 ms").arg(pos).arg(gif.frameDelay(pos)));
+    imglist->setCurrentRow(pos);
+  }
+}
 
-void MainWindow::on_moveright() {}
+void MainWindow::on_moveright() {
+  auto pos = imglist->currentRow();
+  if (gif.moveright(pos)) {
+    auto p = imglist->item(pos);
+    p->setIcon(QIcon(gif.frameimg(pos)));
+    p->setText(QString("%1   %2 ms").arg(pos).arg(gif.frameDelay(pos)));
+    pos++;
+    p = imglist->item(pos);
+    p->setIcon(QIcon(gif.frameimg(pos)));
+    p->setText(QString("%1   %2 ms").arg(pos).arg(gif.frameDelay(pos)));
+    imglist->setCurrentRow(pos);
+  }
+}
 
 void MainWindow::on_createreverse() {}
 
@@ -445,27 +600,42 @@ void MainWindow::on_scalepic() {}
 void MainWindow::on_cutpic() {}
 
 void MainWindow::on_fliph() {
+  auto pos = imglist->currentRow();
   gif.flip(FlipDirection::Horizontal);
   refreshImglist();
+  imglist->setCurrentRow(pos);
 }
 
 void MainWindow::on_flipv() {
+  auto pos = imglist->currentRow();
   gif.flip(FlipDirection::Vertical);
   refreshImglist();
+  imglist->setCurrentRow(pos);
 }
 
 void MainWindow::on_clockwise() {
+  auto pos = imglist->currentRow();
   gif.rotate();
   refreshImglist();
+  imglist->setCurrentRow(pos);
 }
 
 void MainWindow::on_anticlockwise() {
+  auto pos = imglist->currentRow();
   gif.rotate(false);
   refreshImglist();
+  imglist->setCurrentRow(pos);
 }
+
+void MainWindow::on_exportapply() {}
+
+void MainWindow::on_applypic() {}
 
 void MainWindow::on_about() {}
 
-void MainWindow::on_sponsor() {}
+void MainWindow::on_sponsor() {
+  SponsorDialog d;
+  d.exec();
+}
 
 void MainWindow::on_wiki() {}

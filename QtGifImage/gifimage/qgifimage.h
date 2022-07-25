@@ -58,13 +58,13 @@ public:
   QImage frame(int index) const;
 
   void addFrame(const QImage &frame, int delay = -1);
-  void addFrame(const QImage &frame, const QPoint &offset, int delay = -1);
+  // void addFrame(const QImage &frame, const QPoint &offset, int delay = -1);
   void insertFrame(int index, const QImage &frame, int delay = -1);
-  void insertFrame(int index, const QImage &frame, const QPoint &offset,
-                   int delay = -1);
+  // void insertFrame(int index, const QImage &frame, const QPoint &offset,
+  // int delay = -1);
 
-  QPoint frameOffset(int index) const;
-  void setFrameOffset(int index, const QPoint &offset);
+  // QPoint frameOffset(int index) const;
+  // void setFrameOffset(int index, const QPoint &offset);
   int frameDelay(int index) const;
   void setFrameDelay(int index, int delay);
   QColor frameTransparentColor(int index) const;
@@ -85,6 +85,13 @@ public:
   void reverse();                     //反转帧
   void flip(FlipDirection dir);       //反转帧图像
   void rotate(bool clockwise = true); //旋转90度图像，默认为顺时针
+  int width();
+  int height();
+  QSize size();
+  QPixmap frameimg(int index) const;
+  bool moveleft(int index);
+  bool moveright(int index);
+  void createReverse(int from, int to);
 
 private:
   int _lasterr;
