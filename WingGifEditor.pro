@@ -14,7 +14,9 @@ SOURCES += \
     newdialog.cpp \
     exportdialog.cpp \
     createreversedialog.cpp \
-    scalegifdialog.cpp
+    scalegifdialog.cpp \
+    reduceframedialog.cpp \
+    playgifmanager.cpp
 
 RESOURCES += resources.qrc
 
@@ -23,4 +25,6 @@ HEADERS += mainwindow.h \
     newdialog.h \
     exportdialog.h \
     createreversedialog.h \
-    scalegifdialog.h
+    scalegifdialog.h \
+    reduceframedialog.h \
+    playgifmanager.h

@@ -23,24 +23,25 @@ MainWindow::MainWindow(DMainWindow *parent) : DMainWindow(parent) {
   setCentralWidget(w);
   auto vlayout = new QVBoxLayout(w);
   editor = new DGraphicsView(w);
-
+  editor->setInteractive(true);
+  picview = scene.addPixmap(QPixmap(":/images/icon.png"));
+  picview->setScale(1);
+  editor->setScene(&scene);
   vlayout->addWidget(editor);
   imglist = new QListWidget(w);
   imglist->setFlow(QListWidget::TopToBottom);
   imglist->setViewMode(QListWidget::IconMode);
+  imglist->setHorizontalScrollBarPolicy(Qt::ScrollBarPolicy::ScrollBarAlwaysOn);
   imglist->setSelectionMode(
       QAbstractItemView::SelectionMode::ExtendedSelection);
   imglist->setIconSize(QSize(100, 100));
-  imglist->setFixedHeight(120);
+  imglist->setFixedHeight(140);
   imglist->setLayoutDirection(Qt::LayoutDirection::LeftToRight);
   imglist->setResizeMode(QListView::Adjust);
   vlayout->addWidget(imglist);
 
-  connect(imglist, &QListWidget::itemSelectionChanged, this, [=] {
-    auto scene = new QGraphicsScene(editor);
-    scene->addPixmap(gif.frameimg(imglist->currentRow()));
-    editor->setScene(scene);
-  });
+  connect(imglist, &QListWidget::itemSelectionChanged, this,
+          [=] { picview->setPixmap(gif.frameimg(imglist->currentRow())); });
 
   auto title = titlebar();
   title->setIcon(QIcon()); // TODO
@@ -319,6 +320,10 @@ MainWindow::MainWindow(DMainWindow *parent) : DMainWindow(parent) {
 
   status = new DStatusBar(this);
   setStatusBar(status);
+
+  player = new PlayGifManager(this);
+  connect(player, &PlayGifManager::tick, this,
+          [=](int index) { imglist->setCurrentRow(index); });
 }
 
 void MainWindow::refreshImglist() {
@@ -466,9 +471,17 @@ void MainWindow::on_last() {
   }
 }
 
-void MainWindow::on_play() {}
+void MainWindow::on_play() {
+  QList<int> ints;
+  auto len = gif.frameCount();
+  for (auto i = 0; i < len; i++) {
+    ints.append(gif.frameDelay(i));
+  }
+  player->setTickIntervals(ints);
+  player->play(imglist->currentRow());
+}
 
-void MainWindow::on_stop() {}
+void MainWindow::on_stop() { player->stop(); }
 
 void MainWindow::on_next() {
   auto pos = imglist->currentRow();

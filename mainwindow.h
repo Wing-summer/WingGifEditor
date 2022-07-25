@@ -2,10 +2,12 @@
 #define MAINWINDOW_H
 
 #include "QtGifImage/gifimage/qgifimage.h"
+#include "playgifmanager.h"
 #include <DGraphicsView>
 #include <DLabel>
 #include <DMainWindow>
 #include <DStatusBar>
+#include <QGraphicsPixmapItem>
 #include <QListWidget>
 
 DWIDGET_USE_NAMESPACE
@@ -105,6 +107,11 @@ private:
 
   QString lastusedpath;
   QString curfilename;
+  QGraphicsScene scene;
+
+  QGraphicsPixmapItem *picview;
+
+  PlayGifManager *player;
 };
 
 #endif // MAINWINDOW_H
