@@ -92,6 +92,11 @@ public:
   bool moveleft(int index);
   bool moveright(int index);
   void createReverse(int from, int to);
+  void applymodel(QImage &model, int index);
+  void setAllFrameDelay(int delay);
+  void scaleAllFrameDelay(int percent);
+  bool merge(QString gif);  //合并 GIF
+  void scale(int w, int h); //缩放 GIF
 
 private:
   int _lasterr;

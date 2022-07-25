@@ -396,7 +396,7 @@ void MainWindow::on_new_fromgifs() {}
 
 void MainWindow::on_open() {
   auto filename = QFileDialog::getOpenFileName(this, tr("ChooseFile"),
-                                               lastusedpath, "Gif (*.gif)");
+                                               lastusedpath, "gif (*.gif)");
   if (filename.isEmpty())
     return;
   lastusedpath = QFileInfo(filename).absoluteDir().absolutePath();
@@ -510,7 +510,7 @@ void MainWindow::on_delafter() {
 
 void MainWindow::on_saveas() {
   auto filename = QFileDialog::getSaveFileName(this, tr("ChooseSaveFile"),
-                                               lastusedpath, "Gif (*.gif)");
+                                               lastusedpath, "gif (*.gif)");
   if (filename.isEmpty())
     return;
   lastusedpath = QFileInfo(filename).absoluteDir().absolutePath();
@@ -587,13 +587,63 @@ void MainWindow::on_moveright() {
 
 void MainWindow::on_createreverse() {}
 
-void MainWindow::on_setdelay() {}
+void MainWindow::on_setdelay() {
+  auto indices = imglist->selectionModel()->selectedRows();
+  bool ok;
+  auto time10s =
+      DInputDialog::getInt(this, tr("DelayTime"), tr("Input10ms"),
+                           gif.defaultDelay() / 10, 1, INT_MAX, 1, &ok);
+  if (ok) {
+    auto time = time10s * 10;
+    if (indices.count()) {
+      for (auto i : indices) {
+        auto index = i.row();
+        gif.setFrameDelay(index, time);
+        imglist->item(index)->setText(
+            QString("%1   %2 ms").arg(index).arg(time));
+      }
+    } else {
+      gif.setAllFrameDelay(time);
+    }
+  }
+}
 
-void MainWindow::on_scaledelay() {}
+void MainWindow::on_scaledelay() {
+  auto indices = imglist->selectionModel()->selectedRows();
+  bool ok;
+  auto scale = DInputDialog::getInt(this, tr("ScaleDelayTime"),
+                                    tr("InputPercent"), 100, 1, 100, 1, &ok);
+  if (ok) {
+    if (indices.count()) {
+      for (auto i : indices) {
+        auto index = i.row();
+        auto time = gif.frameDelay(index);
+        time = time * scale / 1000;
+        time *= 10;
+        gif.setFrameDelay(index, time);
+        imglist->item(index)->setText(
+            QString("%1   %2 ms").arg(index).arg(time));
+      }
+    } else {
+      gif.scaleAllFrameDelay(scale);
+    }
+  }
+}
 
 void MainWindow::on_insertpic() {}
 
-void MainWindow::on_merge() {}
+void MainWindow::on_merge() {
+  auto filenames = QFileDialog::getOpenFileNames(this, tr("ChooseFile"),
+                                                 lastusedpath, "gif (*.gif)");
+
+  if (filenames.isEmpty())
+    return;
+  lastusedpath = QFileInfo(filenames.first()).absoluteDir().absolutePath();
+  for (auto item : filenames) {
+    gif.merge(item);
+  }
+  refreshImglist();
+}
 
 void MainWindow::on_scalepic() {}
 
@@ -627,9 +677,44 @@ void MainWindow::on_anticlockwise() {
   imglist->setCurrentRow(pos);
 }
 
-void MainWindow::on_exportapply() {}
+void MainWindow::on_exportapply() {
+  auto filename = QFileDialog::getSaveFileName(this, tr("ChooseSaveFile"),
+                                               lastusedpath, "png (*.png)");
+  if (filename.isEmpty())
+    return;
+  lastusedpath = QFileInfo(filename).absoluteDir().absolutePath();
+  QImage img(gif.size(), QImage::Format_RGBA8888);
+  img.fill(Qt::transparent);
+  img.save(filename);
+  DMessageManager::instance()->sendMessage(this, ICONRES("blank"),
+                                           tr("ExportSuccess"));
+}
 
-void MainWindow::on_applypic() {}
+void MainWindow::on_applypic() {
+  auto indices = imglist->selectionModel()->selectedRows();
+  if (!indices.count()) {
+    DMessageManager::instance()->sendMessage(this, ICONRES("model"),
+                                             tr("NoSelection"));
+    return;
+  }
+
+  auto filename = QFileDialog::getOpenFileName(this, tr("ChooseFile"),
+                                               lastusedpath, "png (*.png)");
+  if (filename.isEmpty())
+    return;
+  lastusedpath = QFileInfo(filename).absoluteDir().absolutePath();
+  QImage img;
+  if (img.load(filename) && img.size() == gif.size()) {
+    for (auto i : indices) {
+      auto index = i.row();
+      gif.applymodel(img, index);
+      imglist->item(index)->setIcon(QIcon(gif.frameimg(index)));
+    }
+  } else {
+    DMessageManager::instance()->sendMessage(this, ICONRES("model"),
+                                             tr("InvalidModel"));
+  }
+}
 
 void MainWindow::on_about() {}
 

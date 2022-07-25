@@ -13,7 +13,8 @@ SOURCES += \
     sponsordialog.cpp \
     newdialog.cpp \
     exportdialog.cpp \
-    createreversedialog.cpp
+    createreversedialog.cpp \
+    scalegifdialog.cpp
 
 RESOURCES += resources.qrc
 
@@ -21,4 +22,5 @@ HEADERS += mainwindow.h \
     sponsordialog.h \
     newdialog.h \
     exportdialog.h \
-    createreversedialog.h
+    createreversedialog.h \
+    scalegifdialog.h

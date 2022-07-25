@@ -731,6 +731,56 @@ void QGifImage::createReverse(int from, int to) {
   std::reverse_copy(l.begin() + from, l.begin() + to, l.begin() + to);
 }
 
+void QGifImage::applymodel(QImage &model, int index) {
+  Q_D(QGifImage);
+  auto &l = d->frameInfos;
+  if (index < 0 || index >= l.size() - 1)
+    return;
+
+  QImage pimg(d->canvasSize, QImage::Format_RGBA8888);
+  pimg.fill(Qt::transparent);
+  QPainter p(&pimg);
+  auto &img = l[index].image;
+  p.drawImage(QPoint(), img);
+  p.drawImage(QPoint(), model);
+  img.swap(pimg);
+}
+
+void QGifImage::setAllFrameDelay(int delay) {
+  Q_D(QGifImage);
+  for (auto &item : d->frameInfos) {
+    item.delayTime = delay;
+  }
+}
+
+void QGifImage::scaleAllFrameDelay(int percent) {
+  Q_D(QGifImage);
+  for (auto &item : d->frameInfos) {
+    item.delayTime = (item.delayTime * percent / 1000) * 10;
+  }
+}
+
+bool QGifImage::merge(QString gif) {
+  QGifImage img;
+  if (img.load(gif)) {
+    for (auto i = 0; i < img.frameCount(); i++) {
+      addFrame(img.frame(i), img.frameDelay(i));
+    }
+    return true;
+  } else {
+    return false;
+  }
+}
+
+void QGifImage::scale(int w, int h) {
+  Q_D(QGifImage);
+  d->canvasSize = QSize(w, h);
+  for (auto &l : d->frameInfos) {
+    auto &img = l.image;
+    img = img.scaled(w, h, Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
+  }
+}
+
 /*!
     \overload
 
