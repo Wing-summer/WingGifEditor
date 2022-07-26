@@ -19,9 +19,23 @@
 
 &emsp;&emsp;有关本软件提建议的时候不要天马行空，本软件的定位是提供简单易用满足基本需求的 GIF 编辑器，并不是像`ScreenToGif`，一是没有相关基础知识，自己一个人搞不动；二是没必要，我不想把这个软件搞个大而全，配合`Gimp`等优秀的图像编辑器作为辅助，来编辑 GIF 图像绰绰有余了。
 
-### 软件架构
+### 软件依赖
 
-&emsp;&emsp;本软件基于`QtGifImage`，它是解析编码 GIF 的基础库，是`jiangcaiyang`同志维护的一个`QtGifImage`分支，仓库 [传送门](https://github.com/jiangcaiyang/QtGifImage) 。
+&emsp;&emsp;本软件基于`ImageMagick`，它是一个强大的图片处理库，这个是官网介绍：
+
+> Use ImageMagick® to create, edit, compose, or convert digital images. It can read and write images in a variety of formats (over 200) including PNG, JPEG, GIF, WebP, HEIC, SVG, PDF, DPX, EXR and TIFF. ImageMagick can resize, flip, mirror, rotate, distort, shear and transform images, adjust image colors, apply various special effects, or draw text, lines, polygons, ellipses and Bézier curves.
+
+&emsp;&emsp;功能挺强大的，似乎对于该软件有点大材小用，不过我会尽量充分利用该库，实现与 GIF 编辑相关的操作。
+
+### 编译安装
+
+&emsp;&emsp;由于本软件依赖`ImageMagick`和`DTK`，`DTK`直接在深度应用商店下载就行了，前者你需要在终端输入：
+
+```bash
+sudo apt install graphicsmagick-libmagick-dev-compat
+```
+
+&emsp;&emsp;安装完毕后，打开项目，你就可以直接编译该软件了。
 
 ### 参与贡献
 

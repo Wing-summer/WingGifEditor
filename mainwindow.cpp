@@ -329,69 +329,9 @@ MainWindow::MainWindow(DMainWindow *parent) : DMainWindow(parent) {
 void MainWindow::refreshImglist() {
   imglist->clear();
   for (int i = 0; i < gif.frameCount(); i++) {
-    new QListWidgetItem(QIcon(gif.frameimg(i)),
+    new QListWidgetItem(gif.thumbnail(i),
                         QString("%1   %2 ms").arg(i).arg(gif.frameDelay(i)),
                         imglist);
-  }
-}
-
-QString MainWindow::formatErrCode(int err) {
-  switch (err) {
-  case E_GIF_ERR_OPEN_FAILED:
-    return tr("Failed to open given file");
-  case E_GIF_ERR_WRITE_FAILED:
-    return tr("Failed to write to given file");
-  case E_GIF_ERR_HAS_SCRN_DSCR:
-    return tr("Screen descriptor has already been set");
-  case E_GIF_ERR_HAS_IMAG_DSCR:
-    return tr("Image descriptor is still active");
-  case E_GIF_ERR_NO_COLOR_MAP:
-    return tr("Neither global nor local color map");
-  case E_GIF_ERR_DATA_TOO_BIG:
-    return tr("Number of pixels bigger than width * height");
-  case E_GIF_ERR_NOT_ENOUGH_MEM:
-    return tr("Failed to allocate required memory");
-  case E_GIF_ERR_DISK_IS_FULL:
-    return tr("Write failed (disk full?)");
-    break;
-  case E_GIF_ERR_CLOSE_FAILED:
-    return tr("Failed to close given file");
-  case E_GIF_ERR_NOT_WRITEABLE:
-    return tr("Given file was not opened for write");
-  case D_GIF_ERR_OPEN_FAILED:
-    return tr("Failed to open given file");
-  case D_GIF_ERR_READ_FAILED:
-    return tr("Failed to read from given file");
-  case D_GIF_ERR_NOT_GIF_FILE:
-    return tr("Data is not in GIF format");
-  case D_GIF_ERR_NO_SCRN_DSCR:
-    return tr("No screen descriptor detected");
-  case D_GIF_ERR_NO_IMAG_DSCR:
-    return tr("No Image Descriptor detected");
-  case D_GIF_ERR_NO_COLOR_MAP:
-    return tr("Neither global nor local color map");
-  case D_GIF_ERR_WRONG_RECORD:
-    return tr("Wrong record type detected");
-  case D_GIF_ERR_DATA_TOO_BIG:
-    return tr("Number of pixels bigger than width * height");
-    break;
-  case D_GIF_ERR_NOT_ENOUGH_MEM:
-    return tr("Failed to allocate required memory");
-    break;
-  case D_GIF_ERR_CLOSE_FAILED:
-    return tr("Failed to close given file");
-    break;
-  case D_GIF_ERR_NOT_READABLE:
-    return tr("Given file was not opened for read");
-    break;
-  case D_GIF_ERR_IMAGE_DEFECT:
-    return tr("Image is defective, decoding aborted");
-    break;
-  case D_GIF_ERR_EOF_TOO_SOON:
-    return tr("Image EOF detected before image complete");
-    break;
-  default:
-    return QString();
   }
 }
 
@@ -406,8 +346,7 @@ void MainWindow::on_open() {
     return;
   lastusedpath = QFileInfo(filename).absoluteDir().absolutePath();
   if (!gif.load(filename)) {
-    DMessageManager::instance()->sendMessage(this, ICONRES("icon"),
-                                             formatErrCode(gif.getLastError()));
+    DMessageManager::instance()->sendMessage(this, ICONRES("icon"), "");
     return;
   }
   curfilename = filename;
@@ -424,7 +363,7 @@ void MainWindow::on_del() {
   int offset = 0;
   for (auto item : indices) {
     auto off = item - offset;
-    gif.removeFrame(off);
+    // gif.removeFrame(off);
     offset++;
   }
   for (auto item : imglist->selectedItems()) {
@@ -501,7 +440,7 @@ void MainWindow::on_delbefore() {
     auto del = imglist->item(0);
     imglist->removeItemWidget(del);
     delete del;
-    gif.removeFrame(0);
+    // gif.removeFrame(0);
   }
   len = imglist->count();
   for (auto i = 0; i < len; i++) {
@@ -517,7 +456,7 @@ void MainWindow::on_delafter() {
     auto del = imglist->item(pos);
     imglist->removeItemWidget(del);
     delete del;
-    gif.removeFrame(pos);
+    // gif.removeFrame(pos);
   }
 }
 
@@ -531,8 +470,7 @@ void MainWindow::on_saveas() {
     DMessageManager::instance()->sendMessage(this, ICONRES("saveas"),
                                              tr("SaveAsSuccess"));
   } else {
-    DMessageManager::instance()->sendMessage(this, ICONRES("saveas"),
-                                             formatErrCode(gif.getLastError()));
+    DMessageManager::instance()->sendMessage(this, ICONRES("saveas"), "");
   }
 }
 
@@ -560,42 +498,41 @@ void MainWindow::on_save() {
     DMessageManager::instance()->sendMessage(this, ICONRES("save"),
                                              tr("SaveAsSuccess"));
   } else {
-    DMessageManager::instance()->sendMessage(this, ICONRES("save"),
-                                             formatErrCode(gif.getLastError()));
+    DMessageManager::instance()->sendMessage(this, ICONRES("save"), "");
   }
 }
 
 void MainWindow::on_reverse() {
-  gif.reverse();
+  // gif.reverse();
   refreshImglist();
 }
 
 void MainWindow::on_moveleft() {
   auto pos = imglist->currentRow();
-  if (gif.moveleft(pos)) {
-    auto p = imglist->item(pos);
-    p->setIcon(QIcon(gif.frameimg(pos)));
-    p->setText(QString("%1   %2 ms").arg(pos).arg(gif.frameDelay(pos)));
-    pos--;
-    p = imglist->item(pos);
-    p->setIcon(QIcon(gif.frameimg(pos)));
-    p->setText(QString("%1   %2 ms").arg(pos).arg(gif.frameDelay(pos)));
-    imglist->setCurrentRow(pos);
-  }
+  //  if (gif.moveleft(pos)) {
+  //    auto p = imglist->item(pos);
+  //    p->setIcon(QIcon(gif.frameimg(pos)));
+  //    p->setText(QString("%1   %2 ms").arg(pos).arg(gif.frameDelay(pos)));
+  //    pos--;
+  //    p = imglist->item(pos);
+  //    p->setIcon(QIcon(gif.frameimg(pos)));
+  //    p->setText(QString("%1   %2 ms").arg(pos).arg(gif.frameDelay(pos)));
+  //    imglist->setCurrentRow(pos);
+  //  }
 }
 
 void MainWindow::on_moveright() {
   auto pos = imglist->currentRow();
-  if (gif.moveright(pos)) {
-    auto p = imglist->item(pos);
-    p->setIcon(QIcon(gif.frameimg(pos)));
-    p->setText(QString("%1   %2 ms").arg(pos).arg(gif.frameDelay(pos)));
-    pos++;
-    p = imglist->item(pos);
-    p->setIcon(QIcon(gif.frameimg(pos)));
-    p->setText(QString("%1   %2 ms").arg(pos).arg(gif.frameDelay(pos)));
-    imglist->setCurrentRow(pos);
-  }
+  //  if (gif.moveright(pos)) {
+  //    auto p = imglist->item(pos);
+  //    p->setIcon(QIcon(gif.frameimg(pos)));
+  //    p->setText(QString("%1   %2 ms").arg(pos).arg(gif.frameDelay(pos)));
+  //    pos++;
+  //    p = imglist->item(pos);
+  //    p->setIcon(QIcon(gif.frameimg(pos)));
+  //    p->setText(QString("%1   %2 ms").arg(pos).arg(gif.frameDelay(pos)));
+  //    imglist->setCurrentRow(pos);
+  //  }
 }
 
 void MainWindow::on_createreverse() {}
@@ -603,22 +540,22 @@ void MainWindow::on_createreverse() {}
 void MainWindow::on_setdelay() {
   auto indices = imglist->selectionModel()->selectedRows();
   bool ok;
-  auto time10s =
-      DInputDialog::getInt(this, tr("DelayTime"), tr("Input10ms"),
-                           gif.defaultDelay() / 10, 1, INT_MAX, 1, &ok);
-  if (ok) {
-    auto time = time10s * 10;
-    if (indices.count()) {
-      for (auto i : indices) {
-        auto index = i.row();
-        gif.setFrameDelay(index, time);
-        imglist->item(index)->setText(
-            QString("%1   %2 ms").arg(index).arg(time));
-      }
-    } else {
-      gif.setAllFrameDelay(time);
-    }
-  }
+  //  auto time10s =
+  //      DInputDialog::getInt(this, tr("DelayTime"), tr("Input10ms"),
+  //                           gif.defaultDelay() / 10, 1, INT_MAX, 1, &ok);
+  //  if (ok) {
+  //    auto time = time10s * 10;
+  //    if (indices.count()) {
+  //      for (auto i : indices) {
+  //        auto index = i.row();
+  //        gif.setFrameDelay(index, time);
+  //        imglist->item(index)->setText(
+  //            QString("%1   %2 ms").arg(index).arg(time));
+  //      }
+  //    } else {
+  //      gif.setAllFrameDelay(time);
+  //    }
+  //  }
 }
 
 void MainWindow::on_scaledelay() {
@@ -626,21 +563,21 @@ void MainWindow::on_scaledelay() {
   bool ok;
   auto scale = DInputDialog::getInt(this, tr("ScaleDelayTime"),
                                     tr("InputPercent"), 100, 1, 100, 1, &ok);
-  if (ok) {
-    if (indices.count()) {
-      for (auto i : indices) {
-        auto index = i.row();
-        auto time = gif.frameDelay(index);
-        time = time * scale / 1000;
-        time *= 10;
-        gif.setFrameDelay(index, time);
-        imglist->item(index)->setText(
-            QString("%1   %2 ms").arg(index).arg(time));
-      }
-    } else {
-      gif.scaleAllFrameDelay(scale);
-    }
-  }
+  //  if (ok) {
+  //    if (indices.count()) {
+  //      for (auto i : indices) {
+  //        auto index = i.row();
+  //        auto time = gif.frameDelay(index);
+  //        time = time * scale / 1000;
+  //        time *= 10;
+  //        gif.setFrameDelay(index, time);
+  //        imglist->item(index)->setText(
+  //            QString("%1   %2 ms").arg(index).arg(time));
+  //      }
+  //    } else {
+  //      gif.scaleAllFrameDelay(scale);
+  //    }
+  //  }
 }
 
 void MainWindow::on_insertpic() {}
@@ -653,7 +590,7 @@ void MainWindow::on_merge() {
     return;
   lastusedpath = QFileInfo(filenames.first()).absoluteDir().absolutePath();
   for (auto item : filenames) {
-    gif.merge(item);
+    // gif.merge(item);
   }
   refreshImglist();
 }
@@ -664,28 +601,28 @@ void MainWindow::on_cutpic() {}
 
 void MainWindow::on_fliph() {
   auto pos = imglist->currentRow();
-  gif.flip(FlipDirection::Horizontal);
+  // gif.flip(FlipDirection::Horizontal);
   refreshImglist();
   imglist->setCurrentRow(pos);
 }
 
 void MainWindow::on_flipv() {
   auto pos = imglist->currentRow();
-  gif.flip(FlipDirection::Vertical);
+  // gif.flip(FlipDirection::Vertical);
   refreshImglist();
   imglist->setCurrentRow(pos);
 }
 
 void MainWindow::on_clockwise() {
   auto pos = imglist->currentRow();
-  gif.rotate();
+  // gif.rotate();
   refreshImglist();
   imglist->setCurrentRow(pos);
 }
 
 void MainWindow::on_anticlockwise() {
   auto pos = imglist->currentRow();
-  gif.rotate(false);
+  // gif.rotate(false);
   refreshImglist();
   imglist->setCurrentRow(pos);
 }
@@ -720,8 +657,8 @@ void MainWindow::on_applypic() {
   if (img.load(filename) && img.size() == gif.size()) {
     for (auto i : indices) {
       auto index = i.row();
-      gif.applymodel(img, index);
-      imglist->item(index)->setIcon(QIcon(gif.frameimg(index)));
+      // gif.applymodel(img, index);
+      imglist->item(index)->setIcon(gif.thumbnail(index));
     }
   } else {
     DMessageManager::instance()->sendMessage(this, ICONRES("model"),

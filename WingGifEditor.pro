@@ -2,8 +2,6 @@ QT += core gui dtkwidget
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
-include($$PWD/QtGifImage/gifimage/qtgifimage.pri)
-
 TARGET = WingGifEditor
 TEMPLATE = app
 
@@ -16,7 +14,9 @@ SOURCES += \
     createreversedialog.cpp \
     scalegifdialog.cpp \
     reduceframedialog.cpp \
-    playgifmanager.cpp
+    playgifmanager.cpp \
+    GifImage/gifimage.cpp \
+    GifImage/gifhelper.cpp
 
 RESOURCES += resources.qrc
 
@@ -27,4 +27,10 @@ HEADERS += mainwindow.h \
     createreversedialog.h \
     scalegifdialog.h \
     reduceframedialog.h \
-    playgifmanager.h
+    playgifmanager.h \
+    GifImage/gifimage.h \
+    GifImage/gifhelper.h
+
+QMAKE_CXXFLAGS += $(shell Magick++-config --cppflags --cxxflags)
+
+LIBS += $(shell Magick++-config --ldflags --libs)

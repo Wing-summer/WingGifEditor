@@ -1,7 +1,8 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
-#include "QtGifImage/gifimage/qgifimage.h"
+#include "GifImage/gifhelper.h"
+#include "GifImage/gifimage.h"
 #include "playgifmanager.h"
 #include <DGraphicsView>
 #include <DLabel>
@@ -45,7 +46,6 @@ public:
 
 private:
   void refreshImglist();
-  QString formatErrCode(int err);
 
 private:
   void on_new_frompics();
@@ -103,7 +103,7 @@ private:
   DGraphicsView *editor;
   QListWidget *imglist;
   DStatusBar *status;
-  QGifImage gif;
+  GifHelper gif;
 
   QString lastusedpath;
   QString curfilename;
