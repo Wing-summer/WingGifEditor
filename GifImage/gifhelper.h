@@ -19,12 +19,31 @@ public:
 
   int frameCount();
   int frameDelay(int index);
+  void setFrameDelay(int index, int delay);
+  void setAllFrameDelay(int delay);
 
   QSize size();
+
+  void removeFrame(int index);
+  void reverse();
+  bool moveleft(int index);
+  bool moveright(int index);
+
+  void flip(FlipDirection dir);
+  void rotate(bool clockwise = true);
+
+signals:
+  void frameRemoved(int index);
+  void frameRefreshAll();
+  void frameMoved(int from, int to);
+  void frameDelaySet(int index, int time);
 
 private:
   GifImage m_gif;
   QList<QImage> m_preview;
+
+private:
+  void generatePreview();
 };
 
 #endif // GIFHELPER_H

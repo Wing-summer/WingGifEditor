@@ -86,6 +86,8 @@ private:
 
 } // namespace
 
+enum class FlipDirection { Horizontal, Vertical };
+
 class GifImage : public QObject {
   Q_OBJECT
 public:
@@ -95,7 +97,17 @@ public:
   QImage frame(int index);
   int frameCount();
   int frameDelay(int index);
+  void setFrameDelay(int index, int delay);
+  void setAllFrameDelay(int delay);
   QSize size();
+
+  void removeFrame(int index);
+  bool moveleft(int index);
+  bool moveright(int index);
+
+  void reverse();
+  void flip(FlipDirection dir);
+  void rotate(bool clockwise = true);
 
 private:
   void waitThreadPool();

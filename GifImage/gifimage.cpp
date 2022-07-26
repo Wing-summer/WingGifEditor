@@ -48,7 +48,7 @@ bool GifImage::save(QString filename) {
 }
 
 QImage GifImage::frame(int index) {
-  if (index < 0 || index > int(m_frames.size()))
+  if (index < 0 || index >= int(m_frames.size()))
     return QImage();
   return Image2QImage(m_frames[ulong(index)]);
 }
@@ -56,12 +56,69 @@ QImage GifImage::frame(int index) {
 int GifImage::frameCount() { return int(m_frames.size()); }
 
 int GifImage::frameDelay(int index) {
-  if (index < 0 || index > int(m_frames.size()))
+  if (index < 0 || index >= int(m_frames.size()))
     return -1;
   return int(m_frames[ulong(index)].animationDelay()) * 10;
 }
 
+void GifImage::setFrameDelay(int index, int delay) {
+  if (index < 0 || index >= int(m_frames.size()))
+    return;
+  m_frames[ulong(index)].animationDelay(uint(delay) / 10);
+}
+
+void GifImage::setAllFrameDelay(int delay) {
+  for (auto &item : m_frames) {
+    item.animationDelay(uint(delay) / 10);
+  }
+}
+
 QSize GifImage::size() { return m_size; }
+
+void GifImage::removeFrame(int index) {
+  if (index < 0 || index >= int(m_frames.size()))
+    return;
+  m_frames.erase(m_frames.begin() + index);
+}
+
+bool GifImage::moveleft(int index) {
+  if (index < 1 || index >= int(m_frames.size()))
+    return false;
+  std::swap(m_frames[ulong(index)], m_frames[ulong(index - 1)]);
+  return true;
+}
+
+bool GifImage::moveright(int index) {
+  if (index < 0 || index >= int(m_frames.size()) - 1)
+    return false;
+  std::swap(m_frames[ulong(index)], m_frames[ulong(index + 1)]);
+  return true;
+}
+
+void GifImage::reverse() { std::reverse(m_frames.begin(), m_frames.end()); }
+
+void GifImage::flip(FlipDirection dir) {
+  switch (dir) {
+  case FlipDirection::Horizontal: {
+    for (auto &item : m_frames) {
+      item.flop();
+    }
+    break;
+  }
+  case FlipDirection::Vertical: {
+    for (auto &item : m_frames) {
+      item.flip();
+    }
+    break;
+  }
+  }
+}
+
+void GifImage::rotate(bool clockwise) {
+  for (auto &item : m_frames) {
+    item.rotate(clockwise ? -90 : 90);
+  }
+}
 
 void GifImage::waitThreadPool() {
   while (!QThreadPool::globalInstance()->waitForDone(100 / 6))

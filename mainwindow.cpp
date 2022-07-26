@@ -321,6 +321,24 @@ MainWindow::MainWindow(DMainWindow *parent) : DMainWindow(parent) {
   status = new DStatusBar(this);
   setStatusBar(status);
 
+  auto pgif = &gif;
+  connect(pgif, &GifHelper::frameRemoved, this, [=](int index) {
+    auto item = imglist->item(index);
+    imglist->removeItemWidget(item);
+    delete item;
+  });
+  connect(pgif, &GifHelper::frameMoved, this, [=](int from, int to) {
+    for (auto i = from; i <= to; i++) {
+      auto p = imglist->item(i);
+      p->setIcon(gif.thumbnail(i));
+      p->setText(QString("%1   %2 ms").arg(i).arg(gif.frameDelay(i)));
+    }
+  });
+  connect(pgif, &GifHelper::frameRefreshAll, this, &MainWindow::refreshImglist);
+  connect(pgif, &GifHelper::frameDelaySet, this, [=](int index, int delay) {
+    imglist->item(index)->setText(QString("%1   %2 ms").arg(index).arg(delay));
+  });
+
   player = new PlayGifManager(this);
   connect(player, &PlayGifManager::tick, this,
           [=](int index) { imglist->setCurrentRow(index); });
@@ -363,12 +381,8 @@ void MainWindow::on_del() {
   int offset = 0;
   for (auto item : indices) {
     auto off = item - offset;
-    // gif.removeFrame(off);
+    gif.removeFrame(off);
     offset++;
-  }
-  for (auto item : imglist->selectedItems()) {
-    imglist->removeItemWidget(item);
-    delete item;
   }
   for (int i = indices.first(); i < imglist->count(); i++) {
     imglist->item(i)->setText(
@@ -437,10 +451,7 @@ void MainWindow::on_decreaseframe() {}
 void MainWindow::on_delbefore() {
   auto len = imglist->currentRow();
   for (auto i = 0; i < len; i++) {
-    auto del = imglist->item(0);
-    imglist->removeItemWidget(del);
-    delete del;
-    // gif.removeFrame(0);
+    gif.removeFrame(0);
   }
   len = imglist->count();
   for (auto i = 0; i < len; i++) {
@@ -453,10 +464,7 @@ void MainWindow::on_delafter() {
   auto len = imglist->count() - imglist->currentRow() - 1;
   auto pos = imglist->currentRow() + 1;
   for (auto i = 0; i < len; i++) {
-    auto del = imglist->item(pos);
-    imglist->removeItemWidget(del);
-    delete del;
-    // gif.removeFrame(pos);
+    gif.removeFrame(pos);
   }
 }
 
@@ -503,36 +511,22 @@ void MainWindow::on_save() {
 }
 
 void MainWindow::on_reverse() {
-  // gif.reverse();
+  gif.reverse();
   refreshImglist();
 }
 
 void MainWindow::on_moveleft() {
   auto pos = imglist->currentRow();
-  //  if (gif.moveleft(pos)) {
-  //    auto p = imglist->item(pos);
-  //    p->setIcon(QIcon(gif.frameimg(pos)));
-  //    p->setText(QString("%1   %2 ms").arg(pos).arg(gif.frameDelay(pos)));
-  //    pos--;
-  //    p = imglist->item(pos);
-  //    p->setIcon(QIcon(gif.frameimg(pos)));
-  //    p->setText(QString("%1   %2 ms").arg(pos).arg(gif.frameDelay(pos)));
-  //    imglist->setCurrentRow(pos);
-  //  }
+  if (gif.moveleft(pos)) {
+    imglist->setCurrentRow(pos - 1);
+  }
 }
 
 void MainWindow::on_moveright() {
   auto pos = imglist->currentRow();
-  //  if (gif.moveright(pos)) {
-  //    auto p = imglist->item(pos);
-  //    p->setIcon(QIcon(gif.frameimg(pos)));
-  //    p->setText(QString("%1   %2 ms").arg(pos).arg(gif.frameDelay(pos)));
-  //    pos++;
-  //    p = imglist->item(pos);
-  //    p->setIcon(QIcon(gif.frameimg(pos)));
-  //    p->setText(QString("%1   %2 ms").arg(pos).arg(gif.frameDelay(pos)));
-  //    imglist->setCurrentRow(pos);
-  //  }
+  if (gif.moveright(pos)) {
+    imglist->setCurrentRow(pos + 1);
+  }
 }
 
 void MainWindow::on_createreverse() {}
@@ -540,22 +534,18 @@ void MainWindow::on_createreverse() {}
 void MainWindow::on_setdelay() {
   auto indices = imglist->selectionModel()->selectedRows();
   bool ok;
-  //  auto time10s =
-  //      DInputDialog::getInt(this, tr("DelayTime"), tr("Input10ms"),
-  //                           gif.defaultDelay() / 10, 1, INT_MAX, 1, &ok);
-  //  if (ok) {
-  //    auto time = time10s * 10;
-  //    if (indices.count()) {
-  //      for (auto i : indices) {
-  //        auto index = i.row();
-  //        gif.setFrameDelay(index, time);
-  //        imglist->item(index)->setText(
-  //            QString("%1   %2 ms").arg(index).arg(time));
-  //      }
-  //    } else {
-  //      gif.setAllFrameDelay(time);
-  //    }
-  //  }
+  auto time10s = DInputDialog::getInt(this, tr("DelayTime"), tr("Input10ms"), 2,
+                                      1, INT_MAX, 1, &ok);
+  if (ok) {
+    auto time = time10s * 10;
+    if (indices.count()) {
+      for (auto i : indices) {
+        gif.setFrameDelay(i.row(), time);
+      }
+    } else {
+      gif.setAllFrameDelay(time);
+    }
+  }
 }
 
 void MainWindow::on_scaledelay() {
@@ -563,21 +553,16 @@ void MainWindow::on_scaledelay() {
   bool ok;
   auto scale = DInputDialog::getInt(this, tr("ScaleDelayTime"),
                                     tr("InputPercent"), 100, 1, 100, 1, &ok);
-  //  if (ok) {
-  //    if (indices.count()) {
-  //      for (auto i : indices) {
-  //        auto index = i.row();
-  //        auto time = gif.frameDelay(index);
-  //        time = time * scale / 1000;
-  //        time *= 10;
-  //        gif.setFrameDelay(index, time);
-  //        imglist->item(index)->setText(
-  //            QString("%1   %2 ms").arg(index).arg(time));
-  //      }
-  //    } else {
-  //      gif.scaleAllFrameDelay(scale);
-  //    }
-  //  }
+  if (ok) {
+    for (auto i : indices) {
+      auto index = i.row();
+      auto time = gif.frameDelay(index);
+      time = time * scale / 1000;
+      time *= 10;
+      gif.setFrameDelay(index, time);
+      imglist->item(index)->setText(QString("%1   %2 ms").arg(index).arg(time));
+    }
+  }
 }
 
 void MainWindow::on_insertpic() {}
@@ -601,28 +586,28 @@ void MainWindow::on_cutpic() {}
 
 void MainWindow::on_fliph() {
   auto pos = imglist->currentRow();
-  // gif.flip(FlipDirection::Horizontal);
+  gif.flip(FlipDirection::Horizontal);
   refreshImglist();
   imglist->setCurrentRow(pos);
 }
 
 void MainWindow::on_flipv() {
   auto pos = imglist->currentRow();
-  // gif.flip(FlipDirection::Vertical);
+  gif.flip(FlipDirection::Vertical);
   refreshImglist();
   imglist->setCurrentRow(pos);
 }
 
 void MainWindow::on_clockwise() {
   auto pos = imglist->currentRow();
-  // gif.rotate();
+  gif.rotate();
   refreshImglist();
   imglist->setCurrentRow(pos);
 }
 
 void MainWindow::on_anticlockwise() {
   auto pos = imglist->currentRow();
-  // gif.rotate(false);
+  gif.rotate(false);
   refreshImglist();
   imglist->setCurrentRow(pos);
 }

@@ -6,13 +6,7 @@ bool GifHelper::load(QString filename) {
   auto res = m_gif.load(filename);
   if (!res)
     return false;
-
-  //缓存图片
-  auto len = m_gif.frameCount();
-  for (auto i = 0; i < len; i++) {
-    auto img = m_gif.frame(i);
-    m_preview.append(img);
-  }
+  generatePreview();
   return true;
 }
 
@@ -34,4 +28,64 @@ int GifHelper::frameCount() { return m_gif.frameCount(); }
 
 int GifHelper::frameDelay(int index) { return m_gif.frameDelay(index); }
 
+void GifHelper::setFrameDelay(int index, int delay) {
+  m_gif.setFrameDelay(index, delay);
+  emit frameDelaySet(index, delay);
+}
+
+void GifHelper::setAllFrameDelay(int delay) {
+  m_gif.setAllFrameDelay(delay);
+  auto len = m_gif.frameCount();
+  for (int i = 0; i < len; i++) {
+    emit frameDelaySet(i, delay);
+  }
+}
+
 QSize GifHelper::size() { return m_gif.size(); }
+
+void GifHelper::removeFrame(int index) {
+  m_gif.removeFrame(index);
+  m_preview.removeAt(index);
+  emit frameRemoved(index);
+}
+
+void GifHelper::reverse() {
+  m_gif.reverse();
+  generatePreview();
+  emit frameRefreshAll();
+}
+
+bool GifHelper::moveleft(int index) {
+  auto res = m_gif.moveleft(index);
+  if (res)
+    emit frameMoved(index, index - 1);
+  return res;
+}
+
+bool GifHelper::moveright(int index) {
+  auto res = m_gif.moveright(index);
+  if (res)
+    emit frameMoved(index, index + 1);
+  return res;
+}
+
+void GifHelper::flip(FlipDirection dir) {
+  m_gif.flip(dir);
+  generatePreview();
+  emit frameRefreshAll();
+}
+
+void GifHelper::rotate(bool clockwise) {
+  m_gif.rotate(clockwise);
+  generatePreview();
+  emit frameRefreshAll();
+}
+
+void GifHelper::generatePreview() {
+  m_preview.clear();
+  auto len = m_gif.frameCount();
+  for (auto i = 0; i < len; i++) {
+    auto img = m_gif.frame(i);
+    m_preview.append(img);
+  }
+}
