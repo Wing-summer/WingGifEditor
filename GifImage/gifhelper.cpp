@@ -81,6 +81,30 @@ void GifHelper::rotate(bool clockwise) {
   emit frameRefreshAll();
 }
 
+bool GifHelper::applymodel(QString filename, QVector<int> indices) {
+  auto res = m_gif.applymodel(filename, indices);
+  if (res) {
+    for (auto i : indices) {
+      m_preview[i] = m_gif.frame(i);
+      emit frameRefresh(i);
+    }
+  }
+  return res;
+}
+
+int GifHelper::merge(QString &gif, int index) {
+  auto oldframecout = frameCount();
+  auto res = m_gif.merge(gif);
+  if (res > 0) {
+    emit frameMerge(index, res);
+  }
+  auto len = index + res;
+  for (auto i = len - 1; i >= oldframecout; i--) {
+    m_preview.insert(index, m_gif.frame(i));
+  }
+  return res;
+}
+
 void GifHelper::generatePreview() {
   m_preview.clear();
   auto len = m_gif.frameCount();

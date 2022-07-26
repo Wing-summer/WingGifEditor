@@ -7,27 +7,27 @@ TEMPLATE = app
 
 SOURCES += \
         main.cpp \
-    mainwindow.cpp \
-    sponsordialog.cpp \
-    newdialog.cpp \
-    exportdialog.cpp \
-    createreversedialog.cpp \
-    scalegifdialog.cpp \
-    reduceframedialog.cpp \
-    playgifmanager.cpp \
+    Dialog/mainwindow.cpp \
+    Dialog/sponsordialog.cpp \
+    Dialog/newdialog.cpp \
+    Dialog/exportdialog.cpp \
+    Dialog/createreversedialog.cpp \
+    Dialog/scalegifdialog.cpp \
+    Dialog/reduceframedialog.cpp \
+    Class/playgifmanager.cpp \
     GifImage/gifimage.cpp \
     GifImage/gifhelper.cpp
 
 RESOURCES += resources.qrc
 
-HEADERS += mainwindow.h \
-    sponsordialog.h \
-    newdialog.h \
-    exportdialog.h \
-    createreversedialog.h \
-    scalegifdialog.h \
-    reduceframedialog.h \
-    playgifmanager.h \
+HEADERS += Dialog/mainwindow.h \
+    Dialog/sponsordialog.h \
+    Dialog/newdialog.h \
+    Dialog/exportdialog.h \
+    Dialog/createreversedialog.h \
+    Dialog/scalegifdialog.h \
+    Dialog/reduceframedialog.h \
+    Class/playgifmanager.h \
     GifImage/gifimage.h \
     GifImage/gifhelper.h
 

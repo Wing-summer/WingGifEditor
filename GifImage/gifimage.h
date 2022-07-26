@@ -101,6 +101,8 @@ public:
   void setAllFrameDelay(int delay);
   QSize size();
 
+  QByteArray framedata(int index);
+
   void removeFrame(int index);
   bool moveleft(int index);
   bool moveright(int index);
@@ -108,6 +110,8 @@ public:
   void reverse();
   void flip(FlipDirection dir);
   void rotate(bool clockwise = true);
+  bool applymodel(QString filename, QVector<int> indices);
+  int merge(QString gif, int index = -1);
 
 private:
   void waitThreadPool();

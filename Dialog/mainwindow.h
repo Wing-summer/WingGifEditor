@@ -1,9 +1,9 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
+#include "Class/playgifmanager.h"
 #include "GifImage/gifhelper.h"
 #include "GifImage/gifimage.h"
-#include "playgifmanager.h"
 #include <DGraphicsView>
 #include <DLabel>
 #include <DMainWindow>
@@ -112,6 +112,9 @@ private:
   QGraphicsPixmapItem *picview;
 
   PlayGifManager *player;
+
+protected:
+  void closeEvent(QCloseEvent *event) override;
 };
 
 #endif // MAINWINDOW_H

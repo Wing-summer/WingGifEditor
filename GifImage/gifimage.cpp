@@ -37,7 +37,8 @@ bool GifImage::load(QString filename) {
 }
 
 bool GifImage::save(QString filename) {
-  std::vector<Magick::Image> frames(m_frames.begin(), m_frames.end());
+  std::vector<Magick::Image> frames;
+  Magick::deconstructImages(&frames, m_frames.begin(), m_frames.end());
   try {
     GifSaver saver(frames.begin(), frames.end(), filename.toStdString());
     StartWaitFinish(saver);
@@ -74,6 +75,11 @@ void GifImage::setAllFrameDelay(int delay) {
 }
 
 QSize GifImage::size() { return m_size; }
+
+QByteArray GifImage::framedata(int index) {
+  return QByteArray(reinterpret_cast<char *>(&m_frames[ulong(index)]),
+                    sizeof(Magick::Image));
+}
 
 void GifImage::removeFrame(int index) {
   if (index < 0 || index >= int(m_frames.size()))
@@ -118,6 +124,28 @@ void GifImage::rotate(bool clockwise) {
   for (auto &item : m_frames) {
     item.rotate(clockwise ? -90 : 90);
   }
+}
+
+bool GifImage::applymodel(QString filename, QVector<int> indices) {
+  Magick::Image img(filename.toStdString());
+  auto s = img.size();
+  if (s.width() != uint(m_size.width()) || s.height() != uint(m_size.height()))
+    return false;
+  for (auto i : indices)
+    m_frames[ulong(i)].composite(img, 0, 0, Magick::OverCompositeOp);
+  return true;
+}
+
+int GifImage::merge(QString gif, int index) {
+  if (index >= frameCount())
+    return -1;
+  std::vector<Magick::Image> imgs;
+  Magick::readImages(&imgs, gif.toStdString());
+  std::vector<Magick::Image> cimgs;
+  Magick::coalesceImages(&cimgs, imgs.begin(), imgs.end());
+  m_frames.insert(index > 0 ? (m_frames.begin() + index) : m_frames.end(),
+                  cimgs.begin(), cimgs.end());
+  return int(cimgs.size());
 }
 
 void GifImage::waitThreadPool() {

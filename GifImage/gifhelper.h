@@ -31,12 +31,16 @@ public:
 
   void flip(FlipDirection dir);
   void rotate(bool clockwise = true);
+  bool applymodel(QString filename, QVector<int> indices);
+  int merge(QString &gif, int index = -1);
 
 signals:
   void frameRemoved(int index);
   void frameRefreshAll();
   void frameMoved(int from, int to);
   void frameDelaySet(int index, int time);
+  void frameRefresh(int index);
+  void frameMerge(int start, int count);
 
 private:
   GifImage m_gif;

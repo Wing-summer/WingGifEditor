@@ -1,14 +1,18 @@
-#include "mainwindow.h"
-#include "sponsordialog.h"
+#include "Dialog/mainwindow.h"
+#include "Dialog/sponsordialog.h"
 #include <DInputDialog>
 #include <DMenu>
 #include <DMessageManager>
 #include <DTitlebar>
 #include <DToolBar>
 #include <DToolButton>
+#include <QClipboard>
+#include <QCloseEvent>
+#include <QDesktopServices>
 #include <QFileDialog>
 #include <QListWidgetItem>
 #include <QMessageBox>
+#include <QMimeData>
 #include <QShortcut>
 #include <QVBoxLayout>
 #include <QWidget>
@@ -44,7 +48,7 @@ MainWindow::MainWindow(DMainWindow *parent) : DMainWindow(parent) {
           [=] { picview->setPixmap(gif.frameimg(imglist->currentRow())); });
 
   auto title = titlebar();
-  title->setIcon(QIcon()); // TODO
+  title->setIcon(ICONRES("icon"));
   title->setTitle(tr("WingGifEditor"));
 
   auto menu = new DMenu(this);
@@ -338,6 +342,19 @@ MainWindow::MainWindow(DMainWindow *parent) : DMainWindow(parent) {
   connect(pgif, &GifHelper::frameDelaySet, this, [=](int index, int delay) {
     imglist->item(index)->setText(QString("%1   %2 ms").arg(index).arg(delay));
   });
+  connect(pgif, &GifHelper::frameRefresh, this, [=](int index) {
+    imglist->item(index)->setIcon(gif.thumbnail(index));
+    imglist->itemSelectionChanged();
+  });
+  connect(pgif, &GifHelper::frameMerge, this, [=](int start, int count) {
+    auto end = start + count - 1;
+    for (int i = end; i >= start; i--) {
+      imglist->insertItem(
+          start, new QListWidgetItem(
+                     gif.thumbnail(i),
+                     QString("%1   %2 ms").arg(i).arg(gif.frameDelay(i))));
+    }
+  });
 
   player = new PlayGifManager(this);
   connect(player, &PlayGifManager::tick, this,
@@ -346,7 +363,8 @@ MainWindow::MainWindow(DMainWindow *parent) : DMainWindow(parent) {
 
 void MainWindow::refreshImglist() {
   imglist->clear();
-  for (int i = 0; i < gif.frameCount(); i++) {
+  auto len = gif.frameCount();
+  for (int i = 0; i < len; i++) {
     new QListWidgetItem(gif.thumbnail(i),
                         QString("%1   %2 ms").arg(i).arg(gif.frameDelay(i)),
                         imglist);
@@ -490,7 +508,11 @@ void MainWindow::on_undo() {}
 
 void MainWindow::on_redo() {}
 
-void MainWindow::on_copy() {}
+void MainWindow::on_copy() {
+  auto clipboard = qApp->clipboard();
+  QMimeData data;
+  clipboard->setMimeData(&data);
+}
 
 void MainWindow::on_cut() {}
 
@@ -560,7 +582,6 @@ void MainWindow::on_scaledelay() {
       time = time * scale / 1000;
       time *= 10;
       gif.setFrameDelay(index, time);
-      imglist->item(index)->setText(QString("%1   %2 ms").arg(index).arg(time));
     }
   }
 }
@@ -574,10 +595,15 @@ void MainWindow::on_merge() {
   if (filenames.isEmpty())
     return;
   lastusedpath = QFileInfo(filenames.first()).absoluteDir().absolutePath();
+  auto pos = imglist->currentRow();
   for (auto item : filenames) {
-    // gif.merge(item);
+    auto c = gif.merge(item, pos);
+    if (c > 0) {
+      pos += c;
+    }
   }
   refreshImglist();
+  imglist->setCurrentRow(pos);
 }
 
 void MainWindow::on_scalepic() {}
@@ -637,15 +663,14 @@ void MainWindow::on_applypic() {
                                                lastusedpath, "png (*.png)");
   if (filename.isEmpty())
     return;
+
   lastusedpath = QFileInfo(filename).absoluteDir().absolutePath();
-  QImage img;
-  if (img.load(filename) && img.size() == gif.size()) {
-    for (auto i : indices) {
-      auto index = i.row();
-      // gif.applymodel(img, index);
-      imglist->item(index)->setIcon(gif.thumbnail(index));
-    }
-  } else {
+
+  QVector<int> rows;
+  for (auto i : indices)
+    rows.append(i.row());
+
+  if (!gif.applymodel(filename, rows)) {
     DMessageManager::instance()->sendMessage(this, ICONRES("model"),
                                              tr("InvalidModel"));
   }
@@ -658,4 +683,9 @@ void MainWindow::on_sponsor() {
   d.exec();
 }
 
-void MainWindow::on_wiki() {}
+void MainWindow::on_wiki() { QDesktopServices::openUrl(QUrl("")); }
+
+void MainWindow::closeEvent(QCloseEvent *event) {
+  player->stop();
+  event->accept();
+}
