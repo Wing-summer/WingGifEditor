@@ -148,6 +148,32 @@ int GifImage::merge(QString gif, int index) {
   return int(cimgs.size());
 }
 
+void GifImage::reduceFrame(int from, int to, int step) {
+  auto len = frameCount();
+  if (from < 0 || from >= to || to >= len || step >= len - 1)
+    return;
+
+  for (auto i = from + 1; i <= to; i += step) {
+    removeFrame(i);
+    to--;
+  }
+
+  auto q = uint(step) + 1;
+  for (auto &item : m_frames) {
+    item.animationDelay(item.animationDelay() * (q + 1) / q);
+  }
+}
+
+void GifImage::createReverse(int from, int to) {
+  auto len = frameCount();
+  if (from < 0 || from >= to || to >= len)
+    return;
+  std::vector<Magick::Image> tmp(ulong(to - from + 1));
+  std::reverse_copy(m_frames.begin() + from, m_frames.begin() + to,
+                    tmp.begin());
+  m_frames.insert(m_frames.end(), tmp.begin(), tmp.end());
+}
+
 void GifImage::waitThreadPool() {
   while (!QThreadPool::globalInstance()->waitForDone(100 / 6))
     QApplication::processEvents();

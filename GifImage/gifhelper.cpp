@@ -105,6 +105,21 @@ int GifHelper::merge(QString &gif, int index) {
   return res;
 }
 
+void GifHelper::reduceFrame(int from, int to, int step) {
+  m_gif.reduceFrame(from, to, step); //输出的删除索引为倒序的
+  generatePreview();
+  emit frameRefreshAll();
+}
+
+void GifHelper::createReverse(int from, int to) {
+  m_gif.createReverse(from, to);
+  auto len = to - from + 1;
+  for (auto i = from; i <= to; i++) {
+    m_preview.insert(to + 1, m_gif.frame(i));
+  }
+  emit frameMerge(to + 1, len);
+}
+
 void GifHelper::generatePreview() {
   m_preview.clear();
   auto len = m_gif.frameCount();

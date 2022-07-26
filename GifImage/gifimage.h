@@ -113,6 +113,9 @@ public:
   bool applymodel(QString filename, QVector<int> indices);
   int merge(QString gif, int index = -1);
 
+  void reduceFrame(int from, int to, int step);
+  void createReverse(int from, int to);
+
 private:
   void waitThreadPool();
   QImage Image2QImage(const Magick::Image &img);

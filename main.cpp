@@ -1,4 +1,4 @@
-#include "mainwindow.h"
+#include "Dialog/mainwindow.h"
 #include <DApplication>
 #include <DApplicationSettings>
 #include <DTitlebar>

@@ -9,9 +9,16 @@
 
 DWIDGET_USE_NAMESPACE
 
+struct ReduceResult {
+  int start = -1;
+  int end = -1;
+  int stepcount = 1;
+};
+
 class ReduceFrameDialog : public DDialog {
 public:
-  ReduceFrameDialog(DMainWindow *parent = nullptr);
+  ReduceFrameDialog(int max, DMainWindow *parent = nullptr);
+  ReduceResult getResult();
 
 private:
   void on_accept();
@@ -21,8 +28,10 @@ protected:
   void closeEvent(QCloseEvent *event) override;
 
 private:
-  DSpinBox *sbinterval;
+  DSpinBox *sbcount;
   DSpinBox *sbfrom, *sbto;
+
+  ReduceResult res;
 };
 
 #endif // REDUCEFRAMEDIALOG_H

@@ -1,4 +1,6 @@
 #include "Dialog/mainwindow.h"
+#include "Dialog/createreversedialog.h"
+#include "Dialog/reduceframedialog.h"
 #include "Dialog/sponsordialog.h"
 #include <DInputDialog>
 #include <DMenu>
@@ -396,11 +398,8 @@ void MainWindow::on_del() {
     indices.append(item.row());
   }
   std::sort(indices.begin(), indices.end());
-  int offset = 0;
-  for (auto item : indices) {
-    auto off = item - offset;
-    gif.removeFrame(off);
-    offset++;
+  for (auto p = indices.rbegin(); p != indices.rend(); p++) {
+    gif.removeFrame(*p);
   }
   for (int i = indices.first(); i < imglist->count(); i++) {
     imglist->item(i)->setText(
@@ -464,7 +463,13 @@ void MainWindow::on_next() {
 
 void MainWindow::on_endframe() { imglist->setCurrentRow(imglist->count() - 1); }
 
-void MainWindow::on_decreaseframe() {}
+void MainWindow::on_decreaseframe() {
+  ReduceFrameDialog d(imglist->count(), this);
+  if (d.exec()) {
+    auto res = d.getResult();
+    gif.reduceFrame(res.start, res.end, res.stepcount);
+  }
+}
 
 void MainWindow::on_delbefore() {
   auto len = imglist->currentRow();
@@ -551,7 +556,13 @@ void MainWindow::on_moveright() {
   }
 }
 
-void MainWindow::on_createreverse() {}
+void MainWindow::on_createreverse() {
+  CreateReverseDialog d(imglist->count(), this);
+  if (d.exec()) {
+    auto res = d.getResult();
+    gif.createReverse(res.start, res.end);
+  }
+}
 
 void MainWindow::on_setdelay() {
   auto indices = imglist->selectionModel()->selectedRows();
