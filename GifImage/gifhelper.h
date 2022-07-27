@@ -16,6 +16,7 @@ public:
   QIcon thumbnail(int index);
   QPixmap frameimg(int index);
   QImage img(int index);
+  QByteArray framedata(int index);
 
   int frameCount();
   int frameDelay(int index);
@@ -37,6 +38,11 @@ public:
   void reduceFrame(int from, int to, int step);
   void createReverse(int from, int to);
 
+  bool exportImages(QString folder, QString ext);
+
+  bool addFrameData(int index, QByteArray &buffer);
+  void scale(int w, int h);
+
 signals:
   void frameRemoved(int index);
   void frameRefreshAll();
@@ -44,6 +50,8 @@ signals:
   void frameDelaySet(int index, int time);
   void frameRefresh(int index);
   void frameMerge(int start, int count);
+  void frameInsert(int index);
+  void frameScale();
 
 private:
   GifImage m_gif;

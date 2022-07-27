@@ -1,6 +1,9 @@
 #include "Dialog/mainwindow.h"
+#include "Dialog/aboutsoftwaredialog.h"
 #include "Dialog/createreversedialog.h"
+#include "Dialog/exportdialog.h"
 #include "Dialog/reduceframedialog.h"
+#include "Dialog/scalegifdialog.h"
 #include "Dialog/sponsordialog.h"
 #include <DInputDialog>
 #include <DMenu>
@@ -14,7 +17,6 @@
 #include <QFileDialog>
 #include <QListWidgetItem>
 #include <QMessageBox>
-#include <QMimeData>
 #include <QShortcut>
 #include <QVBoxLayout>
 #include <QWidget>
@@ -334,7 +336,9 @@ MainWindow::MainWindow(DMainWindow *parent) : DMainWindow(parent) {
     delete item;
   });
   connect(pgif, &GifHelper::frameMoved, this, [=](int from, int to) {
-    for (auto i = from; i <= to; i++) {
+    auto max = qMax(from, to);
+    auto min = qMin(from, to);
+    for (auto i = min; i <= max; i++) {
       auto p = imglist->item(i);
       p->setIcon(gif.thumbnail(i));
       p->setText(QString("%1   %2 ms").arg(i).arg(gif.frameDelay(i)));
@@ -357,6 +361,21 @@ MainWindow::MainWindow(DMainWindow *parent) : DMainWindow(parent) {
                      QString("%1   %2 ms").arg(i).arg(gif.frameDelay(i))));
     }
   });
+  connect(pgif, &GifHelper::frameInsert, this, [=](int index) {
+    imglist->insertItem(
+        index,
+        new QListWidgetItem(
+            gif.thumbnail(index),
+            QString("%1   %2 ms").arg(index).arg(gif.frameDelay(index))));
+  });
+  connect(pgif, &GifHelper::frameScale, this, [=] {
+    auto len = imglist->count();
+    for (auto i = 0; i < len; len++) {
+      imglist->item(i)->setIcon(gif.thumbnail(i));
+    }
+  });
+
+  clip = new ClipBoardHelper(pgif, this);
 
   player = new PlayGifManager(this);
   connect(player, &PlayGifManager::tick, this,
@@ -364,12 +383,22 @@ MainWindow::MainWindow(DMainWindow *parent) : DMainWindow(parent) {
 }
 
 void MainWindow::refreshImglist() {
+  auto pos = imglist->currentRow();
   imglist->clear();
   auto len = gif.frameCount();
   for (int i = 0; i < len; i++) {
     new QListWidgetItem(gif.thumbnail(i),
                         QString("%1   %2 ms").arg(i).arg(gif.frameDelay(i)),
                         imglist);
+  }
+  imglist->setCurrentRow(pos);
+}
+
+void MainWindow::refreshListLabel(int start) {
+  auto len = gif.frameCount();
+  for (int i = start; i < len; i++) {
+    imglist->item(i)->setText(
+        QString("%1   %2 ms").arg(i).arg(gif.frameDelay(i)));
   }
 }
 
@@ -397,14 +426,11 @@ void MainWindow::on_del() {
   for (auto item : imglist->selectionModel()->selectedIndexes()) {
     indices.append(item.row());
   }
-  std::sort(indices.begin(), indices.end());
-  for (auto p = indices.rbegin(); p != indices.rend(); p++) {
-    gif.removeFrame(*p);
+  std::sort(indices.begin(), indices.end(), std::greater<int>());
+  for (auto i : indices) {
+    gif.removeFrame(i);
   }
-  for (int i = indices.first(); i < imglist->count(); i++) {
-    imglist->item(i)->setText(
-        QString("%1   %2 ms").arg(i).arg(gif.frameDelay(i)));
-  }
+  refreshListLabel(indices.last());
 }
 
 void MainWindow::on_selall() { imglist->selectAll(); }
@@ -476,11 +502,7 @@ void MainWindow::on_delbefore() {
   for (auto i = 0; i < len; i++) {
     gif.removeFrame(0);
   }
-  len = imglist->count();
-  for (auto i = 0; i < len; i++) {
-    imglist->item(i)->setText(
-        QString("%1   %2 ms").arg(i).arg(gif.frameDelay(i)));
-  }
+  refreshListLabel();
 }
 
 void MainWindow::on_delafter() {
@@ -505,7 +527,35 @@ void MainWindow::on_saveas() {
   }
 }
 
-void MainWindow::on_export() {}
+void MainWindow::on_export() {
+  ExportDialog d;
+  if (d.exec()) {
+    auto res = d.getResult();
+    QString ext;
+    switch (res.type) {
+    case ExportImageType::PNG: {
+      ext = "png";
+      break;
+    }
+    case ExportImageType::JPG: {
+      ext = "jpg";
+      break;
+    }
+    case ExportImageType::TIFF: {
+      ext = "tiff";
+      break;
+    }
+    case ExportImageType::WEBP: {
+      ext = "webp";
+      break;
+    }
+    }
+    if (gif.exportImages(res.path, ext)) {
+      DMessageManager::instance()->sendMessage(this, ICONRES("saveas"),
+                                               tr("ExportSuccess"));
+    }
+  }
+}
 
 void MainWindow::on_exit() { close(); }
 
@@ -514,14 +564,36 @@ void MainWindow::on_undo() {}
 void MainWindow::on_redo() {}
 
 void MainWindow::on_copy() {
-  auto clipboard = qApp->clipboard();
-  QMimeData data;
-  clipboard->setMimeData(&data);
+  auto sels = imglist->selectionModel()->selectedRows();
+  QList<int> indices;
+  for (auto &i : sels) {
+    indices.append(i.row());
+  }
+  clip->setImageFrames(indices);
 }
 
-void MainWindow::on_cut() {}
+void MainWindow::on_cut() {
+  auto sels = imglist->selectionModel()->selectedRows();
+  QList<int> indices;
+  for (auto &i : sels) {
+    indices.append(i.row());
+  }
+  clip->setImageFrames(indices); //此时 indeices 被整理为合适的顺序
+  for (auto item : indices) {
+    gif.removeFrame(item);
+  }
+  refreshListLabel(indices.last());
+}
 
-void MainWindow::on_paste() {}
+void MainWindow::on_paste() {
+  auto pos = imglist->currentRow();
+  auto c = clip->getImageFrames(pos);
+  if (c) {
+    auto npos = pos + c;
+    refreshListLabel(npos);
+    imglist->setCurrentRow(npos);
+  }
+}
 
 void MainWindow::on_save() {
   if (curfilename.isEmpty()) {
@@ -617,7 +689,12 @@ void MainWindow::on_merge() {
   imglist->setCurrentRow(pos);
 }
 
-void MainWindow::on_scalepic() {}
+void MainWindow::on_scalepic() {
+  ScaleGIFDialog d(gif.size(), this);
+  if (d.exec()) {
+    auto res = d.getResult();
+  }
+}
 
 void MainWindow::on_cutpic() {}
 
@@ -687,7 +764,10 @@ void MainWindow::on_applypic() {
   }
 }
 
-void MainWindow::on_about() {}
+void MainWindow::on_about() {
+  AboutSoftwareDialog d;
+  d.exec();
+}
 
 void MainWindow::on_sponsor() {
   SponsorDialog d;

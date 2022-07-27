@@ -116,13 +116,16 @@ public:
   void reduceFrame(int from, int to, int step);
   void createReverse(int from, int to);
 
+  bool exportImages(QString folder, QString ext);
+  bool addFrameData(int index, QByteArray &buffer);
+  void scale(int w, int h);
+
 private:
   void waitThreadPool();
   QImage Image2QImage(const Magick::Image &img);
 
 private:
   std::vector<Magick::Image> m_frames;
-  QSize m_size;
 };
 
 #endif // GIFIMAGE_H

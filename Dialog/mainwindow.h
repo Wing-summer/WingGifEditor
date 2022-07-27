@@ -1,6 +1,7 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
+#include "Class/clipboardhelper.h"
 #include "Class/playgifmanager.h"
 #include "GifImage/gifhelper.h"
 #include "GifImage/gifimage.h"
@@ -46,6 +47,7 @@ public:
 
 private:
   void refreshImglist();
+  void refreshListLabel(int start = 0);
 
 private:
   void on_new_frompics();
@@ -112,6 +114,7 @@ private:
   QGraphicsPixmapItem *picview;
 
   PlayGifManager *player;
+  ClipBoardHelper *clip;
 
 protected:
   void closeEvent(QCloseEvent *event) override;

@@ -16,7 +16,9 @@ SOURCES += \
     Dialog/reduceframedialog.cpp \
     Class/playgifmanager.cpp \
     GifImage/gifimage.cpp \
-    GifImage/gifhelper.cpp
+    GifImage/gifhelper.cpp \
+    Dialog/aboutsoftwaredialog.cpp \
+    Class/clipboardhelper.cpp
 
 RESOURCES += resources.qrc
 
@@ -29,7 +31,9 @@ HEADERS += Dialog/mainwindow.h \
     Dialog/reduceframedialog.h \
     Class/playgifmanager.h \
     GifImage/gifimage.h \
-    GifImage/gifhelper.h
+    GifImage/gifhelper.h \
+    Dialog/aboutsoftwaredialog.h \
+    Class/clipboardhelper.h
 
 QMAKE_CXXFLAGS += $(shell Magick++-config --cppflags --cxxflags)
 

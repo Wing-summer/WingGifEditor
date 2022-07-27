@@ -1,6 +1,7 @@
 #include "gifimage.h"
 #include <QApplication>
 #include <QDebug>
+#include <QFile>
 #include <QPixmap>
 #include <QThreadPool>
 
@@ -23,10 +24,6 @@ bool GifImage::load(QString filename) {
     m_frames.clear();
     GifCoalescer coalescer(&m_frames, frames.begin(), frames.end());
     StartWaitFinish(coalescer);
-
-    auto _s = m_frames[0].size();
-    m_size = QSize(int(_s.width()), int(_s.height()));
-
     return true;
   } catch (const Magick::Exception &ex) {
     qDebug() << ex.what();
@@ -74,9 +71,14 @@ void GifImage::setAllFrameDelay(int delay) {
   }
 }
 
-QSize GifImage::size() { return m_size; }
+QSize GifImage::size() {
+  auto _s = m_frames[0].size();
+  return QSize(int(_s.width()), int(_s.height()));
+}
 
 QByteArray GifImage::framedata(int index) {
+  if (index < 0 || index >= int(m_frames.size()))
+    return QByteArray();
   return QByteArray(reinterpret_cast<char *>(&m_frames[ulong(index)]),
                     sizeof(Magick::Image));
 }
@@ -129,7 +131,7 @@ void GifImage::rotate(bool clockwise) {
 bool GifImage::applymodel(QString filename, QVector<int> indices) {
   Magick::Image img(filename.toStdString());
   auto s = img.size();
-  if (s.width() != uint(m_size.width()) || s.height() != uint(m_size.height()))
+  if (s != m_frames[0].size())
     return false;
   for (auto i : indices)
     m_frames[ulong(i)].composite(img, 0, 0, Magick::OverCompositeOp);
@@ -172,6 +174,30 @@ void GifImage::createReverse(int from, int to) {
   std::reverse_copy(m_frames.begin() + from, m_frames.begin() + to,
                     tmp.begin());
   m_frames.insert(m_frames.end(), tmp.begin(), tmp.end());
+}
+
+bool GifImage::exportImages(QString folder, QString ext) {
+  int i = 0;
+  if (!QFile::exists(folder))
+    return false;
+  for (auto &img : m_frames) {
+    img.write(QString("%1/%2.%3").arg(folder).arg(i).arg(ext).toStdString());
+  }
+  return true;
+}
+
+bool GifImage::addFrameData(int index, QByteArray &buffer) {
+  auto p = reinterpret_cast<Magick::Image *>(buffer.data());
+  if (!p || !p->magick().length())
+    return false;
+  m_frames.insert(m_frames.begin() + index, *p);
+  return true;
+}
+
+void GifImage::scale(int w, int h) {
+  for (auto &img : m_frames) {
+    img.scale(Magick::Geometry(uint(w), uint(h)));
+  }
 }
 
 void GifImage::waitThreadPool() {

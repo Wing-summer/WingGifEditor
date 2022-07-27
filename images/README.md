@@ -1,18 +1,3 @@
-<h1 align="center"> WingSummer.WingGifEditor</h1>
-
-<p align="center">
-<img alt="PEHexExplorer" src="images/icon.png">
-<p align="center">羽云 GIF 编辑器</p>
-</p>
-
-<p align="center">
-<img alt="作者" src="authorband.svg">
-<img alt="开源协议" src="licenseband.svg">
-</p>
-
-- 开源不易，给个 Star 或者 [捐助](#捐助) 吧
-
-
 ## WingGifEditor
 
 &emsp;&emsp;本软件是基于 QT 编写的 GIF 编辑器，采用 C++ 进行开发，目的是让 Deepin 上具有简单易用的 GIF 编辑器。`Windows`上有一个十分强大都既是 GIF 录屏工具又是强大 GIF 编辑器`ScreenToGif`。但 Linux 上只有强大的 GIF 录屏工具，但没有简单好用满足基本编辑需求的 GIF 编辑器。于是乎，我给开发了一个简易的 GIF 编辑器，它具有基本的编辑功能，简单方便。
@@ -56,36 +41,8 @@ sudo apt install graphicsmagick-libmagick-dev-compat
 
 &emsp;&emsp;本软件仓库遵循`AGPL-3.0`协议，不得将本软件用于协议之外的用途。
 
-## 效果图
-
-<p align="center">
-<img alt="效果图" src="">
-<p align="center">羽云 GIF 编辑器</p>
-</p>
-
-## 捐助
-
-**<p align="center">您的每一份支持都将是本项目推进的强大动力，十分感谢您的支持</p>**
-
-<p align="center">
-
-<img alt="支付宝" src="支付宝捐助.jpg" height=50% width=50%>
-<p align="center">感谢支持</p>
-
-</p>
-
-<p align="center">
-<img alt="微信" src="微信捐助.png" height=50% width=50%>
-<p align="center">感谢支持</p>
-
-</p>
-
 ## 有关仓库
 
 - Gitea : https://code.gitlink.org.cn/wingsummer/WingGifEditor
 - Gitee : https://gitee.com/wingsummer/wing-gif-editor
 - Github : https://github.com/Wing-summer/WingGifEditor
-
-## WIKI
-
-## 应用商店

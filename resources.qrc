@@ -56,5 +56,6 @@
         <file>images/reverseplus.png</file>
         <file>images/blank.png</file>
         <file>images/model.png</file>
+        <file>images/README.md</file>
     </qresource>
 </RCC>

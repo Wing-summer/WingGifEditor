@@ -9,8 +9,8 @@ ReduceFrameDialog::ReduceFrameDialog(int max, DMainWindow *parent)
   max--; //转为索引
   sbcount = new DSpinBox(this);
   sbcount->setMinimum(1);
-  sbcount->setValue(1);
   sbcount->setMaximum(max - 1);
+  sbcount->setValue(1);
   addContent(sbcount);
   addSpacing(5);
   addContent(new DLabel(tr("ReduceStart"), this));
@@ -24,8 +24,9 @@ ReduceFrameDialog::ReduceFrameDialog(int max, DMainWindow *parent)
   addContent(new DLabel(tr("ReduceEnd"), this));
   sbto = new DSpinBox(this);
   sbto->setMinimum(1);
-  sbto->setValue(max);
   sbto->setMaximum(max);
+  sbto->setValue(max);
+
   addContent(sbto);
   addSpacing(20);
   auto dbbox = new DDialogButtonBox(

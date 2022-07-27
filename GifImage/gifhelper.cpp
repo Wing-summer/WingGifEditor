@@ -24,6 +24,8 @@ QImage GifHelper::img(int index) {
   return m_preview[index];
 }
 
+QByteArray GifHelper::framedata(int index) { return m_gif.framedata(index); }
+
 int GifHelper::frameCount() { return m_gif.frameCount(); }
 
 int GifHelper::frameDelay(int index) { return m_gif.frameDelay(index); }
@@ -57,15 +59,20 @@ void GifHelper::reverse() {
 
 bool GifHelper::moveleft(int index) {
   auto res = m_gif.moveleft(index);
-  if (res)
+
+  if (res) {
+    m_preview.move(index, index - 1);
     emit frameMoved(index, index - 1);
+  }
   return res;
 }
 
 bool GifHelper::moveright(int index) {
   auto res = m_gif.moveright(index);
-  if (res)
+  if (res) {
+    m_preview.move(index, index + 1);
     emit frameMoved(index, index + 1);
+  }
   return res;
 }
 
@@ -118,6 +125,23 @@ void GifHelper::createReverse(int from, int to) {
     m_preview.insert(to + 1, m_gif.frame(i));
   }
   emit frameMerge(to + 1, len);
+}
+
+bool GifHelper::exportImages(QString folder, QString ext) {
+  return m_gif.exportImages(folder, ext);
+}
+
+bool GifHelper::addFrameData(int index, QByteArray &buffer) {
+  auto res = m_gif.addFrameData(index, buffer);
+  if (res) {
+    m_preview.insert(index, m_gif.frame(index));
+  }
+  return res;
+}
+
+void GifHelper::scale(int w, int h) {
+  m_gif.scale(w, h);
+  emit frameScale();
 }
 
 void GifHelper::generatePreview() {
