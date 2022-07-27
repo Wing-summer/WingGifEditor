@@ -19,7 +19,10 @@ SOURCES += \
     GifImage/gifhelper.cpp \
     Dialog/aboutsoftwaredialog.cpp \
     Class/clipboardhelper.cpp \
-    Dialog/cropgifdialog.cpp
+    Dialog/cropgifdialog.cpp \
+    UndoCommand/moveframecommand.cpp \
+    UndoCommand/removeframecommand.cpp \
+    UndoCommand/insertframecommand.cpp
 
 RESOURCES += resources.qrc
 
@@ -35,8 +38,13 @@ HEADERS += Dialog/mainwindow.h \
     GifImage/gifhelper.h \
     Dialog/aboutsoftwaredialog.h \
     Class/clipboardhelper.h \
-    Dialog/cropgifdialog.h
+    Dialog/cropgifdialog.h \
+    UndoCommand/moveframecommand.h \
+    UndoCommand/removeframecommand.h \
+    UndoCommand/insertframecommand.h
 
 QMAKE_CXXFLAGS += $(shell Magick++-config --cppflags --cxxflags)
 
 LIBS += $(shell Magick++-config --ldflags --libs)
+
+DISTFILES +=

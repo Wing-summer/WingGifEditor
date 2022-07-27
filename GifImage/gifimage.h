@@ -119,6 +119,7 @@ public:
   bool exportImages(QString folder, QString ext);
   bool addFrameData(int index, QByteArray &buffer);
   void scale(int w, int h);
+  void crop(int x, int y, int w, int h);
 
 private:
   void waitThreadPool();

@@ -2,6 +2,7 @@
 #include "Dialog/aboutsoftwaredialog.h"
 #include "Dialog/createreversedialog.h"
 #include "Dialog/exportdialog.h"
+#include "Dialog/newdialog.h"
 #include "Dialog/reduceframedialog.h"
 #include "Dialog/scalegifdialog.h"
 #include "Dialog/sponsordialog.h"
@@ -195,13 +196,9 @@ MainWindow::MainWindow(DMainWindow *parent) : DMainWindow(parent) {
                         keymvr);
   AddMenuShortcutAction("reverse", tr("Reverse"), MainWindow::on_reverse, tm,
                         keyrev);
-  AddMenuIconAction("reverseplus", tr("CreateReverse"),
-                    MainWindow::on_createreverse, tm);
   tm->addSeparator();
   AddMenuShortcutAction("setdelay", tr("SetDelay"), MainWindow::on_setdelay, tm,
                         keysetdelay);
-  AddMenuShortcutAction("scaledelay", tr("ScaleDelay"),
-                        MainWindow::on_scaledelay, tm, keyscaledelay);
   AddMenuIconAction("pics", tr("InsertPics"), MainWindow::on_insertpic, tm);
   AddMenuIconAction("gifs", tr("MergeGIfs"), MainWindow::on_merge, tm);
   AddMenuShortcutAction("scale", tr("ScaleGif"), MainWindow::on_scalepic, tm,
@@ -213,9 +210,18 @@ MainWindow::MainWindow(DMainWindow *parent) : DMainWindow(parent) {
   AddMenuIconAction("flipv", tr("FlipV"), MainWindow::on_flipv, tm);
   AddMenuIconAction("rotatel", tr("RotateLeft"), MainWindow::on_clockwise, tm);
   AddMenuIconAction("rotater", tr("RotateR"), MainWindow::on_anticlockwise, tm);
-  tm->addSeparator();
+  menu->addMenu(tm);
+
+  tm = new DMenu(this);
+  tm->setTitle(tr("Effect"));
+  tm->setIcon(ICONRES("effect"));
   AddMenuIconAction("blank", tr("ExportBlank"), MainWindow::on_exportapply, tm);
   AddMenuIconAction("model", tr("ApplyModel"), MainWindow::on_applypic, tm);
+  tm->addSeparator();
+  AddMenuIconAction("reverseplus", tr("CreateReverse"),
+                    MainWindow::on_createreverse, tm);
+  AddMenuShortcutAction("scaledelay", tr("ScaleDelay"),
+                        MainWindow::on_scaledelay, tm, keyscaledelay);
   menu->addMenu(tm);
 
   tm = new DMenu(this);
@@ -286,9 +292,9 @@ MainWindow::MainWindow(DMainWindow *parent) : DMainWindow(parent) {
   AddToolBarTool("wiki", MainWindow::on_wiki, tr("Wiki"));
   toolbar->setObjectName("main");
   addToolBar(toolbar);
+  toolmain = toolbar;
 
   addToolBarBreak();
-
   toolbar = new DToolBar(this);
   AddToolBarTool("rmframe", MainWindow::on_decreaseframe, tr("ReduceFrame"));
   AddToolBarTool("rml", MainWindow::on_delbefore, tr("DeleteBefore"));
@@ -296,11 +302,8 @@ MainWindow::MainWindow(DMainWindow *parent) : DMainWindow(parent) {
   AddToolBarTool("mvf", MainWindow::on_moveleft, tr("MoveLeft"));
   AddToolBarTool("mvb", MainWindow::on_moveright, tr("MoveRight"));
   AddToolBarTool("reverse", MainWindow::on_reverse, tr("Reverse"));
-  AddToolBarTool("reverseplus", MainWindow::on_createreverse,
-                 tr("CreateReverse"));
   toolbar->addSeparator();
   AddToolBarTool("setdelay", MainWindow::on_setdelay, tr("SetDelay"));
-  AddToolBarTool("scaledelay", MainWindow::on_scaledelay, tr("ScaleDelay"));
   AddToolBarTool("pics", MainWindow::on_insertpic, tr("InsertPics"));
   AddToolBarTool("gifs", MainWindow::on_merge, tr("MergeGIfs"));
   AddToolBarTool("scale", MainWindow::on_scalepic, tr("ScaleGif"));
@@ -310,11 +313,9 @@ MainWindow::MainWindow(DMainWindow *parent) : DMainWindow(parent) {
   AddToolBarTool("flipv", MainWindow::on_flipv, tr("FlipV"));
   AddToolBarTool("rotatel", MainWindow::on_clockwise, tr("RotateLeft"));
   AddToolBarTool("rotater", MainWindow::on_anticlockwise, tr("RotateR"));
-  toolbar->addSeparator();
-  AddToolBarTool("blank", MainWindow::on_exportapply, tr("ExportBlank"));
-  AddToolBarTool("model", MainWindow::on_applypic, tr("ApplyModel"));
   toolbar->setObjectName("pic");
   addToolBar(toolbar);
+  tooledit = toolbar;
 
   toolbar = new DToolBar(this);
   AddToolBarTool("first", MainWindow::on_beginframe, tr("FirstFrame"));
@@ -325,6 +326,17 @@ MainWindow::MainWindow(DMainWindow *parent) : DMainWindow(parent) {
   AddToolBarTool("last", MainWindow::on_endframe, tr("EndFrame"));
   toolbar->setObjectName("play");
   addToolBar(toolbar);
+  toolplay = toolbar;
+
+  toolbar = new DToolBar(this);
+  AddToolBarTool("blank", MainWindow::on_exportapply, tr("ExportBlank"));
+  AddToolBarTool("model", MainWindow::on_applypic, tr("ApplyModel"));
+  AddToolBarTool("reverseplus", MainWindow::on_createreverse,
+                 tr("CreateReverse"));
+  AddToolBarTool("scaledelay", MainWindow::on_scaledelay, tr("ScaleDelay"));
+  toolbar->setObjectName("effect");
+  addToolBar(toolbar);
+  tooleffect = toolbar;
 
   status = new DStatusBar(this);
   setStatusBar(status);
@@ -368,7 +380,7 @@ MainWindow::MainWindow(DMainWindow *parent) : DMainWindow(parent) {
             gif.thumbnail(index),
             QString("%1   %2 ms").arg(index).arg(gif.frameDelay(index))));
   });
-  connect(pgif, &GifHelper::frameScale, this, [=] {
+  connect(pgif, &GifHelper::frameImageChanged, this, [=] {
     auto len = imglist->count();
     for (auto i = 0; i < len; i++) {
       imglist->item(i)->setIcon(gif.thumbnail(i));
@@ -409,9 +421,17 @@ void MainWindow::refreshEditor() {
   editor->fitInView(r, Qt::KeepAspectRatio);
 }
 
-void MainWindow::on_new_frompics() {}
+void MainWindow::on_new_frompics() {
+  NewDialog d(NewType::FromPics, this);
+  if (d.exec()) {
+  }
+}
 
-void MainWindow::on_new_fromgifs() {}
+void MainWindow::on_new_fromgifs() {
+  NewDialog d(NewType::FromGifs, this);
+  if (d.exec()) {
+  }
+}
 
 void MainWindow::on_open() {
   auto filename = QFileDialog::getOpenFileName(this, tr("ChooseFile"),

@@ -206,6 +206,13 @@ void GifImage::scale(int w, int h) {
   }
 }
 
+void GifImage::crop(int x, int y, int w, int h) {
+  auto newsize = Magick::Geometry(uint(w), uint(h), uint(x), uint(y));
+  for (auto &img : m_frames) {
+    img.crop(newsize);
+  }
+}
+
 void GifImage::waitThreadPool() {
   while (!QThreadPool::globalInstance()->waitForDone(100 / 6))
     QApplication::processEvents();

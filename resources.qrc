@@ -57,5 +57,8 @@
         <file>images/blank.png</file>
         <file>images/model.png</file>
         <file>images/README.md</file>
+        <file>images/effect.png</file>
+        <file>images/picture.png</file>
+        <file>images/onion.png</file>
     </qresource>
 </RCC>

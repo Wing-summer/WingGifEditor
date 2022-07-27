@@ -42,6 +42,7 @@ public:
 
   bool addFrameData(int index, QByteArray &buffer);
   void scale(int w, int h);
+  void crop(int x, int y, int w, int h);
 
 signals:
   void frameRemoved(int index);
@@ -51,7 +52,7 @@ signals:
   void frameRefresh(int index);
   void frameMerge(int start, int count);
   void frameInsert(int index);
-  void frameScale();
+  void frameImageChanged();
 
 private:
   GifImage m_gif;

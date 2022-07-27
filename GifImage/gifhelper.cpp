@@ -141,7 +141,13 @@ bool GifHelper::addFrameData(int index, QByteArray &buffer) {
 void GifHelper::scale(int w, int h) {
   m_gif.scale(w, h);
   generatePreview();
-  emit frameScale();
+  emit frameImageChanged();
+}
+
+void GifHelper::crop(int x, int y, int w, int h) {
+  m_gif.crop(x, y, w, h);
+  generatePreview();
+  emit frameImageChanged();
 }
 
 void GifHelper::generatePreview() {

@@ -11,6 +11,7 @@
 #include <DStatusBar>
 #include <QGraphicsPixmapItem>
 #include <QListWidget>
+#include <QUndoStack>
 
 DWIDGET_USE_NAMESPACE
 
@@ -103,6 +104,7 @@ private:
   void on_wiki();
 
 private:
+  QUndoStack undo;
   DGraphicsView *editor;
   QListWidget *imglist;
   DStatusBar *status;
@@ -116,6 +118,10 @@ private:
 
   PlayGifManager *player;
   ClipBoardHelper *clip;
+
+  DToolBar *toolmain, *toolplay, *tooledit, *tooleffect;
+  QList<QAction *> dismenu, distool;
+  QAction *undotool, *undomenu, *redotool, *redomenu;
 
 protected:
   void closeEvent(QCloseEvent *event) override;
