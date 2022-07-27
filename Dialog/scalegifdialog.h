@@ -31,7 +31,7 @@ private:
   DSpinBox *sbwidth;
   DSpinBox *sbheight;
   bool _lockscale = true;
-
+  int _oldwidth = 0, _oldheight = 0;
   ScaleResult res;
 };
 

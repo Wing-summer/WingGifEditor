@@ -141,11 +141,15 @@ bool GifImage::applymodel(QString filename, QVector<int> indices) {
 int GifImage::merge(QString gif, int index) {
   if (index >= frameCount())
     return -1;
+  Magick::Image t(gif.toStdString());
+  if (t.magick().compare("GIF") || m_frames[0].size() != t.size())
+    return -1;
+
   std::vector<Magick::Image> imgs;
   Magick::readImages(&imgs, gif.toStdString());
   std::vector<Magick::Image> cimgs;
   Magick::coalesceImages(&cimgs, imgs.begin(), imgs.end());
-  m_frames.insert(index > 0 ? (m_frames.begin() + index) : m_frames.end(),
+  m_frames.insert(index >= 0 ? (m_frames.begin() + index) : m_frames.end(),
                   cimgs.begin(), cimgs.end());
   return int(cimgs.size());
 }
@@ -195,8 +199,10 @@ bool GifImage::addFrameData(int index, QByteArray &buffer) {
 }
 
 void GifImage::scale(int w, int h) {
+  auto newsize = Magick::Geometry(uint(w), uint(h));
+  newsize.aspect(true);
   for (auto &img : m_frames) {
-    img.scale(Magick::Geometry(uint(w), uint(h)));
+    img.resize(newsize);
   }
 }
 

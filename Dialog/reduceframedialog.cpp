@@ -26,7 +26,6 @@ ReduceFrameDialog::ReduceFrameDialog(int max, DMainWindow *parent)
   sbto->setMinimum(1);
   sbto->setMaximum(max);
   sbto->setValue(max);
-
   addContent(sbto);
   addSpacing(20);
   auto dbbox = new DDialogButtonBox(

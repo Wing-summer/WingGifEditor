@@ -100,14 +100,13 @@ bool GifHelper::applymodel(QString filename, QVector<int> indices) {
 }
 
 int GifHelper::merge(QString &gif, int index) {
-  auto oldframecout = frameCount();
-  auto res = m_gif.merge(gif);
-  if (res > 0) {
-    emit frameMerge(index, res);
-  }
+  auto res = m_gif.merge(gif, index);
   auto len = index + res;
-  for (auto i = len - 1; i >= oldframecout; i--) {
-    m_preview.insert(index, m_gif.frame(i));
+  if (res > 0) {
+    for (auto i = len; i >= index; i--) {
+      m_preview.insert(index, m_gif.frame(i));
+    }
+    emit frameMerge(index, res);
   }
   return res;
 }
@@ -141,6 +140,7 @@ bool GifHelper::addFrameData(int index, QByteArray &buffer) {
 
 void GifHelper::scale(int w, int h) {
   m_gif.scale(w, h);
+  generatePreview();
   emit frameScale();
 }
 

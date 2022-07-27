@@ -18,7 +18,8 @@ SOURCES += \
     GifImage/gifimage.cpp \
     GifImage/gifhelper.cpp \
     Dialog/aboutsoftwaredialog.cpp \
-    Class/clipboardhelper.cpp
+    Class/clipboardhelper.cpp \
+    Dialog/cropgifdialog.cpp
 
 RESOURCES += resources.qrc
 
@@ -33,7 +34,8 @@ HEADERS += Dialog/mainwindow.h \
     GifImage/gifimage.h \
     GifImage/gifhelper.h \
     Dialog/aboutsoftwaredialog.h \
-    Class/clipboardhelper.h
+    Class/clipboardhelper.h \
+    Dialog/cropgifdialog.h
 
 QMAKE_CXXFLAGS += $(shell Magick++-config --cppflags --cxxflags)
 

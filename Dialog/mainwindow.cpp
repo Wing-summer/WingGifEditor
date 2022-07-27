@@ -370,9 +370,10 @@ MainWindow::MainWindow(DMainWindow *parent) : DMainWindow(parent) {
   });
   connect(pgif, &GifHelper::frameScale, this, [=] {
     auto len = imglist->count();
-    for (auto i = 0; i < len; len++) {
+    for (auto i = 0; i < len; i++) {
       imglist->item(i)->setIcon(gif.thumbnail(i));
     }
+    picview->setPixmap(gif.frameimg(imglist->currentRow()));
   });
 
   clip = new ClipBoardHelper(pgif, this);
@@ -402,6 +403,12 @@ void MainWindow::refreshListLabel(int start) {
   }
 }
 
+void MainWindow::refreshEditor() {
+  auto r = picview->boundingRect();
+  editor->setSceneRect(r);
+  editor->fitInView(r, Qt::KeepAspectRatio);
+}
+
 void MainWindow::on_new_frompics() {}
 
 void MainWindow::on_new_fromgifs() {}
@@ -419,6 +426,7 @@ void MainWindow::on_open() {
   curfilename = filename;
   refreshImglist();
   imglist->setCurrentRow(0);
+  refreshEditor();
 }
 
 void MainWindow::on_del() {
@@ -678,14 +686,14 @@ void MainWindow::on_merge() {
   if (filenames.isEmpty())
     return;
   lastusedpath = QFileInfo(filenames.first()).absoluteDir().absolutePath();
-  auto pos = imglist->currentRow();
+  auto pos = imglist->currentRow() + 1;
   for (auto item : filenames) {
     auto c = gif.merge(item, pos);
     if (c > 0) {
       pos += c;
     }
   }
-  refreshImglist();
+  refreshListLabel(pos);
   imglist->setCurrentRow(pos);
 }
 
@@ -693,7 +701,9 @@ void MainWindow::on_scalepic() {
   ScaleGIFDialog d(gif.size(), this);
   if (d.exec()) {
     auto res = d.getResult();
+    gif.scale(res.width, res.height);
   }
+  refreshEditor();
 }
 
 void MainWindow::on_cutpic() {}

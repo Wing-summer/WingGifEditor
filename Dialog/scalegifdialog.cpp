@@ -26,18 +26,38 @@ ScaleGIFDialog::ScaleGIFDialog(QSize size, DMainWindow *parent)
   addSpacing(10);
   addContent(new DLabel(tr("Width"), this));
   addSpacing(3);
+
+  _oldwidth = size.width();
+
   sbwidth = new DSpinBox(this);
   sbwidth->setMinimum(1);
   sbwidth->setMaximum(INT_MAX);
-  sbwidth->setValue(size.width());
+  sbwidth->setValue(_oldwidth);
+  sbwidth->setSuffix(" px");
+
+  connect(sbwidth, &DSpinBox::editingFinished, this, [=] {
+    if (_lockscale)
+      sbheight->setValue(sbwidth->value() * _oldheight / _oldwidth);
+  });
+
   addContent(sbwidth);
   addSpacing(5);
   addContent(new DLabel(tr("Height"), this));
   addSpacing(3);
+
+  _oldheight = size.height();
+
   sbheight = new DSpinBox(this);
   sbheight->setMinimum(1);
   sbheight->setMaximum(INT_MAX);
-  sbheight->setValue(size.height());
+  sbheight->setValue(_oldheight);
+  sbheight->setSuffix(" px");
+
+  connect(sbheight, &DSpinBox::editingFinished, this, [=] {
+    if (_lockscale)
+      sbwidth->setValue(sbheight->value() * _oldwidth / _oldheight);
+  });
+
   addContent(sbheight);
   addSpacing(20);
   auto dbbox = new DDialogButtonBox(

@@ -48,6 +48,7 @@ public:
 private:
   void refreshImglist();
   void refreshListLabel(int start = 0);
+  void refreshEditor();
 
 private:
   void on_new_frompics();
