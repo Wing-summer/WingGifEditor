@@ -22,7 +22,8 @@ SOURCES += \
     Dialog/cropgifdialog.cpp \
     UndoCommand/moveframecommand.cpp \
     UndoCommand/removeframecommand.cpp \
-    UndoCommand/insertframecommand.cpp
+    UndoCommand/insertframecommand.cpp \
+    Class/gifeditor.cpp
 
 RESOURCES += resources.qrc
 
@@ -41,7 +42,8 @@ HEADERS += Dialog/mainwindow.h \
     Dialog/cropgifdialog.h \
     UndoCommand/moveframecommand.h \
     UndoCommand/removeframecommand.h \
-    UndoCommand/insertframecommand.h
+    UndoCommand/insertframecommand.h \
+    Class/gifeditor.h
 
 QMAKE_CXXFLAGS += $(shell Magick++-config --cppflags --cxxflags)
 

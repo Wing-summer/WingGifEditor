@@ -18,6 +18,7 @@
 #include <QFileDialog>
 #include <QListWidgetItem>
 #include <QMessageBox>
+#include <QRubberBand>
 #include <QShortcut>
 #include <QVBoxLayout>
 #include <QWidget>
@@ -31,11 +32,8 @@ MainWindow::MainWindow(DMainWindow *parent) : DMainWindow(parent) {
   auto w = new QWidget(this);
   setCentralWidget(w);
   auto vlayout = new QVBoxLayout(w);
-  editor = new DGraphicsView(w);
+  editor = new GifEditor(QPixmap(":/images/icon.png"), w);
   editor->setInteractive(true);
-  picview = scene.addPixmap(QPixmap(":/images/icon.png"));
-  picview->setScale(1);
-  editor->setScene(&scene);
   vlayout->addWidget(editor);
   imglist = new QListWidget(w);
   imglist->setFlow(QListWidget::TopToBottom);
@@ -49,8 +47,9 @@ MainWindow::MainWindow(DMainWindow *parent) : DMainWindow(parent) {
   imglist->setResizeMode(QListView::Adjust);
   vlayout->addWidget(imglist);
 
-  connect(imglist, &QListWidget::itemSelectionChanged, this,
-          [=] { picview->setPixmap(gif.frameimg(imglist->currentRow())); });
+  connect(imglist, &QListWidget::itemSelectionChanged, this, [=] {
+    editor->setBackgroudPix(gif.frameimg(imglist->currentRow()));
+  });
 
   auto title = titlebar();
   title->setIcon(ICONRES("icon"));
@@ -385,7 +384,7 @@ MainWindow::MainWindow(DMainWindow *parent) : DMainWindow(parent) {
     for (auto i = 0; i < len; i++) {
       imglist->item(i)->setIcon(gif.thumbnail(i));
     }
-    picview->setPixmap(gif.frameimg(imglist->currentRow()));
+    editor->setBackgroudPix(gif.frameimg(imglist->currentRow()));
   });
 
   clip = new ClipBoardHelper(pgif, this);
@@ -415,12 +414,6 @@ void MainWindow::refreshListLabel(int start) {
   }
 }
 
-void MainWindow::refreshEditor() {
-  auto r = picview->boundingRect();
-  editor->setSceneRect(r);
-  editor->fitInView(r, Qt::KeepAspectRatio);
-}
-
 void MainWindow::on_new_frompics() {
   NewDialog d(NewType::FromPics, this);
   if (d.exec()) {
@@ -446,7 +439,6 @@ void MainWindow::on_open() {
   curfilename = filename;
   refreshImglist();
   imglist->setCurrentRow(0);
-  refreshEditor();
 }
 
 void MainWindow::on_del() {
@@ -723,7 +715,6 @@ void MainWindow::on_scalepic() {
     auto res = d.getResult();
     gif.scale(res.width, res.height);
   }
-  refreshEditor();
 }
 
 void MainWindow::on_cutpic() {}

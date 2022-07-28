@@ -2,6 +2,7 @@
 #define MAINWINDOW_H
 
 #include "Class/clipboardhelper.h"
+#include "Class/gifeditor.h"
 #include "Class/playgifmanager.h"
 #include "GifImage/gifhelper.h"
 #include "GifImage/gifimage.h"
@@ -49,7 +50,6 @@ public:
 private:
   void refreshImglist();
   void refreshListLabel(int start = 0);
-  void refreshEditor();
 
 private:
   void on_new_frompics();
@@ -105,16 +105,13 @@ private:
 
 private:
   QUndoStack undo;
-  DGraphicsView *editor;
+  GifEditor *editor;
   QListWidget *imglist;
   DStatusBar *status;
   GifHelper gif;
 
   QString lastusedpath;
   QString curfilename;
-  QGraphicsScene scene;
-
-  QGraphicsPixmapItem *picview;
 
   PlayGifManager *player;
   ClipBoardHelper *clip;

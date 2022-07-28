@@ -10,7 +10,7 @@ NewDialog::NewDialog(NewType type, DMainWindow *parent) : DDialog(parent) {
   btnbox = new DButtonBox(this);
   QList<DButtonBoxButton *> blist;
   auto b = new DButtonBoxButton(tr("Add"), this);
-  connect(b, &DButtonBoxButton::toggled, [=] {
+  connect(b, &DButtonBoxButton::clicked, [=] {
     QFileDialog d;
     if (type == NewType::FromPics) {
       d.setNameFilter(tr("Images (*.jpg *.tiff *.png)"));
@@ -34,7 +34,7 @@ NewDialog::NewDialog(NewType type, DMainWindow *parent) : DDialog(parent) {
   });
   blist.append(b);
   b = new DButtonBoxButton(tr("Remove"), this);
-  connect(b, &DButtonBoxButton::toggled, [=] {
+  connect(b, &DButtonBoxButton::clicked, [=] {
     auto indices = imgslist->selectionModel()->selectedRows();
     QList<int> ins;
     for (auto i : indices) {
@@ -50,18 +50,18 @@ NewDialog::NewDialog(NewType type, DMainWindow *parent) : DDialog(parent) {
   });
   blist.append(b);
   b = new DButtonBoxButton(tr("Clear"), this);
-  connect(b, &DButtonBoxButton::toggled, [=] {
+  connect(b, &DButtonBoxButton::clicked, [=] {
     imgslist->clear();
     filenames.clear();
   });
   blist.append(b);
   b = new DButtonBoxButton(tr("MoveUp"), this);
-  connect(b, &DButtonBoxButton::toggled, [=] {
+  connect(b, &DButtonBoxButton::clicked, [=] {
 
   });
   blist.append(b);
   b = new DButtonBoxButton(tr("MoveDown"), this);
-  connect(b, &DButtonBoxButton::toggled, [=] {
+  connect(b, &DButtonBoxButton::clicked, [=] {
 
   });
   blist.append(b);
