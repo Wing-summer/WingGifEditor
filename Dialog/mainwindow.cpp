@@ -717,7 +717,7 @@ void MainWindow::on_scalepic() {
   }
 }
 
-void MainWindow::on_cutpic() {}
+void MainWindow::on_cutpic() { editor->initCrop(); }
 
 void MainWindow::on_fliph() {
   auto pos = imglist->currentRow();
@@ -800,4 +800,9 @@ void MainWindow::on_wiki() { QDesktopServices::openUrl(QUrl("")); }
 void MainWindow::closeEvent(QCloseEvent *event) {
   player->stop();
   event->accept();
+}
+
+void MainWindow::resizeEvent(QResizeEvent *event) {
+  Q_UNUSED(event);
+  editor->refreshEditor();
 }

@@ -1,6 +1,7 @@
 #ifndef GIFEDITOR_H
 #define GIFEDITOR_H
 
+#include "gifeditorscene.h"
 #include <DGraphicsView>
 #include <QGraphicsPixmapItem>
 #include <QGraphicsScene>
@@ -17,6 +18,9 @@ public:
   void zoomIn();
   void zoomOut();
   void setZoom(int value);
+  void refreshEditor();
+
+  void initCrop();
 
 protected:
   void mousePressEvent(QMouseEvent *event) override;
@@ -25,12 +29,12 @@ protected:
   void wheelEvent(QWheelEvent *event) override;
 
 private:
-  void refreshEditor();
-
 private:
-  QGraphicsScene scene;
-  QGraphicsPixmapItem *picview;
+  GifEditorScene *scene;
   QRubberBand *rubber;
+
+  QPoint tmppos;
+  bool iscut = true;
 };
 
 #endif // GIFEDITOR_H

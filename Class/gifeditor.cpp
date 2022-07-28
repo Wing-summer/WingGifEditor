@@ -3,14 +3,14 @@
 #include <QWheelEvent>
 
 GifEditor::GifEditor(QPixmap pix, QWidget *parent) : DGraphicsView(parent) {
-  picview = scene.addPixmap(pix);
-  picview->setScale(1);
-  setScene(&scene);
-  rubber = new QRubberBand(QRubberBand::Rectangle, this);
+  scene = new GifEditorScene(pix, this);
+  setScene(scene);
+  rubber = new QRubberBand(QRubberBand::Line, this);
+  refreshEditor();
 }
 
 void GifEditor::setBackgroudPix(QPixmap pix) {
-  picview->setPixmap(pix);
+  scene->setFrameImg(pix);
   refreshEditor();
 }
 
@@ -23,11 +23,27 @@ void GifEditor::setZoom(int value) {
   scale(v, v);
 }
 
-void GifEditor::mousePressEvent(QMouseEvent *event) {}
+void GifEditor::mousePressEvent(QMouseEvent *event) {
+  if (event->button() == Qt::MouseButton::LeftButton &&
+      !scene->isCuttingMode()) {
+    tmppos = event->pos();
 
-void GifEditor::mouseMoveEvent(QMouseEvent *event) {}
+    rubber->setGeometry(QRect(tmppos, QSize()));
+    rubber->show();
+  }
+  DGraphicsView::mousePressEvent(event);
+}
 
-void GifEditor::mouseReleaseEvent(QMouseEvent *event) {}
+void GifEditor::mouseMoveEvent(QMouseEvent *event) {
+  rubber->setGeometry(QRect(tmppos, event->pos()).normalized());
+  DGraphicsView::mouseMoveEvent(event);
+}
+
+void GifEditor::mouseReleaseEvent(QMouseEvent *event) {
+  Q_UNUSED(event);
+  rubber->hide();
+  DGraphicsView::mouseReleaseEvent(event);
+}
 
 void GifEditor::wheelEvent(QWheelEvent *event) {
   auto mod = QGuiApplication::keyboardModifiers();
@@ -55,7 +71,9 @@ void GifEditor::wheelEvent(QWheelEvent *event) {
 }
 
 void GifEditor::refreshEditor() {
-  auto r = picview->boundingRect();
+  auto r = scene->contentBounding();
   setSceneRect(r);
   fitInView(r, Qt::KeepAspectRatio);
 }
+
+void GifEditor::initCrop() { scene->setCuttingMode(true); }
