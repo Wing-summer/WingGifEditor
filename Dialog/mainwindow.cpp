@@ -6,6 +6,10 @@
 #include "Dialog/reduceframedialog.h"
 #include "Dialog/scalegifdialog.h"
 #include "Dialog/sponsordialog.h"
+#include "UndoCommand/delayframecommand.h"
+#include "UndoCommand/flipframecommand.h"
+#include "UndoCommand/moveframecommand.h"
+#include "UndoCommand/rotateframecommand.h"
 #include <DInputDialog>
 #include <DMenu>
 #include <DMessageManager>
@@ -45,6 +49,8 @@ MainWindow::MainWindow(DMainWindow *parent) : DMainWindow(parent) {
   imglist->setFixedHeight(140);
   imglist->setLayoutDirection(Qt::LayoutDirection::LeftToRight);
   imglist->setResizeMode(QListView::Adjust);
+  imglist->setDragDropMode(QListWidget::DragDropMode::InternalMove);
+  imglist->setDefaultDropAction(Qt::DropAction::TargetMoveAction);
   vlayout->addWidget(imglist);
 
   connect(imglist, &QListWidget::itemSelectionChanged, this, [=] {
@@ -314,6 +320,7 @@ MainWindow::MainWindow(DMainWindow *parent) : DMainWindow(parent) {
   AddToolBarTool("rotater", MainWindow::on_anticlockwise, tr("RotateR"));
   toolbar->setObjectName("pic");
   addToolBar(toolbar);
+  toolbar->setEnabled(false);
   tooledit = toolbar;
 
   toolbar = new DToolBar(this);
@@ -325,6 +332,7 @@ MainWindow::MainWindow(DMainWindow *parent) : DMainWindow(parent) {
   AddToolBarTool("last", MainWindow::on_endframe, tr("EndFrame"));
   toolbar->setObjectName("play");
   addToolBar(toolbar);
+  toolbar->setEnabled(false);
   toolplay = toolbar;
 
   toolbar = new DToolBar(this);
@@ -335,6 +343,7 @@ MainWindow::MainWindow(DMainWindow *parent) : DMainWindow(parent) {
   AddToolBarTool("scaledelay", MainWindow::on_scaledelay, tr("ScaleDelay"));
   toolbar->setObjectName("effect");
   addToolBar(toolbar);
+  toolbar->setEnabled(false);
   tooleffect = toolbar;
 
   status = new DStatusBar(this);
@@ -366,18 +375,19 @@ MainWindow::MainWindow(DMainWindow *parent) : DMainWindow(parent) {
   connect(pgif, &GifHelper::frameMerge, this, [=](int start, int count) {
     auto end = start + count - 1;
     for (int i = end; i >= start; i--) {
-      imglist->insertItem(
-          start, new QListWidgetItem(
-                     gif.thumbnail(i),
-                     QString("%1   %2 ms").arg(i).arg(gif.frameDelay(i))));
+      auto p = new QListWidgetItem(
+          gif.thumbnail(i),
+          QString("%1   %2 ms").arg(i).arg(gif.frameDelay(i)));
+      p->setSizeHint(QSize(120, 120));
+      imglist->insertItem(start, p);
     }
   });
   connect(pgif, &GifHelper::frameInsert, this, [=](int index) {
-    imglist->insertItem(
-        index,
-        new QListWidgetItem(
-            gif.thumbnail(index),
-            QString("%1   %2 ms").arg(index).arg(gif.frameDelay(index))));
+    auto p = new QListWidgetItem(
+        gif.thumbnail(index),
+        QString("%1   %2 ms").arg(index).arg(gif.frameDelay(index)));
+    p->setSizeHint(QSize(120, 120));
+    imglist->insertItem(index, p);
   });
   connect(pgif, &GifHelper::frameImageChanged, this, [=] {
     auto len = imglist->count();
@@ -399,9 +409,10 @@ void MainWindow::refreshImglist() {
   imglist->clear();
   auto len = gif.frameCount();
   for (int i = 0; i < len; i++) {
-    new QListWidgetItem(gif.thumbnail(i),
-                        QString("%1   %2 ms").arg(i).arg(gif.frameDelay(i)),
-                        imglist);
+    auto p = new QListWidgetItem(
+        gif.thumbnail(i), QString("%1   %2 ms").arg(i).arg(gif.frameDelay(i)),
+        imglist);
+    p->setSizeHint(QSize(120, 120));
   }
   imglist->setCurrentRow(pos);
 }
@@ -412,6 +423,12 @@ void MainWindow::refreshListLabel(int start) {
     imglist->item(i)->setText(
         QString("%1   %2 ms").arg(i).arg(gif.frameDelay(i)));
   }
+}
+
+void MainWindow::setEditMode(bool b) {
+  tooledit->setEnabled(b);
+  toolplay->setEnabled(b);
+  tooleffect->setEnabled(b);
 }
 
 void MainWindow::on_new_frompics() {
@@ -433,12 +450,14 @@ void MainWindow::on_open() {
     return;
   lastusedpath = QFileInfo(filename).absoluteDir().absolutePath();
   if (!gif.load(filename)) {
-    DMessageManager::instance()->sendMessage(this, ICONRES("icon"), "");
+    DMessageManager::instance()->sendMessage(this, ICONRES("icon"),
+                                             "OpenError");
     return;
   }
   curfilename = filename;
-  refreshImglist();
   imglist->setCurrentRow(0);
+  editor->refreshEditor();
+  setEditMode(true);
 }
 
 void MainWindow::on_del() {
@@ -579,9 +598,9 @@ void MainWindow::on_export() {
 
 void MainWindow::on_exit() { close(); }
 
-void MainWindow::on_undo() {}
+void MainWindow::on_undo() { undo.undo(); }
 
-void MainWindow::on_redo() {}
+void MainWindow::on_redo() { undo.redo(); }
 
 void MainWindow::on_copy() {
   auto sels = imglist->selectionModel()->selectedRows();
@@ -636,16 +655,13 @@ void MainWindow::on_reverse() {
 
 void MainWindow::on_moveleft() {
   auto pos = imglist->currentRow();
-  if (gif.moveleft(pos)) {
-    imglist->setCurrentRow(pos - 1);
-  }
+  undo.push(new MoveFrameCommand(&gif, imglist, MoveFrameDirection::Left, pos));
 }
 
 void MainWindow::on_moveright() {
   auto pos = imglist->currentRow();
-  if (gif.moveright(pos)) {
-    imglist->setCurrentRow(pos + 1);
-  }
+  undo.push(
+      new MoveFrameCommand(&gif, imglist, MoveFrameDirection::Right, pos));
 }
 
 void MainWindow::on_createreverse() {
@@ -663,13 +679,11 @@ void MainWindow::on_setdelay() {
                                       1, INT_MAX, 1, &ok);
   if (ok) {
     auto time = time10s * 10;
-    if (indices.count()) {
-      for (auto i : indices) {
-        gif.setFrameDelay(i.row(), time);
-      }
-    } else {
-      gif.setAllFrameDelay(time);
+    QVector<int> is;
+    for (auto i : indices) {
+      is.append(i.row());
     }
+    undo.push(new DelayFrameCommand(&gif, is, time));
   }
 }
 
@@ -679,13 +693,11 @@ void MainWindow::on_scaledelay() {
   auto scale = DInputDialog::getInt(this, tr("ScaleDelayTime"),
                                     tr("InputPercent"), 100, 1, 100, 1, &ok);
   if (ok) {
+    QVector<int> is;
     for (auto i : indices) {
-      auto index = i.row();
-      auto time = gif.frameDelay(index);
-      time = time * scale / 1000;
-      time *= 10;
-      gif.setFrameDelay(index, time);
+      is.append(i.row());
     }
+    undo.push(new DelayScaleCommand(&gif, is, scale));
   }
 }
 
@@ -720,31 +732,19 @@ void MainWindow::on_scalepic() {
 void MainWindow::on_cutpic() { editor->initCrop(); }
 
 void MainWindow::on_fliph() {
-  auto pos = imglist->currentRow();
-  gif.flip(FlipDirection::Horizontal);
-  refreshImglist();
-  imglist->setCurrentRow(pos);
+  undo.push(new FlipFrameCommand(&gif, FlipDirection::Horizontal));
 }
 
 void MainWindow::on_flipv() {
-  auto pos = imglist->currentRow();
-  gif.flip(FlipDirection::Vertical);
-  refreshImglist();
-  imglist->setCurrentRow(pos);
+  undo.push(new FlipFrameCommand(&gif, FlipDirection::Vertical));
 }
 
 void MainWindow::on_clockwise() {
-  auto pos = imglist->currentRow();
-  gif.rotate();
-  refreshImglist();
-  imglist->setCurrentRow(pos);
+  undo.push(new RotateFrameCommand(&gif, true));
 }
 
 void MainWindow::on_anticlockwise() {
-  auto pos = imglist->currentRow();
-  gif.rotate(false);
-  refreshImglist();
-  imglist->setCurrentRow(pos);
+  undo.push(new RotateFrameCommand(&gif, false));
 }
 
 void MainWindow::on_exportapply() {
@@ -802,7 +802,4 @@ void MainWindow::closeEvent(QCloseEvent *event) {
   event->accept();
 }
 
-void MainWindow::resizeEvent(QResizeEvent *event) {
-  Q_UNUSED(event);
-  editor->refreshEditor();
-}
+void MainWindow::resizeEvent(QResizeEvent *event) { Q_UNUSED(event); }

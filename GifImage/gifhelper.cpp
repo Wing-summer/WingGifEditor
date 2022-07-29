@@ -7,6 +7,7 @@ bool GifHelper::load(QString filename) {
   if (!res)
     return false;
   generatePreview();
+  emit frameRefreshAll();
   return true;
 }
 
@@ -79,13 +80,13 @@ bool GifHelper::moveright(int index) {
 void GifHelper::flip(FlipDirection dir) {
   m_gif.flip(dir);
   generatePreview();
-  emit frameRefreshAll();
+  emit frameImageChanged();
 }
 
 void GifHelper::rotate(bool clockwise) {
   m_gif.rotate(clockwise);
   generatePreview();
-  emit frameRefreshAll();
+  emit frameImageChanged();
 }
 
 bool GifHelper::applymodel(QString filename, QVector<int> indices) {

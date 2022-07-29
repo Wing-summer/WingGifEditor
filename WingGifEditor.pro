@@ -25,7 +25,12 @@ SOURCES += \
     UndoCommand/insertframecommand.cpp \
     Class/gifeditor.cpp \
     Class/gifeditorscene.cpp \
-    Class/SizeGripItem.cpp
+    Class/SizeGripItem.cpp \
+    Class/cuttingselector.cpp \
+    UndoCommand/framechangedcommand.cpp \
+    UndoCommand/flipframecommand.cpp \
+    UndoCommand/delayframecommand.cpp \
+    UndoCommand/rotateframecommand.cpp
 
 RESOURCES += resources.qrc
 
@@ -47,7 +52,12 @@ HEADERS += Dialog/mainwindow.h \
     UndoCommand/insertframecommand.h \
     Class/gifeditor.h \
     Class/gifeditorscene.h \
-    Class/SizeGripItem.h
+    Class/SizeGripItem.h \
+    Class/cuttingselector.h \
+    UndoCommand/framechangedcommand.h \
+    UndoCommand/flipframecommand.h \
+    UndoCommand/delayframecommand.h \
+    UndoCommand/rotateframecommand.h
 
 QMAKE_CXXFLAGS += $(shell Magick++-config --cppflags --cxxflags)
 

@@ -87,7 +87,7 @@ private:
   void updateHandleItemPositions();
 
   QList<HandleItem *> handleItems_;
-  QRectF rect_;
+  QRectF rect_, limitrect;
   Resizer *resizer_;
 };
 

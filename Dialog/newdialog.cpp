@@ -57,12 +57,49 @@ NewDialog::NewDialog(NewType type, DMainWindow *parent) : DDialog(parent) {
   blist.append(b);
   b = new DButtonBoxButton(tr("MoveUp"), this);
   connect(b, &DButtonBoxButton::clicked, [=] {
+    auto si = imgslist->selectionModel()->selectedRows();
+    auto len = si.count();
+    QVector<int> indices(len);
+    auto i = 0;
+    for (auto &item : si) {
+      indices[i] = item.row();
+    }
+    std::sort(indices.begin(), indices.end());
+    if (indices[0] == 0) {
+      for (i = 1; i < len; i++) {
+        if (indices[i] != i)
+          break;
+      }
+    }
 
+    for (; i < len; i++) {
+      auto p = imgslist->takeItem(i);
+      imgslist->insertItem(i - 1, p);
+      filenames.move(i, i - 1);
+    }
   });
   blist.append(b);
   b = new DButtonBoxButton(tr("MoveDown"), this);
   connect(b, &DButtonBoxButton::clicked, [=] {
-
+    auto si = imgslist->selectionModel()->selectedRows();
+    auto len = si.count();
+    QVector<int> indices(len);
+    auto i = 0;
+    for (auto &item : si) {
+      indices[i] = item.row();
+    }
+    std::sort(indices.begin(), indices.end(), std::greater<int>());
+    if (indices[0] == len - 1) {
+      for (i = 1; i < len; i++) {
+        if (indices[i] != len - 1 - i)
+          break;
+      }
+    }
+    for (; i < len; i++) {
+      auto p = imgslist->takeItem(i);
+      imgslist->insertItem(i + 1, p);
+      filenames.move(i, i + 1);
+    }
   });
   blist.append(b);
   btnbox->setButtonList(blist, false);

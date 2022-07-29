@@ -50,6 +50,7 @@ public:
 private:
   void refreshImglist();
   void refreshListLabel(int start = 0);
+  void setEditMode(bool b);
 
 private:
   void on_new_frompics();

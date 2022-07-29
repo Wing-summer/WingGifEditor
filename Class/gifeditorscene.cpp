@@ -4,7 +4,7 @@
 GifEditorScene::GifEditorScene(QPixmap pix, QObject *parent)
     : QGraphicsScene(parent) {
   picview = addPixmap(pix);
-  sel = new QGraphicsRectItem;
+  sel = new QGraphicsRectItem(picview);
   auto brush = QBrush(Qt::red);
   auto pen = QPen(brush, 4);
   sel->setPen(pen);

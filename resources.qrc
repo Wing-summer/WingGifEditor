@@ -60,5 +60,6 @@
         <file>images/effect.png</file>
         <file>images/picture.png</file>
         <file>images/onion.png</file>
+        <file>images/nopic.jpeg</file>
     </qresource>
 </RCC>

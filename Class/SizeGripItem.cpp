@@ -158,9 +158,10 @@ void SizeGripItem::updateHandleItemPositions() {
     item->setFlag(ItemSendsGeometryChanges, false);
 
     switch (item->positionFlags()) {
-    case TopLeft:
+    case TopLeft: {
       item->setPos(rect_.topLeft());
       break;
+    }
     case Top:
       item->setPos(rect_.left() + rect_.width() / 2 - 1, rect_.top());
       break;
