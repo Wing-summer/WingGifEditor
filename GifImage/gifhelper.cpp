@@ -181,6 +181,11 @@ void GifHelper::insertNativeImage(Magick::Image &img, int index) {
   m_gif.insertNativeImage(img, index);
 }
 
+void GifHelper::getNativeImages(QVector<int> &indices,
+                                QVector<Magick::Image> &imgs) {
+  m_gif.getNativeImages(indices, imgs);
+}
+
 void GifHelper::generatePreview() {
   m_preview.clear();
   auto len = m_gif.frameCount();

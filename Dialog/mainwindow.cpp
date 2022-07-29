@@ -8,7 +8,10 @@
 #include "Dialog/sponsordialog.h"
 #include "UndoCommand/delayframecommand.h"
 #include "UndoCommand/flipframecommand.h"
+#include "UndoCommand/insertframecommand.h"
 #include "UndoCommand/moveframecommand.h"
+#include "UndoCommand/removeframecommand.h"
+#include "UndoCommand/reverseframecommand.h"
 #include "UndoCommand/rotateframecommand.h"
 #include <DInputDialog>
 #include <DMenu>
@@ -16,6 +19,7 @@
 #include <DTitlebar>
 #include <DToolBar>
 #include <DToolButton>
+#include <Magick++.h>
 #include <QClipboard>
 #include <QCloseEvent>
 #include <QDesktopServices>
@@ -699,7 +703,7 @@ void MainWindow::on_redo() { undo.redo(); }
 
 void MainWindow::on_copy() {
   auto sels = imglist->selectionModel()->selectedRows();
-  QList<int> indices;
+  QVector<int> indices;
   for (auto &i : sels) {
     indices.append(i.row());
   }
@@ -708,24 +712,23 @@ void MainWindow::on_copy() {
 
 void MainWindow::on_cut() {
   auto sels = imglist->selectionModel()->selectedRows();
-  QList<int> indices;
+  QVector<int> indices;
   for (auto &i : sels) {
     indices.append(i.row());
   }
   clip->setImageFrames(indices); //此时 indeices 被整理为合适的顺序
-  for (auto item : indices) {
-    gif.removeFrame(item);
-  }
+  undo.push(new RemoveFrameCommand(&gif, indices));
   refreshListLabel(indices.last());
 }
 
 void MainWindow::on_paste() {
-  auto pos = imglist->currentRow();
-  auto c = clip->getImageFrames(pos);
-  if (c) {
-    auto npos = pos + c;
+  auto pos = imglist->currentRow() + 1;
+  QVector<Magick::Image> imgs;
+  clip->getImageFrames(imgs);
+  if (imgs.count()) {
+    undo.push(new InsertFrameCommand(&gif, imglist, pos, imgs));
+    auto npos = pos + imgs.count();
     refreshListLabel(npos);
-    imglist->setCurrentRow(npos);
   }
 }
 
@@ -737,14 +740,14 @@ void MainWindow::on_save() {
 
   if (gif.save(curfilename)) {
     DMessageManager::instance()->sendMessage(this, ICONRES("save"),
-                                             tr("SaveAsSuccess"));
+                                             tr("SaveSuccess"));
   } else {
-    DMessageManager::instance()->sendMessage(this, ICONRES("save"), "");
+    DMessageManager::instance()->sendMessage(this, ICONRES("save"), "SaveFail");
   }
 }
 
 void MainWindow::on_reverse() {
-  gif.reverse();
+  undo.push(new ReverseFrameCommand(&gif));
   refreshImglist();
 }
 

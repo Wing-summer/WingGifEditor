@@ -8,7 +8,7 @@
 
 class RemoveFrameCommand : public QUndoCommand {
 public:
-  RemoveFrameCommand(GifHelper *helper, QMap<int, Magick::Image> &frames,
+  RemoveFrameCommand(GifHelper *helper, QVector<int> &frames,
                      QUndoCommand *parent = nullptr);
 
   void undo() override;

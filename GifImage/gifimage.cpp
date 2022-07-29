@@ -226,6 +226,19 @@ void GifImage::insertNativeImage(Magick::Image &img, int index) {
   m_frames.insert(m_frames.begin() + index, img);
 }
 
+void GifImage::getNativeImages(QVector<int> &indices,
+                               QVector<Magick::Image> &imgs) {
+  imgs.clear();
+  auto max = frameCount();
+  for (auto i : indices) {
+    if (i >= 0 && i < max) {
+      imgs.append(m_frames[ulong(i)]);
+    } else {
+      imgs.append(Magick::Image());
+    }
+  }
+}
+
 void GifImage::waitThreadPool() {
   while (!QThreadPool::globalInstance()->waitForDone(100 / 6))
     QApplication::processEvents();

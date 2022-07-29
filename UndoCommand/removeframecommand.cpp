@@ -1,17 +1,11 @@
 #include "removeframecommand.h"
 
-RemoveFrameCommand::RemoveFrameCommand(GifHelper *helper,
-                                       QMap<int, Magick::Image> &frames,
+RemoveFrameCommand::RemoveFrameCommand(GifHelper *helper, QVector<int> &frames,
                                        QUndoCommand *parent)
     : QUndoCommand(parent), gif(helper) {
-  auto k = frames.keys();
-  std::sort(k.begin(), k.end());
-  indices.append(k.toVector());
-  auto len = k.count();
-  imgs.resize(len);
-  for (auto i = 0; i < len; i++) {
-    imgs[i] = frames[indices[i]];
-  }
+  indices = frames;
+  std::sort(indices.begin(), indices.end(), std::greater<int>());
+  gif->getNativeImages(indices, imgs);
 }
 
 void RemoveFrameCommand::undo() {

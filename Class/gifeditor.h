@@ -29,7 +29,6 @@ protected:
   void wheelEvent(QWheelEvent *event) override;
 
 private:
-private:
   GifEditorScene *scene;
   QRubberBand *rubber;
 

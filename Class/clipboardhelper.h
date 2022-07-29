@@ -8,8 +8,8 @@ class ClipBoardHelper : public QObject {
   Q_OBJECT
 public:
   explicit ClipBoardHelper(GifHelper *helper, QObject *parent = nullptr);
-  void setImageFrames(QList<int> &selections);
-  int getImageFrames(int index);
+  void setImageFrames(QVector<int> &selections);
+  void getImageFrames(QVector<Magick::Image> &images);
 
 private:
   GifHelper *m_helper;

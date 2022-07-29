@@ -7,7 +7,7 @@
 ClipBoardHelper::ClipBoardHelper(GifHelper *helper, QObject *parent)
     : QObject(parent), m_helper(helper) {}
 
-void ClipBoardHelper::setImageFrames(QList<int> &selections) {
+void ClipBoardHelper::setImageFrames(QVector<int> &selections) {
   auto clipboard = qApp->clipboard();
   QByteArray buffer;
   auto l = selections.count();
@@ -19,22 +19,26 @@ void ClipBoardHelper::setImageFrames(QList<int> &selections) {
   clipboard->setText(buffer.toHex());
 }
 
-int ClipBoardHelper::getImageFrames(int index) {
+void ClipBoardHelper::getImageFrames(QVector<Magick::Image> &images) {
+  images.clear();
   auto clipboard = qApp->clipboard();
   auto buffer = QByteArray::fromHex(clipboard->text().toUtf8());
   if (buffer.count()) {
     int count = *reinterpret_cast<int *>(buffer.data());
     if (count < 0)
-      return 0;
+      return;
     auto ncount =
         (buffer.count() - int(sizeof(int))) / int(sizeof(Magick::Image));
     auto len = qMin(count, ncount);
     auto off = int(sizeof(int));
     for (auto i = 0; i < len; i++) {
       auto m = buffer.mid(off, sizeof(Magick::Image));
-      m_helper->addFrameData(index, m);
+      auto p = reinterpret_cast<Magick::Image *>(m.data());
+      if (!p || !p->magick().length() || !p->magick().compare("GIF"))
+        continue;
+      images.append(*p);
     }
-    return len;
+    return;
   }
-  return 0;
+  return;
 }

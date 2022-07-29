@@ -2,11 +2,13 @@
 #define INSERTFRAMECOMMAND_H
 
 #include "GifImage/gifhelper.h"
+#include <QListWidget>
 #include <QUndoCommand>
 
 class InsertFrameCommand : public QUndoCommand {
 public:
-  InsertFrameCommand(GifHelper *helper, QVector<int> &index,
+  InsertFrameCommand(GifHelper *helper, QListWidget *imglist, int index,
+                     QVector<Magick::Image> &images,
                      QUndoCommand *parent = nullptr);
 
   void undo() override;
@@ -14,7 +16,9 @@ public:
 
 protected:
   GifHelper *gif;
-  QVector<int> olds;
+  int oldindex;
+  QVector<Magick::Image> oldimgs;
+  QListWidget *imgw;
 };
 
 #endif // INSERTFRAMECOMMAND_H

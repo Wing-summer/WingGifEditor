@@ -51,6 +51,7 @@ public:
   //+++++++++++++++++++++++++++++
 
   void insertNativeImage(Magick::Image &img, int index);
+  void getNativeImages(QVector<int> &indices, QVector<Magick::Image> &imgs);
 
 signals:
   void frameRemoved(int index);

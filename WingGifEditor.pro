@@ -30,7 +30,8 @@ SOURCES += \
     UndoCommand/framechangedcommand.cpp \
     UndoCommand/flipframecommand.cpp \
     UndoCommand/delayframecommand.cpp \
-    UndoCommand/rotateframecommand.cpp
+    UndoCommand/rotateframecommand.cpp \
+    UndoCommand/reverseframecommand.cpp
 
 RESOURCES += resources.qrc
 
@@ -57,7 +58,8 @@ HEADERS += Dialog/mainwindow.h \
     UndoCommand/framechangedcommand.h \
     UndoCommand/flipframecommand.h \
     UndoCommand/delayframecommand.h \
-    UndoCommand/rotateframecommand.h
+    UndoCommand/rotateframecommand.h \
+    UndoCommand/reverseframecommand.h
 
 QMAKE_CXXFLAGS += $(shell Magick++-config --cppflags --cxxflags)
 

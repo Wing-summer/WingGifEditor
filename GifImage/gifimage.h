@@ -126,6 +126,7 @@ public:
   //+++++++++++++++++++++++++++++
 
   void insertNativeImage(Magick::Image &img, int index);
+  void getNativeImages(QVector<int> &indices, QVector<Magick::Image> &imgs);
 
 private:
   void waitThreadPool();
