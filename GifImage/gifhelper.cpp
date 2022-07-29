@@ -177,6 +177,10 @@ void GifHelper::crop(int x, int y, int w, int h) {
   emit frameImageChanged();
 }
 
+void GifHelper::insertNativeImage(Magick::Image &img, int index) {
+  m_gif.insertNativeImage(img, index);
+}
+
 void GifHelper::generatePreview() {
   m_preview.clear();
   auto len = m_gif.frameCount();

@@ -16,7 +16,8 @@ public:
 
 protected:
   GifHelper *gif;
-  QMap<int, Magick::Image> olds;
+  QVector<int> indices;
+  QVector<Magick::Image> imgs;
 };
 
 #endif // REMOVEFRAMECOMMAND_H

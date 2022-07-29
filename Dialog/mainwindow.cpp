@@ -39,6 +39,7 @@ MainWindow::MainWindow(DMainWindow *parent) : DMainWindow(parent) {
   editor = new GifEditor(QPixmap(":/images/icon.png"), w);
   editor->setInteractive(true);
   vlayout->addWidget(editor);
+
   imglist = new QListWidget(w);
   imglist->setFlow(QListWidget::TopToBottom);
   imglist->setViewMode(QListWidget::IconMode);
@@ -483,6 +484,18 @@ MainWindow::MainWindow(DMainWindow *parent) : DMainWindow(parent) {
   player = new PlayGifManager(this);
   connect(player, &PlayGifManager::tick, this,
           [=](int index) { imglist->setCurrentRow(index); });
+
+  connect(&undo, &QUndoStack::canUndoChanged, this, [=](bool b) {
+    undomenu->setEnabled(b);
+    undotool->setEnabled(b);
+  });
+
+  connect(&undo, &QUndoStack::canRedoChanged, this, [=](bool b) {
+    redomenu->setEnabled(b);
+    redotool->setEnabled(b);
+  });
+
+  cuttingdlg = new CropGifDialog(this);
 }
 
 void MainWindow::refreshImglist() {
@@ -817,7 +830,10 @@ void MainWindow::on_scalepic() {
   }
 }
 
-void MainWindow::on_cutpic() { editor->initCrop(); }
+void MainWindow::on_cutpic() {
+  cuttingdlg->show();
+  editor->initCrop();
+}
 
 void MainWindow::on_fliph() {
   undo.push(new FlipFrameCommand(&gif, FlipDirection::Horizontal));

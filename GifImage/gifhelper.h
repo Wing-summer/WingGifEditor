@@ -48,6 +48,10 @@ public:
   void scale(int w, int h);
   void crop(int x, int y, int w, int h);
 
+  //+++++++++++++++++++++++++++++
+
+  void insertNativeImage(Magick::Image &img, int index);
+
 signals:
   void frameRemoved(int index);
   void frameRefreshAll();

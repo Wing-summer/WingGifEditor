@@ -59,7 +59,7 @@ sudo apt install graphicsmagick-libmagick-dev-compat
 ## 效果图
 
 <p align="center">
-<img alt="效果图" src="">
+<img alt="效果图" src="screenshot.png">
 <p align="center">羽云 GIF 编辑器</p>
 </p>
 

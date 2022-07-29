@@ -1,28 +1,24 @@
 #ifndef CROPGIFDIALOG_H
 #define CROPGIFDIALOG_H
 
-#include <DFloatingWidget>
+#include <DButtonBox>
+#include <DDialog>
 #include <DLabel>
+#include <DMainWindow>
+#include <DSpinBox>
 
 DWIDGET_USE_NAMESPACE
 
-struct CropResult {
-  int x;
-  int y;
-  int w;
-  int h;
-};
-
-class CropGifDialog : public DFloatingWidget {
+class CropGifDialog : public DDialog {
 public:
-  CropGifDialog(QWidget *parent = nullptr);
-  CropResult getResult();
+  CropGifDialog(DMainWindow *parent = nullptr);
 
 signals:
   void crop(int x, int y, int w, int h);
 
 private:
-  CropResult res;
+  DButtonBox *btnbox;
+  DSpinBox *m_x, *m_y, *m_w, *m_h;
 };
 
 #endif // CROPGIFDIALOG_H

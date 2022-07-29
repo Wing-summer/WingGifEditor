@@ -6,6 +6,7 @@
 #include "Class/playgifmanager.h"
 #include "GifImage/gifhelper.h"
 #include "GifImage/gifimage.h"
+#include "cropgifdialog.h"
 #include <DGraphicsView>
 #include <DLabel>
 #include <DMainWindow>
@@ -116,6 +117,8 @@ private:
 
   PlayGifManager *player;
   ClipBoardHelper *clip;
+
+  CropGifDialog *cuttingdlg;
 
   // DToolBar *toolmain, *toolplay, *tooledit, *tooleffect;
   QList<QAction *> dismenu, distool;

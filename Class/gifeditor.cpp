@@ -6,13 +6,10 @@ GifEditor::GifEditor(QPixmap pix, QWidget *parent) : DGraphicsView(parent) {
   scene = new GifEditorScene(pix, this);
   setScene(scene);
   rubber = new QRubberBand(QRubberBand::Line, this);
-  refreshEditor();
+  scale(1, 1);
 }
 
-void GifEditor::setBackgroudPix(QPixmap pix) {
-  scene->setFrameImg(pix);
-  refreshEditor();
-}
+void GifEditor::setBackgroudPix(QPixmap pix) { scene->setFrameImg(pix); }
 
 void GifEditor::zoomIn() { scale(1.1, 1.1); }
 

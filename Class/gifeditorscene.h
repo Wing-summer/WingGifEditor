@@ -2,6 +2,7 @@
 #define GIFEDITORSCENE_H
 
 #include "SizeGripItem.h"
+#include "cuttingselector.h"
 #include <QGraphicsPixmapItem>
 #include <QGraphicsScene>
 
@@ -19,7 +20,7 @@ public:
 private:
   bool iscutmode = false;
   QGraphicsPixmapItem *picview;
-  QGraphicsRectItem *sel;
+  CuttingSelector *sel;
   SizeGripItem *handler;
   QPointF oldpos;
 };

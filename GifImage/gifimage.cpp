@@ -222,6 +222,10 @@ void GifImage::crop(int x, int y, int w, int h) {
   }
 }
 
+void GifImage::insertNativeImage(Magick::Image &img, int index) {
+  m_frames.insert(m_frames.begin() + index, img);
+}
+
 void GifImage::waitThreadPool() {
   while (!QThreadPool::globalInstance()->waitForDone(100 / 6))
     QApplication::processEvents();
