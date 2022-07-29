@@ -117,7 +117,7 @@ private:
   PlayGifManager *player;
   ClipBoardHelper *clip;
 
-  DToolBar *toolmain, *toolplay, *tooledit, *tooleffect;
+  // DToolBar *toolmain, *toolplay, *tooledit, *tooleffect;
   QList<QAction *> dismenu, distool;
   QAction *undotool, *undomenu, *redotool, *redomenu;
 

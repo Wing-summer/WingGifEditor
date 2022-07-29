@@ -33,7 +33,11 @@ public:
   void flip(FlipDirection dir);
   void rotate(bool clockwise = true);
   bool applymodel(QString filename, QVector<int> indices);
-  int merge(QString &gif, int index = -1);
+  int mergeGif(QString &gif, int index = -1);
+  int mergeGifs(QStringList &gifs, int index = -1);
+
+  bool insertPic(QString &pic, int index = -1);
+  int insertPics(QStringList &imgs, int index = -1);
 
   void reduceFrame(int from, int to, int step);
   void createReverse(int from, int to);

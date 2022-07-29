@@ -118,6 +118,10 @@ MainWindow::MainWindow(DMainWindow *parent) : DMainWindow(parent) {
 #define AddToolSubMenuShortcutAction(Icon, Title, Slot, ShortCut)              \
   AddMenuShortcutAction(Icon, Title, Slot, tm, ShortCut)
 
+#define AddMenuDB()                                                            \
+  a->setDisabled(true);                                                        \
+  dismenu.append(a)
+
   auto tm = new QMenu(this);
   tm->setIcon(ICONRES("file"));
   tm->setTitle(tr("File"));
@@ -133,10 +137,13 @@ MainWindow::MainWindow(DMainWindow *parent) : DMainWindow(parent) {
                         QKeySequence::Open);
   AddMenuShortcutAction("save", tr("Save"), MainWindow::on_save, tm,
                         QKeySequence::Save);
+  AddMenuDB();
   AddMenuShortcutAction("saveas", tr("SaveAs"), MainWindow::on_saveas, tm,
                         QKeySequence::SaveAs);
+  AddMenuDB();
   AddMenuIconAction("export", tr("Export"), MainWindow::on_export, tm);
   tm->addSeparator();
+  AddMenuDB();
   AddMenuShortcutAction("close", tr("Close"), MainWindow::on_exit, tm,
                         QKeySequence::Close);
 
@@ -147,26 +154,38 @@ MainWindow::MainWindow(DMainWindow *parent) : DMainWindow(parent) {
   tm->setIcon(ICONRES("edit"));
   AddMenuShortcutAction("undo", tr("Undo"), MainWindow::on_undo, tm,
                         QKeySequence::Undo);
+  a->setDisabled(true);
+  undomenu = a;
   AddMenuShortcutAction("redo", tr("Redo"), MainWindow::on_redo, tm,
                         QKeySequence::Redo);
+  a->setDisabled(true);
+  redomenu = a;
   tm->addSeparator();
   AddMenuShortcutAction("cut", tr("Cut"), MainWindow::on_cut, tm,
                         QKeySequence::Cut);
+  AddMenuDB();
   AddMenuShortcutAction("copy", tr("Copy"), MainWindow::on_copy, tm,
                         QKeySequence::Copy);
+  AddMenuDB();
   AddMenuShortcutAction("paste", tr("Paste"), MainWindow::on_paste, tm,
                         QKeySequence::Paste);
+  AddMenuDB();
   AddMenuShortcutAction("del", tr("Delete"), MainWindow::on_del, tm,
                         QKeySequence::Delete);
+  AddMenuDB();
   tm->addSeparator();
   AddMenuShortcutAction("selall", tr("SelectAll"), MainWindow::on_selall, tm,
                         QKeySequence::SelectAll);
+  AddMenuDB();
   AddMenuShortcutAction("desel", tr("Deselect"), MainWindow::on_desel, tm,
                         QKeySequence::Deselect);
+  AddMenuDB();
   AddMenuShortcutAction("selrev", tr("ReverseSelection"),
                         MainWindow::on_selreverse, tm, keyselrev);
+  AddMenuDB();
   tm->addSeparator();
   AddMenuShortcutAction("jmp", tr("Goto"), MainWindow::on_goto, tm, keygoto);
+  AddMenuDB();
   menu->addMenu(tm);
 
   tm = new QMenu(this);
@@ -174,15 +193,21 @@ MainWindow::MainWindow(DMainWindow *parent) : DMainWindow(parent) {
   tm->setTitle(tr("Play"));
   AddMenuShortcutAction("first", tr("FirstFrame"), MainWindow::on_beginframe,
                         tm, keybeginframe);
+  AddMenuDB();
   AddMenuShortcutAction("back", tr("LastFrame"), MainWindow::on_last, tm,
                         keylastframe);
+  AddMenuDB();
   AddMenuShortcutAction("gifplay", tr("Play"), MainWindow::on_play, tm,
                         keyplay);
+  AddMenuDB();
   AddMenuShortcutAction("pause", tr("Stop"), MainWindow::on_stop, tm, keypause);
+  AddMenuDB();
   AddMenuShortcutAction("foreword", tr("NextFrame"), MainWindow::on_next, tm,
                         keynextframe);
+  AddMenuDB();
   AddMenuShortcutAction("last", tr("EndFrame"), MainWindow::on_endframe, tm,
                         keylastframe);
+  AddMenuDB();
   title->setMenu(menu);
 
   tm = new QMenu(this);
@@ -190,43 +215,62 @@ MainWindow::MainWindow(DMainWindow *parent) : DMainWindow(parent) {
   tm->setTitle(tr("Picture"));
   AddMenuShortcutAction("rmframe", tr("ReduceFrame"),
                         MainWindow::on_decreaseframe, tm, keyreduceframe);
+  AddMenuDB();
   AddMenuShortcutAction("rml", tr("DeleteBefore"), MainWindow::on_delbefore, tm,
                         keyrmleft);
+  AddMenuDB();
   AddMenuShortcutAction("rmr", tr("DeleteAfter"), MainWindow::on_delafter, tm,
                         keyrmright);
+  AddMenuDB();
   tm->addSeparator();
   AddMenuShortcutAction("mvf", tr("MoveLeft"), MainWindow::on_moveleft, tm,
                         keymvl);
+  AddMenuDB();
   AddMenuShortcutAction("mvb", tr("MoveRight"), MainWindow::on_moveright, tm,
                         keymvr);
+  AddMenuDB();
   AddMenuShortcutAction("reverse", tr("Reverse"), MainWindow::on_reverse, tm,
                         keyrev);
+  AddMenuDB();
   tm->addSeparator();
   AddMenuShortcutAction("setdelay", tr("SetDelay"), MainWindow::on_setdelay, tm,
                         keysetdelay);
+  AddMenuDB();
   AddMenuIconAction("pics", tr("InsertPics"), MainWindow::on_insertpic, tm);
+  AddMenuDB();
   AddMenuIconAction("gifs", tr("MergeGIfs"), MainWindow::on_merge, tm);
+  AddMenuDB();
   AddMenuShortcutAction("scale", tr("ScaleGif"), MainWindow::on_scalepic, tm,
                         keyscalepic);
+  AddMenuDB();
   AddMenuShortcutAction("cutpic", tr("CutGif"), MainWindow::on_cutpic, tm,
                         keycutpic);
+  AddMenuDB();
   tm->addSeparator();
   AddMenuIconAction("fliph", tr("FilpH"), MainWindow::on_fliph, tm);
+  AddMenuDB();
   AddMenuIconAction("flipv", tr("FlipV"), MainWindow::on_flipv, tm);
+  AddMenuDB();
   AddMenuIconAction("rotatel", tr("RotateLeft"), MainWindow::on_clockwise, tm);
+  AddMenuDB();
   AddMenuIconAction("rotater", tr("RotateR"), MainWindow::on_anticlockwise, tm);
+  AddMenuDB();
   menu->addMenu(tm);
 
   tm = new DMenu(this);
   tm->setTitle(tr("Effect"));
   tm->setIcon(ICONRES("effect"));
   AddMenuIconAction("blank", tr("ExportBlank"), MainWindow::on_exportapply, tm);
+  AddMenuDB();
   AddMenuIconAction("model", tr("ApplyModel"), MainWindow::on_applypic, tm);
+  AddMenuDB();
   tm->addSeparator();
   AddMenuIconAction("reverseplus", tr("CreateReverse"),
                     MainWindow::on_createreverse, tm);
+  AddMenuDB();
   AddMenuShortcutAction("scaledelay", tr("ScaleDelay"),
                         MainWindow::on_scaledelay, tm, keyscaledelay);
+  AddMenuDB();
   menu->addMenu(tm);
 
   tm = new DMenu(this);
@@ -276,75 +320,112 @@ MainWindow::MainWindow(DMainWindow *parent) : DMainWindow(parent) {
   }
   AddToolBtnEnd();
 
+#define AddToolDB()                                                            \
+  a->setEnabled(false);                                                        \
+  distool.append(a);
+
   AddToolBarTool("open", MainWindow::on_open, tr("Open"));
   AddToolBarTool("save", MainWindow::on_save, tr("Save"));
+  AddToolDB();
   AddToolBarTool("saveas", MainWindow::on_saveas, tr("SaveAs"));
+  AddToolDB();
   AddToolBarTool("export", MainWindow::on_export, tr("Export"));
+  AddToolDB();
   toolbar->addSeparator();
   AddToolBarTool("undo", MainWindow::on_undo, tr("Undo"));
+  a->setEnabled(false);
+  undotool = a;
   AddToolBarTool("redo", MainWindow::on_redo, tr("Redo"));
+  a->setEnabled(false);
+  redotool = a;
   AddToolBarTool("cut", MainWindow::on_cut, tr("Cut"));
+  AddToolDB();
   AddToolBarTool("copy", MainWindow::on_copy, tr("Copy"));
+  AddToolDB();
   AddToolBarTool("paste", MainWindow::on_paste, tr("Paste"));
+  AddToolDB();
   AddToolBarTool("del", MainWindow::on_del, tr("Delete"));
+  AddToolDB();
   AddToolBarTool("selall", MainWindow::on_selall, tr("SelectAll"));
+  AddToolDB();
   AddToolBarTool("desel", MainWindow::on_desel, tr("Deselect"));
+  AddToolDB();
   AddToolBarTool("selrev", MainWindow::on_selreverse, tr("ReverseSelection"));
+  AddToolDB();
   AddToolBarTool("jmp", MainWindow::on_goto, tr("Goto"));
+  AddToolDB();
   toolbar->addSeparator();
   AddToolBarTool("soft", MainWindow::on_about, tr("About"));
   AddToolBarTool("sponsor", MainWindow::on_sponsor, tr("Sponsor"));
   AddToolBarTool("wiki", MainWindow::on_wiki, tr("Wiki"));
   toolbar->setObjectName("main");
   addToolBar(toolbar);
-  toolmain = toolbar;
 
   addToolBarBreak();
   toolbar = new DToolBar(this);
   AddToolBarTool("rmframe", MainWindow::on_decreaseframe, tr("ReduceFrame"));
+  AddToolDB();
   AddToolBarTool("rml", MainWindow::on_delbefore, tr("DeleteBefore"));
+  AddToolDB();
   AddToolBarTool("rmr", MainWindow::on_delafter, tr("DeleteAfter"));
+  AddToolDB();
   AddToolBarTool("mvf", MainWindow::on_moveleft, tr("MoveLeft"));
+  AddToolDB();
   AddToolBarTool("mvb", MainWindow::on_moveright, tr("MoveRight"));
+  AddToolDB();
   AddToolBarTool("reverse", MainWindow::on_reverse, tr("Reverse"));
+  AddToolDB();
   toolbar->addSeparator();
   AddToolBarTool("setdelay", MainWindow::on_setdelay, tr("SetDelay"));
+  AddToolDB();
   AddToolBarTool("pics", MainWindow::on_insertpic, tr("InsertPics"));
+  AddToolDB();
   AddToolBarTool("gifs", MainWindow::on_merge, tr("MergeGIfs"));
+  AddToolDB();
   AddToolBarTool("scale", MainWindow::on_scalepic, tr("ScaleGif"));
+  AddToolDB();
   AddToolBarTool("cutpic", MainWindow::on_cutpic, tr("CutGif"));
+  AddToolDB();
   toolbar->addSeparator();
   AddToolBarTool("fliph", MainWindow::on_fliph, tr("FilpH"));
+  AddToolDB();
   AddToolBarTool("flipv", MainWindow::on_flipv, tr("FlipV"));
+  AddToolDB();
   AddToolBarTool("rotatel", MainWindow::on_clockwise, tr("RotateLeft"));
+  AddToolDB();
   AddToolBarTool("rotater", MainWindow::on_anticlockwise, tr("RotateR"));
+  AddToolDB();
   toolbar->setObjectName("pic");
   addToolBar(toolbar);
-  toolbar->setEnabled(false);
-  tooledit = toolbar;
 
   toolbar = new DToolBar(this);
   AddToolBarTool("first", MainWindow::on_beginframe, tr("FirstFrame"));
+  AddToolDB();
   AddToolBarTool("back", MainWindow::on_last, tr("LastFrame"));
+  AddToolDB();
   AddToolBarTool("gifplay", MainWindow::on_play, tr("Play"));
+  AddToolDB();
   AddToolBarTool("pause", MainWindow::on_stop, tr("Stop"));
+  AddToolDB();
   AddToolBarTool("foreword", MainWindow::on_next, tr("NextFrame"));
+  AddToolDB();
   AddToolBarTool("last", MainWindow::on_endframe, tr("EndFrame"));
+  AddToolDB();
   toolbar->setObjectName("play");
   addToolBar(toolbar);
-  toolbar->setEnabled(false);
-  toolplay = toolbar;
 
   toolbar = new DToolBar(this);
   AddToolBarTool("blank", MainWindow::on_exportapply, tr("ExportBlank"));
+  AddToolDB();
   AddToolBarTool("model", MainWindow::on_applypic, tr("ApplyModel"));
+  AddToolDB();
   AddToolBarTool("reverseplus", MainWindow::on_createreverse,
                  tr("CreateReverse"));
+  AddToolDB();
   AddToolBarTool("scaledelay", MainWindow::on_scaledelay, tr("ScaleDelay"));
+  AddToolDB();
   toolbar->setObjectName("effect");
   addToolBar(toolbar);
-  toolbar->setEnabled(false);
-  tooleffect = toolbar;
 
   status = new DStatusBar(this);
   setStatusBar(status);
@@ -426,9 +507,10 @@ void MainWindow::refreshListLabel(int start) {
 }
 
 void MainWindow::setEditMode(bool b) {
-  tooledit->setEnabled(b);
-  toolplay->setEnabled(b);
-  tooleffect->setEnabled(b);
+  for (auto item : distool)
+    item->setEnabled(b);
+  for (auto item : dismenu)
+    item->setEnabled(item);
 }
 
 void MainWindow::on_new_frompics() {
@@ -701,7 +783,18 @@ void MainWindow::on_scaledelay() {
   }
 }
 
-void MainWindow::on_insertpic() {}
+void MainWindow::on_insertpic() {
+  auto filenames = QFileDialog::getOpenFileNames(
+      this, tr("ChooseFile"), lastusedpath, tr("Images (*.jpg *.tiff *.png)"));
+
+  if (filenames.isEmpty())
+    return;
+  lastusedpath = QFileInfo(filenames.first()).absoluteDir().absolutePath();
+  auto pos = imglist->currentRow() + 1;
+  gif.insertPics(filenames, pos);
+  refreshListLabel(pos);
+  imglist->setCurrentRow(pos);
+}
 
 void MainWindow::on_merge() {
   auto filenames = QFileDialog::getOpenFileNames(this, tr("ChooseFile"),
@@ -711,12 +804,7 @@ void MainWindow::on_merge() {
     return;
   lastusedpath = QFileInfo(filenames.first()).absoluteDir().absolutePath();
   auto pos = imglist->currentRow() + 1;
-  for (auto item : filenames) {
-    auto c = gif.merge(item, pos);
-    if (c > 0) {
-      pos += c;
-    }
-  }
+  gif.mergeGifs(filenames, pos);
   refreshListLabel(pos);
   imglist->setCurrentRow(pos);
 }

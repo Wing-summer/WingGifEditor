@@ -154,6 +154,15 @@ int GifImage::merge(QString gif, int index) {
   return int(cimgs.size());
 }
 
+bool GifImage::insertPic(QString &pic, int index) {
+  Magick::Image img(pic.toStdString());
+  if (img.isValid() && img.magick().compare("GIF")) {
+    m_frames.insert(m_frames.begin() + index, img);
+    return true;
+  }
+  return false;
+}
+
 void GifImage::reduceFrame(int from, int to, int step) {
   auto len = frameCount();
   if (from < 0 || from >= to || to >= len || step >= len - 1)

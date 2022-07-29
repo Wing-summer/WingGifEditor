@@ -100,7 +100,7 @@ bool GifHelper::applymodel(QString filename, QVector<int> indices) {
   return res;
 }
 
-int GifHelper::merge(QString &gif, int index) {
+int GifHelper::mergeGif(QString &gif, int index) {
   auto res = m_gif.merge(gif, index);
   auto len = index + res;
   if (res > 0) {
@@ -110,6 +110,32 @@ int GifHelper::merge(QString &gif, int index) {
     emit frameMerge(index, res);
   }
   return res;
+}
+
+int GifHelper::mergeGifs(QStringList &gifs, int index) {
+  auto count = 0;
+  for (auto p = gifs.rbegin(); p != gifs.rend(); p++) {
+    auto c = m_gif.merge(*p, index);
+    if (c > 0) {
+      count += c;
+    }
+  }
+  return count;
+}
+
+bool GifHelper::insertPic(QString &pic, int index) {
+  return m_gif.insertPic(pic, index);
+}
+
+int GifHelper::insertPics(QStringList &imgs, int index) {
+  auto count = 0;
+  for (auto p = imgs.rbegin(); p != imgs.rend(); p++) {
+    auto c = m_gif.insertPic(*p, index);
+    if (c) {
+      count++;
+    }
+  }
+  return count;
 }
 
 void GifHelper::reduceFrame(int from, int to, int step) {
