@@ -1,2 +1,12 @@
+# qmake configs:
 **/*.pro.user
+
+# cmake tmp configs
+**/*.txt.user*
+
+# build
+build
+
+# local scripts:
 push.sh
+
