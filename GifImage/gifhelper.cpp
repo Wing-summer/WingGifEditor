@@ -1,4 +1,5 @@
 #include "gifhelper.h"
+#include <QPainter>
 
 GifHelper::GifHelper(QObject *parent) : QObject(parent) {}
 
@@ -34,10 +35,26 @@ void GifHelper::close() {
   emit frameRefreshAll();
 }
 
-QIcon GifHelper::thumbnail(int index) { return QIcon(frameimg(index)); }
+QIcon GifHelper::thumbnail(int index) {
+  return QIcon(QPixmap::fromImage(img(index)));
+}
 
 QPixmap GifHelper::frameimg(int index) {
-  return QPixmap::fromImage(img(index));
+  auto img = this->img(index);
+  if (onionIndex >= 0) {
+    QImage p(img.size(), QImage::Format_RGBA8888);
+    p.fill(Qt::transparent);
+    QPainter painter(&p);
+    painter.drawImage(QPointF(), img, img.rect());
+    painter.setOpacity(0.6);
+    auto d = this->img(onionIndex);
+    painter.setCompositionMode(
+        QPainter::CompositionMode::CompositionMode_Source);
+    painter.drawImage(QPointF(), d, d.rect());
+    painter.end();
+    return QPixmap::fromImage(p);
+  }
+  return QPixmap::fromImage(img);
 }
 
 QImage GifHelper::img(int index) {
@@ -194,6 +211,11 @@ void GifHelper::getNativeImagesAfter(int index, QVector<Magick::Image> &imgs) {
 void GifHelper::applyNativeImage(Magick::Image &img, int index) {
   m_gif.applyNativeImage(img, index);
   m_preview[index] = m_gif.frame(index);
+  emit frameRefreshImg(index);
+}
+
+void GifHelper::setOnionIndex(int index) {
+  onionIndex = index;
   emit frameRefreshImg(index);
 }
 

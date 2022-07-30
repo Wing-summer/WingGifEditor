@@ -59,6 +59,8 @@ public:
   void getNativeImagesAfter(int index, QVector<Magick::Image> &imgs);
   void applyNativeImage(Magick::Image &img, int index);
 
+  void setOnionIndex(int index);
+
 signals:
   void frameRemoved(int index);
   void frameRefreshAll();
@@ -73,6 +75,7 @@ signals:
 private:
   GifImage m_gif;
   QList<QImage> m_preview;
+  int onionIndex = -1;
 
 private:
   void generatePreview();

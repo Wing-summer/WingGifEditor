@@ -102,6 +102,8 @@ private:
   void on_exportapply();
   void on_applypic();
 
+  void on_onion();
+
   void on_about();
   void on_sponsor();
   void on_wiki();

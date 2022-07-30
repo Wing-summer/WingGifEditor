@@ -280,6 +280,8 @@ MainWindow::MainWindow(DMainWindow *parent) : DMainWindow(parent) {
   AddMenuShortcutAction("scaledelay", tr("ScaleDelay"),
                         MainWindow::on_scaledelay, tm, keyscaledelay);
   AddMenuDB();
+  AddMenuIconAction("onion", tr("OnionMask"), MainWindow::on_onion, tm);
+  AddMenuDB();
   menu->addMenu(tm);
 
   tm = new DMenu(this);
@@ -710,7 +712,11 @@ void MainWindow::on_export() {
   }
 }
 
-void MainWindow::on_exit() { close(); }
+void MainWindow::on_exit() {
+  gif.close();
+  editor->setBackgroudPix(QPixmap(":/images/icon.png"));
+  editor->scale(1, 1);
+}
 
 void MainWindow::on_undo() { undo.undo(); }
 
@@ -913,6 +919,16 @@ void MainWindow::on_applypic() {
   } else {
     DMessageManager::instance()->sendMessage(this, ICONRES("model"),
                                              tr("InvalidModel"));
+  }
+}
+
+void MainWindow::on_onion() {
+  bool ok;
+  auto index =
+      DInputDialog::getInt(this, tr("OnionMask"), tr("PleaseInputIndex"),
+                           imglist->currentRow(), 0, imglist->count(), 1, &ok);
+  if (ok) {
+    gif.setOnionIndex(index);
   }
 }
 

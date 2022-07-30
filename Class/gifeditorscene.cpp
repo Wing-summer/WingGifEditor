@@ -31,6 +31,10 @@ void GifEditorScene::setCuttingMode(bool value) {
   handler->setVisible(value);
 }
 
-void GifEditorScene::setFrameImg(QPixmap img) { picview->setPixmap(img); }
+void GifEditorScene::setFrameImg(QPixmap img) {
+  picview->setPixmap(img);
+  picview->setPos(0, 0);
+  setSceneRect(0, 0, img.width(), img.height());
+}
 
 QRectF GifEditorScene::contentBounding() { return picview->boundingRect(); }

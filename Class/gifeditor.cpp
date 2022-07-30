@@ -9,7 +9,10 @@ GifEditor::GifEditor(QPixmap pix, QWidget *parent) : DGraphicsView(parent) {
   scale(1, 1);
 }
 
-void GifEditor::setBackgroudPix(QPixmap pix) { scene->setFrameImg(pix); }
+void GifEditor::setBackgroudPix(QPixmap pix) {
+  scene->setFrameImg(pix);
+  scale(1, 1);
+}
 
 void GifEditor::zoomIn() { scale(1.1, 1.1); }
 
