@@ -52,7 +52,7 @@ private:
   void refreshImglist();
   void refreshListLabel(int start = 0);
   void setEditMode(bool b);
-  void ensureSafeClose();
+  bool ensureSafeClose();
 
 private:
   void on_new_frompics();

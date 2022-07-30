@@ -7,6 +7,7 @@
 
 NewDialog::NewDialog(NewType type, DMainWindow *parent) : DDialog(parent) {
   setWindowTitle(tr("New"));
+  auto nopic = QPixmap(":/images/nopic.jpeg");
   btnbox = new DButtonBox(this);
   QList<DButtonBoxButton *> blist;
   auto b = new DButtonBoxButton(tr("Add"), this);
@@ -108,19 +109,18 @@ NewDialog::NewDialog(NewType type, DMainWindow *parent) : DDialog(parent) {
   auto w = new QWidget(this);
   auto hbox = new QHBoxLayout(w);
   imgslist = new DListWidget(this);
-  connect(imgslist, &DListWidget::itemSelectionChanged, this, [=] {
-
-  });
   hbox->addWidget(imgslist);
   auto vbox = new QVBoxLayout(w);
   hbox->addLayout(vbox);
   imgview = new DLabel(this);
   imgview->setFixedSize(200, 200);
   imgview->setScaledContents(true);
+  imgview->setPixmap(nopic.scaled(imgview->size(), Qt::KeepAspectRatio,
+                                  Qt::SmoothTransformation));
   vbox->addWidget(imgview);
   vbox->addSpacing(5);
   vbox->addWidget(new DLabel(tr("Size"), this));
-  imgsize = new DLabel(this);
+  imgsize = new DLabel(tr("Unknown"), this);
   vbox->addWidget(imgsize);
   addContent(w);
   addSpacing(5);
@@ -134,6 +134,20 @@ NewDialog::NewDialog(NewType type, DMainWindow *parent) : DDialog(parent) {
   auto s = new QShortcut(key, this);
   connect(s, &QShortcut::activated, this, &NewDialog::on_accept);
   addContent(dbbox);
+
+  connect(imgslist, &DListWidget::itemSelectionChanged, this, [=] {
+    auto cur = imgslist->currentItem();
+    if (cur) {
+      auto p = QPixmap(cur->text());
+      imgview->setPixmap(p.scaled(imgview->size(), Qt::KeepAspectRatio,
+                                  Qt::SmoothTransformation));
+      imgsize->setText(
+          QString("%1 × %2").arg(p.size().width()).arg(p.size().height()));
+    } else {
+      imgview->setPixmap(nopic);
+      imgsize->setText(tr("Unknown"));
+    }
+  });
 }
 
 QStringList NewDialog::getResult() { return filenames; }

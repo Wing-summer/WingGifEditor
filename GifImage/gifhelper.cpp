@@ -3,6 +3,7 @@
 GifHelper::GifHelper(QObject *parent) : QObject(parent) {}
 
 bool GifHelper::load(QString filename) {
+  close();
   auto res = m_gif.load(filename);
   if (!res)
     return false;
@@ -12,6 +13,26 @@ bool GifHelper::load(QString filename) {
 }
 
 bool GifHelper::save(QString filename) { return m_gif.save(filename); }
+
+void GifHelper::loadfromImages(QStringList imgs) {
+  m_gif.close();
+  m_gif.loadfromImages(imgs);
+  generatePreview();
+  emit frameRefreshAll();
+}
+
+void GifHelper::loadfromGifs(QStringList gifs) {
+  m_gif.close();
+  m_gif.loadfromGifs(gifs);
+  generatePreview();
+  emit frameRefreshAll();
+}
+
+void GifHelper::close() {
+  m_gif.close();
+  m_preview.clear();
+  emit frameRefreshAll();
+}
 
 QIcon GifHelper::thumbnail(int index) { return QIcon(frameimg(index)); }
 
@@ -138,19 +159,15 @@ int GifHelper::insertPics(QStringList &imgs, int index) {
   return count;
 }
 
-void GifHelper::reduceFrame(int from, int to, int step) {
-  m_gif.reduceFrame(from, to, step); //输出的删除索引为倒序的
-  generatePreview();
-  emit frameRefreshAll();
+void GifHelper::getReduceFrame(int from, int to, int step,
+                               QVector<int> &indices,
+                               QVector<Magick::Image> &imgs,
+                               QVector<int> &intervals) {
+  m_gif.getReduceFrame(from, to, step, indices, imgs, intervals);
 }
 
-void GifHelper::createReverse(int from, int to) {
-  m_gif.createReverse(from, to);
-  auto len = to - from + 1;
-  for (auto i = from; i <= to; i++) {
-    m_preview.insert(to + 1, m_gif.frame(i));
-  }
-  emit frameMerge(to + 1, len);
+void GifHelper::getReverse(int from, int to, QVector<Magick::Image> &imgs) {
+  m_gif.getReverse(from, to, imgs);
 }
 
 bool GifHelper::exportImages(QString folder, QString ext) {
@@ -184,6 +201,14 @@ void GifHelper::insertNativeImage(Magick::Image &img, int index) {
 void GifHelper::getNativeImages(QVector<int> &indices,
                                 QVector<Magick::Image> &imgs) {
   m_gif.getNativeImages(indices, imgs);
+}
+
+void GifHelper::getNativeImagesBefore(int index, QVector<Magick::Image> &imgs) {
+  m_gif.getNativeImagesBefore(index, imgs);
+}
+
+void GifHelper::getNativeImagesAfter(int index, QVector<Magick::Image> &imgs) {
+  m_gif.getNativeImagesAfter(index, imgs);
 }
 
 void GifHelper::generatePreview() {

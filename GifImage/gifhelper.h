@@ -13,6 +13,9 @@ public:
 
   bool load(QString filename);
   bool save(QString filename);
+  void loadfromImages(QStringList imgs);
+  void loadfromGifs(QStringList gifs);
+  void close();
   QIcon thumbnail(int index);
   QPixmap frameimg(int index);
   QImage img(int index);
@@ -39,8 +42,9 @@ public:
   bool insertPic(QString &pic, int index = -1);
   int insertPics(QStringList &imgs, int index = -1);
 
-  void reduceFrame(int from, int to, int step);
-  void createReverse(int from, int to);
+  void getReduceFrame(int from, int to, int step, QVector<int> &indices,
+                      QVector<Magick::Image> &imgs, QVector<int> &intervals);
+  void getReverse(int from, int to, QVector<Magick::Image> &imgs);
 
   bool exportImages(QString folder, QString ext);
 
@@ -52,6 +56,8 @@ public:
 
   void insertNativeImage(Magick::Image &img, int index);
   void getNativeImages(QVector<int> &indices, QVector<Magick::Image> &imgs);
+  void getNativeImagesBefore(int index, QVector<Magick::Image> &imgs);
+  void getNativeImagesAfter(int index, QVector<Magick::Image> &imgs);
 
 signals:
   void frameRemoved(int index);

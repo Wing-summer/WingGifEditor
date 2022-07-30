@@ -93,7 +93,10 @@ class GifImage : public QObject {
 public:
   explicit GifImage(QObject *parent = nullptr);
   bool load(QString filename);
+  void loadfromImages(QStringList imgs);
+  void loadfromGifs(QStringList gifs);
   bool save(QString filename);
+  void close();
   QImage frame(int index);
   int frameCount();
   int frameDelay(int index);
@@ -115,8 +118,9 @@ public:
 
   bool insertPic(QString &pic, int index = -1);
 
-  void reduceFrame(int from, int to, int step);
-  void createReverse(int from, int to);
+  void getReduceFrame(int from, int to, int step, QVector<int> &indices,
+                      QVector<Magick::Image> &imgs, QVector<int> &intervals);
+  void getReverse(int from, int to, QVector<Magick::Image> &imgs);
 
   bool exportImages(QString folder, QString ext);
   bool addFrameData(int index, QByteArray &buffer);
@@ -127,6 +131,8 @@ public:
 
   void insertNativeImage(Magick::Image &img, int index);
   void getNativeImages(QVector<int> &indices, QVector<Magick::Image> &imgs);
+  void getNativeImagesBefore(int index, QVector<Magick::Image> &imgs);
+  void getNativeImagesAfter(int index, QVector<Magick::Image> &imgs);
 
 private:
   void waitThreadPool();

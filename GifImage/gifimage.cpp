@@ -33,6 +33,47 @@ bool GifImage::load(QString filename) {
   }
 }
 
+void GifImage::loadfromImages(QStringList imgs) {
+  Magick::Image fir(imgs.first().toStdString());
+  auto gifsize = fir.size();
+  m_frames.clear();
+  fir.animationDelay(4);
+  m_frames.push_back(fir);
+  for (auto p = imgs.begin() + 1; p != imgs.end(); p++) {
+    Magick::Image img((*p).toStdString());
+    img.scale(gifsize);
+    img.animationDelay(4);
+    m_frames.push_back(img);
+  }
+}
+
+void GifImage::loadfromGifs(QStringList gifs) {
+  std::vector<Magick::Image> buffer, cbuffer;
+  m_frames.clear();
+  try {
+    GifReader freader(&buffer, gifs.first().toStdString());
+    StartWaitFinish(freader);
+
+    GifCoalescer fcoalescer(&cbuffer, cbuffer.begin(), cbuffer.end());
+    StartWaitFinish(fcoalescer);
+    m_frames.insert(m_frames.end(), cbuffer.begin(), cbuffer.end());
+    auto gifsize = cbuffer[0].size();
+    for (auto p = gifs.begin() + 1; p != gifs.end(); p++) {
+      GifReader reader(&buffer, (*p).toStdString());
+      StartWaitFinish(reader);
+      GifCoalescer coalescer(&cbuffer, cbuffer.begin(), cbuffer.end());
+      StartWaitFinish(coalescer);
+      for (auto &img : cbuffer) {
+        img.scale(gifsize);
+      }
+      m_frames.insert(m_frames.end(), cbuffer.begin(), cbuffer.end());
+    }
+  } catch (const Magick::Exception &ex) {
+    qDebug() << ex.what();
+  } catch (const std::bad_alloc &) {
+  }
+}
+
 bool GifImage::save(QString filename) {
   std::vector<Magick::Image> frames;
   Magick::deconstructImages(&frames, m_frames.begin(), m_frames.end());
@@ -44,6 +85,8 @@ bool GifImage::save(QString filename) {
     return false;
   }
 }
+
+void GifImage::close() { m_frames.clear(); }
 
 QImage GifImage::frame(int index) {
   if (index < 0 || index >= int(m_frames.size()))
@@ -163,30 +206,37 @@ bool GifImage::insertPic(QString &pic, int index) {
   return false;
 }
 
-void GifImage::reduceFrame(int from, int to, int step) {
+void GifImage::getReduceFrame(int from, int to, int step, QVector<int> &indices,
+                              QVector<Magick::Image> &imgs,
+                              QVector<int> &intervals) {
   auto len = frameCount();
   if (from < 0 || from >= to || to >= len || step >= len - 1)
     return;
 
-  for (auto i = from + 1; i <= to; i += step) {
-    removeFrame(i);
-    to--;
-  }
+  indices.clear();
+  imgs.clear();
+  intervals.clear();
 
-  auto q = uint(step) + 1;
-  for (auto &item : m_frames) {
-    item.animationDelay(item.animationDelay() * (q + 1) / q);
+  auto ii = from + 1;
+  auto q = step + 1;
+  for (auto i = ii; i <= to; i++) {
+    if (i == ii + step) {
+      ii += step;
+      indices.append(i);
+      imgs.append(m_frames[ulong(i)]);
+    } else {
+      intervals.append(frameDelay(i) * (q + 1) / q);
+    }
   }
 }
 
-void GifImage::createReverse(int from, int to) {
+void GifImage::getReverse(int from, int to, QVector<Magick::Image> &imgs) {
   auto len = frameCount();
   if (from < 0 || from >= to || to >= len)
     return;
-  std::vector<Magick::Image> tmp(ulong(to - from + 1));
+  imgs.resize(to - from + 1);
   std::reverse_copy(m_frames.begin() + from, m_frames.begin() + to,
-                    tmp.begin());
-  m_frames.insert(m_frames.end(), tmp.begin(), tmp.end());
+                    imgs.begin());
 }
 
 bool GifImage::exportImages(QString folder, QString ext) {
@@ -236,6 +286,21 @@ void GifImage::getNativeImages(QVector<int> &indices,
     } else {
       imgs.append(Magick::Image());
     }
+  }
+}
+
+void GifImage::getNativeImagesBefore(int index, QVector<Magick::Image> &imgs) {
+  imgs.resize(index);
+  for (auto i = 0; i < index; i++) {
+    imgs[i] = m_frames[ulong(i)];
+  }
+}
+
+void GifImage::getNativeImagesAfter(int index, QVector<Magick::Image> &imgs) {
+  auto len = frameCount();
+  imgs.clear();
+  for (auto i = index + 1; i < len; i++) {
+    imgs.push_back(m_frames[ulong(i)]);
   }
 }
 
