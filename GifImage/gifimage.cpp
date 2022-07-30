@@ -171,39 +171,34 @@ void GifImage::rotate(bool clockwise) {
   }
 }
 
-bool GifImage::applymodel(QString filename, QVector<int> indices) {
+bool GifImage::getModeledFrames(QString filename, QVector<int> indices,
+                                QVector<Magick::Image> &imgs) {
   Magick::Image img(filename.toStdString());
   auto s = img.size();
   if (s != m_frames[0].size())
     return false;
-  for (auto i : indices)
-    m_frames[ulong(i)].composite(img, 0, 0, Magick::OverCompositeOp);
+  for (auto i : indices) {
+    auto imgb = m_frames[ulong(i)];
+    imgb.composite(img, 0, 0, Magick::OverCompositeOp);
+    imgs.append(imgb);
+  }
   return true;
 }
 
-int GifImage::merge(QString gif, int index) {
-  if (index >= frameCount())
-    return -1;
-  Magick::Image t(gif.toStdString());
-  if (t.magick().compare("GIF") || m_frames[0].size() != t.size())
-    return -1;
-
-  std::vector<Magick::Image> imgs;
-  Magick::readImages(&imgs, gif.toStdString());
-  std::vector<Magick::Image> cimgs;
-  Magick::coalesceImages(&cimgs, imgs.begin(), imgs.end());
-  m_frames.insert(index >= 0 ? (m_frames.begin() + index) : m_frames.end(),
-                  cimgs.begin(), cimgs.end());
-  return int(cimgs.size());
-}
-
-bool GifImage::insertPic(QString &pic, int index) {
-  Magick::Image img(pic.toStdString());
-  if (img.isValid() && img.magick().compare("GIF")) {
-    m_frames.insert(m_frames.begin() + index, img);
-    return true;
+int GifImage::getGifFrames(QString gif, QVector<Magick::Image> &imgs) {
+  try {
+    std::vector<Magick::Image> img, cimgs;
+    GifReader reader(&img, gif.toStdString());
+    StartWaitFinish(reader);
+    GifCoalescer coalescer(&cimgs, img.begin(), img.end());
+    StartWaitFinish(coalescer);
+    for (auto item : cimgs) {
+      imgs.append(item);
+    }
+  } catch (...) {
+    return 0;
   }
-  return false;
+  return imgs.count();
 }
 
 void GifImage::getReduceFrame(int from, int to, int step, QVector<int> &indices,
@@ -272,6 +267,14 @@ void GifImage::crop(int x, int y, int w, int h) {
   }
 }
 
+void GifImage::getNativeFrames(QVector<int> &indices,
+                               QVector<Magick::Image> &frames) {
+  frames.clear();
+  for (auto i : indices) {
+    frames.append(m_frames[ulong(i)]);
+  }
+}
+
 void GifImage::insertNativeImage(Magick::Image &img, int index) {
   m_frames.insert(m_frames.begin() + index, img);
 }
@@ -302,6 +305,12 @@ void GifImage::getNativeImagesAfter(int index, QVector<Magick::Image> &imgs) {
   for (auto i = index + 1; i < len; i++) {
     imgs.push_back(m_frames[ulong(i)]);
   }
+}
+
+void GifImage::applyNativeImage(Magick::Image &img, int index) {
+  if (index <= 0 || index > frameCount())
+    return;
+  m_frames[ulong(index)] = img;
 }
 
 void GifImage::waitThreadPool() {

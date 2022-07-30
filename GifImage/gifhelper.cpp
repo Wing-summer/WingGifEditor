@@ -110,53 +110,39 @@ void GifHelper::rotate(bool clockwise) {
   emit frameImageChanged();
 }
 
-bool GifHelper::applymodel(QString filename, QVector<int> indices) {
-  auto res = m_gif.applymodel(filename, indices);
-  if (res) {
-    for (auto i : indices) {
-      m_preview[i] = m_gif.frame(i);
-      emit frameRefresh(i);
-    }
-  }
-  return res;
+bool GifHelper::getModeledFrames(QString filename, QVector<int> indices,
+                                 QVector<Magick::Image> &frames) {
+  return m_gif.getModeledFrames(filename, indices, frames);
 }
 
-int GifHelper::mergeGif(QString &gif, int index) {
-  auto res = m_gif.merge(gif, index);
-  auto len = index + res;
-  if (res > 0) {
-    for (auto i = len; i >= index; i--) {
-      m_preview.insert(index, m_gif.frame(i));
-    }
-    emit frameMerge(index, res);
-  }
-  return res;
+void GifHelper::getNativeFrames(QVector<int> &indices,
+                                QVector<Magick::Image> &frames) {
+  getNativeFrames(indices, frames);
 }
 
-int GifHelper::mergeGifs(QStringList &gifs, int index) {
-  auto count = 0;
-  for (auto p = gifs.rbegin(); p != gifs.rend(); p++) {
-    auto c = m_gif.merge(*p, index);
-    if (c > 0) {
-      count += c;
+int GifHelper::getNativeMergeGifFrames(QStringList &gifs,
+                                       QVector<Magick::Image> &frames) {
+  for (auto item : gifs) {
+    Magick::Image img(item.toStdString());
+    auto s = img.size();
+    if (img.magick().compare("GIF") && s.width() == uint(size().width()) &&
+        s.height() == uint(size().height())) {
+      m_gif.getGifFrames(item, frames);
     }
   }
-  return count;
+  return frames.count();
 }
 
-bool GifHelper::insertPic(QString &pic, int index) {
-  return m_gif.insertPic(pic, index);
-}
-
-int GifHelper::insertPics(QStringList &imgs, int index) {
-  auto count = 0;
-  for (auto p = imgs.rbegin(); p != imgs.rend(); p++) {
-    auto c = m_gif.insertPic(*p, index);
-    if (c) {
-      count++;
+int GifHelper::getNativeImages(QStringList &imgfiles,
+                               QVector<Magick::Image> &imgs) {
+  imgs.clear();
+  for (auto item : imgfiles) {
+    Magick::Image img(item.toStdString());
+    if (img.isValid() && img.magick().compare("GIF")) {
+      imgs.append(img);
     }
   }
-  return count;
+  return imgs.count();
 }
 
 void GifHelper::getReduceFrame(int from, int to, int step,
@@ -174,14 +160,6 @@ bool GifHelper::exportImages(QString folder, QString ext) {
   return m_gif.exportImages(folder, ext);
 }
 
-bool GifHelper::addFrameData(int index, QByteArray &buffer) {
-  auto res = m_gif.addFrameData(index, buffer);
-  if (res) {
-    m_preview.insert(index, m_gif.frame(index));
-  }
-  return res;
-}
-
 void GifHelper::scale(int w, int h) {
   m_gif.scale(w, h);
   generatePreview();
@@ -196,6 +174,8 @@ void GifHelper::crop(int x, int y, int w, int h) {
 
 void GifHelper::insertNativeImage(Magick::Image &img, int index) {
   m_gif.insertNativeImage(img, index);
+  m_preview.insert(index, m_gif.frame(index));
+  emit frameInsert(index);
 }
 
 void GifHelper::getNativeImages(QVector<int> &indices,
@@ -209,6 +189,12 @@ void GifHelper::getNativeImagesBefore(int index, QVector<Magick::Image> &imgs) {
 
 void GifHelper::getNativeImagesAfter(int index, QVector<Magick::Image> &imgs) {
   m_gif.getNativeImagesAfter(index, imgs);
+}
+
+void GifHelper::applyNativeImage(Magick::Image &img, int index) {
+  m_gif.applyNativeImage(img, index);
+  m_preview[index] = m_gif.frame(index);
+  emit frameRefreshImg(index);
 }
 
 void GifHelper::generatePreview() {

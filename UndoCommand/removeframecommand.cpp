@@ -11,9 +11,11 @@ RemoveFrameCommand::RemoveFrameCommand(GifHelper *helper, QVector<int> &frames,
 void RemoveFrameCommand::undo() {
   for (auto i : indices)
     gif->insertNativeImage(imgs[i], i);
+  gif->frameRefreshLabel(*indices.end());
 }
 
 void RemoveFrameCommand::redo() {
   for (auto p = indices.rbegin(); p < indices.rend(); p++)
     gif->removeFrame(*p);
+  gif->frameRefreshLabel(*indices.end());
 }

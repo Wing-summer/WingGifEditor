@@ -12,6 +12,7 @@ void InsertFrameCommand::undo() {
   for (auto i = 0; i < len; i++) {
     gif->removeFrame(oldindex);
   }
+  gif->frameRefreshLabel(oldindex);
   imgw->setCurrentRow(oldindex);
 }
 
@@ -19,5 +20,7 @@ void InsertFrameCommand::redo() {
   for (auto p = oldimgs.rbegin(); p != oldimgs.rend(); p++) {
     gif->insertNativeImage(*p, oldindex);
   }
-  imgw->setCurrentRow(oldindex + oldimgs.count());
+  auto len = oldindex + oldimgs.count();
+  gif->frameRefreshLabel(len);
+  imgw->setCurrentRow(len);
 }

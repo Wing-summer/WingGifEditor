@@ -35,20 +35,19 @@ public:
 
   void flip(FlipDirection dir);
   void rotate(bool clockwise = true);
-  bool applymodel(QString filename, QVector<int> indices);
-  int mergeGif(QString &gif, int index = -1);
-  int mergeGifs(QStringList &gifs, int index = -1);
+  bool getModeledFrames(QString filename, QVector<int> indices,
+                        QVector<Magick::Image> &frames);
 
-  bool insertPic(QString &pic, int index = -1);
-  int insertPics(QStringList &imgs, int index = -1);
-
+  void getNativeFrames(QVector<int> &indices, QVector<Magick::Image> &frames);
+  int getNativeMergeGifFrames(QStringList &gifs,
+                              QVector<Magick::Image> &frames);
+  int getNativeImages(QStringList &imgfiles, QVector<Magick::Image> &imgs);
   void getReduceFrame(int from, int to, int step, QVector<int> &indices,
                       QVector<Magick::Image> &imgs, QVector<int> &intervals);
   void getReverse(int from, int to, QVector<Magick::Image> &imgs);
 
   bool exportImages(QString folder, QString ext);
 
-  bool addFrameData(int index, QByteArray &buffer);
   void scale(int w, int h);
   void crop(int x, int y, int w, int h);
 
@@ -58,13 +57,15 @@ public:
   void getNativeImages(QVector<int> &indices, QVector<Magick::Image> &imgs);
   void getNativeImagesBefore(int index, QVector<Magick::Image> &imgs);
   void getNativeImagesAfter(int index, QVector<Magick::Image> &imgs);
+  void applyNativeImage(Magick::Image &img, int index);
 
 signals:
   void frameRemoved(int index);
   void frameRefreshAll();
   void frameMoved(int from, int to);
   void frameDelaySet(int index, int time);
-  void frameRefresh(int index);
+  void frameRefreshImg(int index);
+  void frameRefreshLabel(int start);
   void frameMerge(int start, int count);
   void frameInsert(int index);
   void frameImageChanged();

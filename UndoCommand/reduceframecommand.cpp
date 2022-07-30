@@ -23,6 +23,7 @@ void ReduceFrameCommand::undo() {
   for (auto i = 0; i < len; i++) {
     gif->setFrameDelay(i, oldinter[i]);
   }
+  gif->frameRefreshLabel(0);
 }
 
 void ReduceFrameCommand::redo() {
@@ -33,4 +34,5 @@ void ReduceFrameCommand::redo() {
   for (auto i = 0; i < len; i++) {
     gif->setFrameDelay(i, inter[i]);
   }
+  gif->frameRefreshLabel(0);
 }

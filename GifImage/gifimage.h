@@ -113,10 +113,9 @@ public:
   void reverse();
   void flip(FlipDirection dir);
   void rotate(bool clockwise = true);
-  bool applymodel(QString filename, QVector<int> indices);
-  int merge(QString gif, int index = -1);
-
-  bool insertPic(QString &pic, int index = -1);
+  bool getModeledFrames(QString filename, QVector<int> indices,
+                        QVector<Magick::Image> &imgs);
+  int getGifFrames(QString gif, QVector<Magick::Image> &imgs);
 
   void getReduceFrame(int from, int to, int step, QVector<int> &indices,
                       QVector<Magick::Image> &imgs, QVector<int> &intervals);
@@ -129,10 +128,12 @@ public:
 
   //+++++++++++++++++++++++++++++
 
+  void getNativeFrames(QVector<int> &indices, QVector<Magick::Image> &frames);
   void insertNativeImage(Magick::Image &img, int index);
   void getNativeImages(QVector<int> &indices, QVector<Magick::Image> &imgs);
   void getNativeImagesBefore(int index, QVector<Magick::Image> &imgs);
   void getNativeImagesAfter(int index, QVector<Magick::Image> &imgs);
+  void applyNativeImage(Magick::Image &img, int index);
 
 private:
   void waitThreadPool();

@@ -13,8 +13,10 @@
 #include "UndoCommand/moveframecommand.h"
 #include "UndoCommand/reduceframecommand.h"
 #include "UndoCommand/removeframecommand.h"
+#include "UndoCommand/replaceframecommand.h"
 #include "UndoCommand/reverseframecommand.h"
 #include "UndoCommand/rotateframecommand.h"
+#include "UndoCommand/scaleframecommand.h"
 #include <DInputDialog>
 #include <DMenu>
 #include <DMessageManager>
@@ -456,10 +458,12 @@ MainWindow::MainWindow(DMainWindow *parent) : DMainWindow(parent) {
   connect(pgif, &GifHelper::frameDelaySet, this, [=](int index, int delay) {
     imglist->item(index)->setText(QString("%1   %2 ms").arg(index).arg(delay));
   });
-  connect(pgif, &GifHelper::frameRefresh, this, [=](int index) {
+  connect(pgif, &GifHelper::frameRefreshImg, this, [=](int index) {
     imglist->item(index)->setIcon(gif.thumbnail(index));
     imglist->itemSelectionChanged();
   });
+  connect(pgif, &GifHelper::frameRefreshLabel, this,
+          &MainWindow::refreshListLabel);
   connect(pgif, &GifHelper::frameMerge, this, [=](int start, int count) {
     auto end = start + count - 1;
     for (int i = end; i >= start; i--) {
@@ -578,7 +582,6 @@ void MainWindow::on_del() {
     indices.append(item.row());
   }
   undo.push(new RemoveFrameCommand(&gif, indices));
-  refreshListLabel(indices.last());
 }
 
 void MainWindow::on_selall() { imglist->selectAll(); }
@@ -646,20 +649,17 @@ void MainWindow::on_decreaseframe() {
     gif.getReduceFrame(res.start, res.end, res.stepcount, delindices, delimgs,
                        modinter);
     undo.push(new ReduceFrameCommand(&gif, delindices, delimgs, modinter));
-    refreshImglist();
   }
 }
 
 void MainWindow::on_delbefore() {
   auto pos = imglist->currentRow();
   undo.push(new DelFrameDirCommand(&gif, pos, DelDirection::Before, imglist));
-  refreshListLabel();
 }
 
 void MainWindow::on_delafter() {
   auto pos = imglist->currentRow();
   undo.push(new DelFrameDirCommand(&gif, pos, DelDirection::After, imglist));
-  refreshListLabel();
 }
 
 void MainWindow::on_saveas() {
@@ -826,9 +826,10 @@ void MainWindow::on_insertpic() {
     return;
   lastusedpath = QFileInfo(filenames.first()).absoluteDir().absolutePath();
   auto pos = imglist->currentRow() + 1;
-  gif.insertPics(filenames, pos);
+  QVector<Magick::Image> imgs;
+  gif.getNativeImages(filenames, imgs);
+  undo.push(new InsertFrameCommand(&gif, imglist, pos, imgs));
   refreshListLabel(pos);
-  imglist->setCurrentRow(pos);
 }
 
 void MainWindow::on_merge() {
@@ -839,16 +840,17 @@ void MainWindow::on_merge() {
     return;
   lastusedpath = QFileInfo(filenames.first()).absoluteDir().absolutePath();
   auto pos = imglist->currentRow() + 1;
-  gif.mergeGifs(filenames, pos);
+  QVector<Magick::Image> imgs;
+  gif.getNativeMergeGifFrames(filenames, imgs);
+  undo.push(new InsertFrameCommand(&gif, imglist, pos, imgs));
   refreshListLabel(pos);
-  imglist->setCurrentRow(pos);
 }
 
 void MainWindow::on_scalepic() {
   ScaleGIFDialog d(gif.size(), this);
   if (d.exec()) {
     auto res = d.getResult();
-    gif.scale(res.width, res.height);
+    undo.push(new ScaleFrameCommand(&gif, res.width, res.height, imglist));
   }
 }
 
@@ -905,7 +907,10 @@ void MainWindow::on_applypic() {
   for (auto i : indices)
     rows.append(i.row());
 
-  if (!gif.applymodel(filename, rows)) {
+  QVector<Magick::Image> imgs;
+  if (gif.getModeledFrames(filename, rows, imgs)) {
+    undo.push(new ReplaceFrameCommand(&gif, rows, imgs));
+  } else {
     DMessageManager::instance()->sendMessage(this, ICONRES("model"),
                                              tr("InvalidModel"));
   }
