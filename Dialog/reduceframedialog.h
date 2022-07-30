@@ -16,6 +16,7 @@ struct ReduceResult {
 };
 
 class ReduceFrameDialog : public DDialog {
+  Q_OBJECT
 public:
   ReduceFrameDialog(int max, DMainWindow *parent = nullptr);
   ReduceResult getResult();

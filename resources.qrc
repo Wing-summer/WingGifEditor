@@ -61,5 +61,9 @@
         <file>images/picture.png</file>
         <file>images/onion.png</file>
         <file>images/nopic.jpeg</file>
+        <file>images/writable.png</file>
+        <file>images/readonly.png</file>
+        <file>images/rwg.png</file>
+        <file>images/fitinview.png</file>
     </qresource>
 </RCC>

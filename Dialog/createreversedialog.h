@@ -15,6 +15,7 @@ struct ReverseResult {
 };
 
 class CreateReverseDialog : public DDialog {
+  Q_OBJECT
 public:
   CreateReverseDialog(int max, DMainWindow *parent = nullptr);
   ReverseResult getResult();

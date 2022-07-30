@@ -95,6 +95,7 @@ private:
 
   void on_scalepic();
   void on_cutpic();
+  void on_crop();
   void on_fliph();
   void on_flipv();
   void on_clockwise();
@@ -130,6 +131,20 @@ private:
 protected:
   void closeEvent(QCloseEvent *event) override;
   void resizeEvent(QResizeEvent *event) override;
+
+private:
+  DIconButton *iSetfitInView;
+
+  DLabel *iReadWrite;
+  DLabel *iSaved;
+  DLabel *iw;
+
+  QPixmap infoSaved;
+  QPixmap infoUnsaved;
+  QPixmap infoSaveg;
+  QPixmap infoReadonly;
+  QPixmap infoWriteable;
+  QPixmap inforwg;
 };
 
 #endif // MAINWINDOW_H

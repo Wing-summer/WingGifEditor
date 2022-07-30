@@ -17,6 +17,7 @@ struct ExportResult {
 };
 
 class ExportDialog : public DDialog {
+  Q_OBJECT
 public:
   ExportDialog(DMainWindow *parent = nullptr);
   ExportResult getResult();

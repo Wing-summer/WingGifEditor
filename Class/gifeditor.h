@@ -21,6 +21,13 @@ public:
   void refreshEditor();
 
   void initCrop();
+  void endCrop();
+
+public slots:
+  void setSelRect(int x, int y, int w, int h);
+
+signals:
+  void selRectChanged(QRectF rect);
 
 protected:
   void mousePressEvent(QMouseEvent *event) override;

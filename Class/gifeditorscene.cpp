@@ -38,3 +38,10 @@ void GifEditorScene::setFrameImg(QPixmap img) {
 }
 
 QRectF GifEditorScene::contentBounding() { return picview->boundingRect(); }
+
+void GifEditorScene::setSelRect(int x, int y, int w, int h) {
+  handler->setLeft(x);
+  handler->setTop(y);
+  handler->setTop(w);
+  handler->setBottom(h);
+}

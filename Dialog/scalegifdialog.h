@@ -15,6 +15,7 @@ struct ScaleResult {
 };
 
 class ScaleGIFDialog : public DDialog {
+  Q_OBJECT
 public:
   ScaleGIFDialog(QSize size, DMainWindow *parent = nullptr);
   ScaleResult getResult();

@@ -439,6 +439,43 @@ MainWindow::MainWindow(DMainWindow *parent) : DMainWindow(parent) {
   addToolBar(toolbar);
 
   status = new DStatusBar(this);
+  DLabel *l;
+
+#define AddNamedStatusLabel(Var, Content)                                      \
+  Var = new DLabel(this);                                                      \
+  Var->setText(Content);                                                       \
+  status->addPermanentWidget(Var);
+
+#define AddStatusLabel(Content) AddNamedStatusLabel(l, Content)
+#define LoadPixMap(Var, Icon) Var.load(":/images/" Icon ".png");
+
+#define AddStausILable(PixMap, Icon, Label, OPixMap, OIcon, GPixMap, GIcon)    \
+  LoadPixMap(PixMap, Icon);                                                    \
+  LoadPixMap(OPixMap, OIcon);                                                  \
+  LoadPixMap(GPixMap, GIcon) Label = new DLabel(this);                         \
+  Label->setPixmap(GPixMap);                                                   \
+  Label->setScaledContents(true);                                              \
+  Label->setFixedSize(20, 20);                                                 \
+  Label->setAlignment(Qt::AlignCenter);                                        \
+  status->addPermanentWidget(Label);                                           \
+  AddStatusLabel(QString(' '));
+
+#define AddFunctionIconButton(Var, Icon)                                       \
+  Var = new DIconButton(this);                                                 \
+  Var->setIcon(ICONRES(Icon));                                                 \
+  Var->setIconSize(QSize(20, 20));                                             \
+  status->addPermanentWidget(Var);
+
+  AddStausILable(infoSaved, "saved", iSaved, infoUnsaved, "unsaved", infoSaveg,
+                 "saveg");
+  iSaved->setToolTip(tr("InfoSave"));
+  AddStausILable(infoWriteable, "writable", iReadWrite, infoReadonly,
+                 "readonly", inforwg, "rwg");
+  iReadWrite->setToolTip(tr("InfoReadWrite"));
+  AddFunctionIconButton(iSetfitInView, "fitinview");
+  AddStatusLabel(QString(5, ' '));
+  connect(iSetfitInView, &DIconButton::clicked, this,
+          [=] { editor->refreshEditor(); });
   setStatusBar(status);
 
   auto pgif = &gif;
@@ -508,6 +545,16 @@ MainWindow::MainWindow(DMainWindow *parent) : DMainWindow(parent) {
   });
 
   cuttingdlg = new CropGifDialog(this);
+  connect(cuttingdlg, &CropGifDialog::selRectChanged, editor,
+          &GifEditor::setSelRect);
+  connect(cuttingdlg, &CropGifDialog::crop, this,
+          [=](int x, int y, int w, int h) {});
+  connect(cuttingdlg, &CropGifDialog::pressCancel, this, [=] {
+    editor->endCrop();
+    this->setEditMode(true);
+  });
+  connect(editor, &GifEditor::selRectChanged, cuttingdlg,
+          &CropGifDialog::setSelRect);
 }
 
 void MainWindow::refreshImglist() {
@@ -862,7 +909,9 @@ void MainWindow::on_scalepic() {
 
 void MainWindow::on_cutpic() {
   cuttingdlg->show();
+
   editor->initCrop();
+  setEditMode(false);
 }
 
 void MainWindow::on_fliph() {

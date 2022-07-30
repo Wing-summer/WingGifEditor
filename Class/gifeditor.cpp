@@ -4,6 +4,8 @@
 
 GifEditor::GifEditor(QPixmap pix, QWidget *parent) : DGraphicsView(parent) {
   scene = new GifEditorScene(pix, this);
+  connect(scene, &GifEditorScene::selRectChanged, this,
+          &GifEditor::selRectChanged);
   setScene(scene);
   rubber = new QRubberBand(QRubberBand::Line, this);
   scale(1, 1);
@@ -77,3 +79,9 @@ void GifEditor::refreshEditor() {
 }
 
 void GifEditor::initCrop() { scene->setCuttingMode(true); }
+
+void GifEditor::endCrop() { scene->setCuttingMode(false); }
+
+void GifEditor::setSelRect(int x, int y, int w, int h) {
+  scene->setSelRect(x, y, w, h);
+}

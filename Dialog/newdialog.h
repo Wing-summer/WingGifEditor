@@ -15,6 +15,7 @@ DWIDGET_USE_NAMESPACE
 enum class NewType { FromPics, FromGifs };
 
 class NewDialog : public DDialog {
+  Q_OBJECT
 public:
   NewDialog(NewType type, DMainWindow *parent = nullptr);
   QStringList getResult();

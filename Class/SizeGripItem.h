@@ -81,6 +81,7 @@ public:
 
   void setRect(QRectF rect);
   void setVisible(bool value);
+  void setLimitRect(QRectF rect);
 
 private:
   void doResize();

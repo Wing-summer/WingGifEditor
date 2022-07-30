@@ -7,6 +7,7 @@
 #include <QGraphicsScene>
 
 class GifEditorScene : public QGraphicsScene {
+  Q_OBJECT
 public:
   GifEditorScene(QPixmap pix, QObject *parent = nullptr);
 
@@ -16,6 +17,12 @@ public:
   void setFrameImg(QPixmap img);
 
   QRectF contentBounding();
+
+public slots:
+  void setSelRect(int x, int y, int w, int h);
+
+signals:
+  void selRectChanged(QRectF rect);
 
 private:
   bool iscutmode = false;
