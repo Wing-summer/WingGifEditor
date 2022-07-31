@@ -473,6 +473,8 @@ MainWindow::MainWindow(DMainWindow *parent) : DMainWindow(parent) {
                  "readonly", inforwg, "rwg");
   iReadWrite->setToolTip(tr("InfoReadWrite"));
   AddFunctionIconButton(iSetfitInView, "fitinview");
+  iSetfitInView->setToolTip(tr("FitInView"));
+  iSetfitInView->setEnabled(false);
   AddStatusLabel(QString(5, ' '));
   connect(iSetfitInView, &DIconButton::clicked, this,
           [=] { editor->refreshEditor(); });
@@ -543,9 +545,8 @@ MainWindow::MainWindow(DMainWindow *parent) : DMainWindow(parent) {
     redomenu->setEnabled(b);
     redotool->setEnabled(b);
   });
-  connect(&undo, &QUndoStack::cleanChanged, this, [=](bool clean) {
-
-  });
+  connect(&undo, &QUndoStack::cleanChanged, this,
+          [=](bool clean) { this->setSaved(clean && curfilename != ":"); });
 
   cuttingdlg = new CropGifDialog(this);
   connect(cuttingdlg, &CropGifDialog::selRectChanged, editor,
@@ -591,6 +592,7 @@ void MainWindow::setEditMode(bool b) {
     item->setEnabled(b);
   for (auto item : dismenu)
     item->setEnabled(item);
+  iSetfitInView->setEnabled(b);
 }
 
 bool MainWindow::ensureSafeClose() { return true; }
@@ -599,11 +601,18 @@ void MainWindow::setSaved(bool b) {
   iSaved->setPixmap(b ? infoSaved : infoUnsaved);
 }
 
+void MainWindow::setWritable(bool b) {
+  iReadWrite->setPixmap(b ? infoWriteable : infoReadonly);
+}
+
 void MainWindow::on_new_frompics() {
   if (ensureSafeClose()) {
     NewDialog d(NewType::FromPics, this);
     if (d.exec()) {
       gif.loadfromImages(d.getResult());
+      curfilename = ":"; //表示新建
+      setSaved(false);
+      setWritable(true);
     }
   }
 }
@@ -613,6 +622,9 @@ void MainWindow::on_new_fromgifs() {
     NewDialog d(NewType::FromGifs, this);
     if (d.exec()) {
       gif.loadfromGifs(d.getResult());
+      curfilename = ":"; //表示新建
+      setSaved(false);
+      setWritable(true);
     }
   }
 }
@@ -623,7 +635,8 @@ void MainWindow::on_open() {
                                                  lastusedpath, "gif (*.gif)");
     if (filename.isEmpty())
       return;
-    lastusedpath = QFileInfo(filename).absoluteDir().absolutePath();
+    auto info = QFileInfo(filename);
+    lastusedpath = info.absoluteDir().absolutePath();
     if (!gif.load(filename)) {
       setEditMode(false);
       DMessageManager::instance()->sendMessage(this, ICONRES("icon"),
@@ -634,6 +647,8 @@ void MainWindow::on_open() {
     imglist->setCurrentRow(0);
     editor->refreshEditor();
     setEditMode(true);
+    setSaved(true);
+    setWritable(info.permission(QFile::WriteUser));
   }
 }
 
@@ -732,6 +747,7 @@ void MainWindow::on_saveas() {
   if (gif.save(filename)) {
     DMessageManager::instance()->sendMessage(this, ICONRES("saveas"),
                                              tr("SaveAsSuccess"));
+    curfilename = filename;
   } else {
     DMessageManager::instance()->sendMessage(this, ICONRES("saveas"),
                                              "SaveAsFail");
@@ -775,6 +791,8 @@ void MainWindow::on_exit() {
   gif.close();
   editor->setBackgroudPix(QPixmap(":/images/icon.png"));
   editor->scale(1, 1);
+  iSaved->setPixmap(infoSaveg);
+  iReadWrite->setPixmap(inforwg);
 }
 
 void MainWindow::on_undo() { undo.undo(); }
@@ -798,7 +816,6 @@ void MainWindow::on_cut() {
   }
   clip->setImageFrames(indices);
   undo.push(new RemoveFrameCommand(&gif, indices));
-  refreshListLabel(indices.last());
 }
 
 void MainWindow::on_paste() {
@@ -807,13 +824,11 @@ void MainWindow::on_paste() {
   clip->getImageFrames(imgs);
   if (imgs.count()) {
     undo.push(new InsertFrameCommand(&gif, imglist, pos, imgs));
-    auto npos = pos + imgs.count();
-    refreshListLabel(npos);
   }
 }
 
 void MainWindow::on_save() {
-  if (curfilename.isEmpty()) {
+  if (curfilename == ":") {
     on_saveas();
     return;
   }
@@ -894,7 +909,6 @@ void MainWindow::on_insertpic() {
   QVector<Magick::Image> imgs;
   gif.getNativeImages(filenames, imgs);
   undo.push(new InsertFrameCommand(&gif, imglist, pos, imgs));
-  refreshListLabel(pos);
 }
 
 void MainWindow::on_merge() {
@@ -908,7 +922,6 @@ void MainWindow::on_merge() {
   QVector<Magick::Image> imgs;
   gif.getNativeMergeGifFrames(filenames, imgs);
   undo.push(new InsertFrameCommand(&gif, imglist, pos, imgs));
-  refreshListLabel(pos);
 }
 
 void MainWindow::on_scalepic() {

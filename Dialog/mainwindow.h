@@ -54,6 +54,7 @@ private:
   void setEditMode(bool b);
   bool ensureSafeClose();
   void setSaved(bool b);
+  void setWritable(bool b);
 
 private:
   void on_new_frompics();
