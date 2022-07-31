@@ -37,6 +37,10 @@
 
 #define ICONRES(name) QIcon(":/images/" name ".png")
 
+#define CheckEnabled                                                           \
+  if (curfilename.isEmpty())                                                   \
+    return;
+
 MainWindow::MainWindow(DMainWindow *parent) : DMainWindow(parent) {
   setMinimumSize(800, 600);
   setWindowTitle(tr("WingGifEditor"));
@@ -64,6 +68,7 @@ MainWindow::MainWindow(DMainWindow *parent) : DMainWindow(parent) {
 
   connect(imglist, &QListWidget::itemSelectionChanged, this, [=] {
     editor->setBackgroudPix(gif.frameimg(imglist->currentRow()));
+    this->showGifMessage();
   });
 
   auto title = titlebar();
@@ -537,33 +542,76 @@ MainWindow::MainWindow(DMainWindow *parent) : DMainWindow(parent) {
           [=](int index) { imglist->setCurrentRow(index); });
 
   connect(&undo, &QUndoStack::canUndoChanged, this, [=](bool b) {
+    CheckEnabled;
     undomenu->setEnabled(b);
     undotool->setEnabled(b);
   });
 
   connect(&undo, &QUndoStack::canRedoChanged, this, [=](bool b) {
+    CheckEnabled;
     redomenu->setEnabled(b);
     redotool->setEnabled(b);
   });
-  connect(&undo, &QUndoStack::cleanChanged, this,
-          [=](bool clean) { this->setSaved(clean && curfilename != ":"); });
+  connect(&undo, &QUndoStack::cleanChanged, this, [=](bool clean) {
+    CheckEnabled;
+    this->setSaved(clean && curfilename != ":");
+  });
 
   cuttingdlg = new CropGifDialog(this);
   connect(cuttingdlg, &CropGifDialog::selRectChanged, editor,
           &GifEditor::setSelRect);
   connect(cuttingdlg, &CropGifDialog::crop, this,
           [=](int x, int y, int w, int h) {
+            CheckEnabled;
             editor->endCrop();
             this->setEditMode(true);
             gif.crop(x, y, w, h);
             editor->refreshEditor();
           });
   connect(cuttingdlg, &CropGifDialog::pressCancel, this, [=] {
+    CheckEnabled;
     editor->endCrop();
     this->setEditMode(true);
   });
   connect(editor, &GifEditor::selRectChanged, cuttingdlg,
           &CropGifDialog::setSelRect);
+
+#define ConnectShortCut(ShortCut, Slot)                                        \
+  s = new QShortcut(ShortCut, this);                                           \
+  connect(s, &QShortcut::activated, this, &Slot);
+
+  QShortcut *s;
+
+  ConnectShortCut(QKeySequence::Open, MainWindow::on_open);
+  ConnectShortCut(QKeySequence::Save, MainWindow::on_save);
+  ConnectShortCut(QKeySequence::SaveAs, MainWindow::on_saveas);
+  ConnectShortCut(QKeySequence::Close, MainWindow::on_exit);
+  ConnectShortCut(QKeySequence::Undo, MainWindow::on_undo);
+  ConnectShortCut(QKeySequence::Redo, MainWindow::on_redo);
+  ConnectShortCut(QKeySequence::Cut, MainWindow::on_cut);
+  ConnectShortCut(QKeySequence::Copy, MainWindow::on_copy);
+  ConnectShortCut(QKeySequence::Paste, MainWindow::on_paste);
+  ConnectShortCut(QKeySequence::Delete, MainWindow::on_del);
+  ConnectShortCut(QKeySequence::SelectAll, MainWindow::on_selall);
+  ConnectShortCut(QKeySequence::Deselect, MainWindow::on_desel);
+  ConnectShortCut(keyselrev, MainWindow::on_selreverse);
+  ConnectShortCut(keygoto, MainWindow::on_goto);
+  ConnectShortCut(keybeginframe, MainWindow::on_beginframe);
+  ConnectShortCut(keylastframe, MainWindow::on_last);
+  ConnectShortCut(keyplay, MainWindow::on_play);
+  ConnectShortCut(keypause, MainWindow::on_stop);
+  ConnectShortCut(keynextframe, MainWindow::on_next);
+  ConnectShortCut(keylastframe, MainWindow::on_endframe);
+  ConnectShortCut(keyreduceframe, MainWindow::on_decreaseframe);
+  ConnectShortCut(keyrmleft, MainWindow::on_delbefore);
+  ConnectShortCut(keyrmright, MainWindow::on_delafter);
+  ConnectShortCut(keymvl, MainWindow::on_moveleft);
+  ConnectShortCut(keymvr, MainWindow::on_moveright);
+  ConnectShortCut(keyrev, MainWindow::on_reverse);
+  ConnectShortCut(keysetdelay, MainWindow::on_setdelay);
+  ConnectShortCut(keyscalepic, MainWindow::on_scalepic);
+  ConnectShortCut(keycutpic, MainWindow::on_cutpic);
+  ConnectShortCut(keyscaledelay, MainWindow::on_scaledelay);
 }
 
 void MainWindow::refreshImglist() {
@@ -605,6 +653,13 @@ void MainWindow::setWritable(bool b) {
   iReadWrite->setPixmap(b ? infoWriteable : infoReadonly);
 }
 
+void MainWindow::showGifMessage(QString message) {
+  status->showMessage(QString(5, ' ') + message +
+                      QString(tr("%1 frame | %2 total")
+                                  .arg(imglist->currentRow())
+                                  .arg(gif.frameCount())));
+}
+
 void MainWindow::on_new_frompics() {
   if (ensureSafeClose()) {
     NewDialog d(NewType::FromPics, this);
@@ -613,6 +668,7 @@ void MainWindow::on_new_frompics() {
       curfilename = ":"; //表示新建
       setSaved(false);
       setWritable(true);
+      showGifMessage();
     }
   }
 }
@@ -625,6 +681,7 @@ void MainWindow::on_new_fromgifs() {
       curfilename = ":"; //表示新建
       setSaved(false);
       setWritable(true);
+      showGifMessage();
     }
   }
 }
@@ -649,10 +706,12 @@ void MainWindow::on_open() {
     setEditMode(true);
     setSaved(true);
     setWritable(info.permission(QFile::WriteUser));
+    showGifMessage();
   }
 }
 
 void MainWindow::on_del() {
+  CheckEnabled;
   QVector<int> indices;
   for (auto item : imglist->selectionModel()->selectedIndexes()) {
     indices.append(item.row());
@@ -660,9 +719,13 @@ void MainWindow::on_del() {
   undo.push(new RemoveFrameCommand(&gif, indices));
 }
 
-void MainWindow::on_selall() { imglist->selectAll(); }
+void MainWindow::on_selall() {
+  CheckEnabled;
+  imglist->selectAll();
+}
 
 void MainWindow::on_selreverse() {
+  CheckEnabled;
   auto len = imglist->count();
   for (auto i = 0; i < len; i++) {
     auto item = imglist->item(i);
@@ -671,11 +734,13 @@ void MainWindow::on_selreverse() {
 }
 
 void MainWindow::on_desel() {
+  CheckEnabled;
   auto cur = imglist->currentRow();
   imglist->setCurrentRow(cur);
 }
 
 void MainWindow::on_goto() {
+  CheckEnabled;
   bool ok;
   auto index =
       DInputDialog::getInt(this, tr("Goto"), tr("PleaseInputIndex"),
@@ -685,9 +750,13 @@ void MainWindow::on_goto() {
   }
 }
 
-void MainWindow::on_beginframe() { imglist->setCurrentRow(0); }
+void MainWindow::on_beginframe() {
+  CheckEnabled;
+  imglist->setCurrentRow(0);
+}
 
 void MainWindow::on_last() {
+  CheckEnabled;
   auto pos = imglist->currentRow();
   if (pos > 0) {
     imglist->setCurrentRow(pos - 1);
@@ -695,6 +764,7 @@ void MainWindow::on_last() {
 }
 
 void MainWindow::on_play() {
+  CheckEnabled;
   QList<int> ints;
   auto len = gif.frameCount();
   for (auto i = 0; i < len; i++) {
@@ -704,9 +774,13 @@ void MainWindow::on_play() {
   player->play(imglist->currentRow());
 }
 
-void MainWindow::on_stop() { player->stop(); }
+void MainWindow::on_stop() {
+  CheckEnabled;
+  player->stop();
+}
 
 void MainWindow::on_next() {
+  CheckEnabled;
   auto pos = imglist->currentRow();
   auto max = imglist->count();
   if (pos < max - 1) {
@@ -714,9 +788,13 @@ void MainWindow::on_next() {
   }
 }
 
-void MainWindow::on_endframe() { imglist->setCurrentRow(imglist->count() - 1); }
+void MainWindow::on_endframe() {
+  CheckEnabled;
+  imglist->setCurrentRow(imglist->count() - 1);
+}
 
 void MainWindow::on_decreaseframe() {
+  CheckEnabled;
   ReduceFrameDialog d(imglist->count(), this);
   if (d.exec()) {
     auto res = d.getResult();
@@ -729,16 +807,19 @@ void MainWindow::on_decreaseframe() {
 }
 
 void MainWindow::on_delbefore() {
+  CheckEnabled;
   auto pos = imglist->currentRow();
   undo.push(new DelFrameDirCommand(&gif, pos, DelDirection::Before, imglist));
 }
 
 void MainWindow::on_delafter() {
+  CheckEnabled;
   auto pos = imglist->currentRow();
   undo.push(new DelFrameDirCommand(&gif, pos, DelDirection::After, imglist));
 }
 
 void MainWindow::on_saveas() {
+  CheckEnabled;
   auto filename = QFileDialog::getSaveFileName(this, tr("ChooseSaveFile"),
                                                lastusedpath, "gif (*.gif)");
   if (filename.isEmpty())
@@ -755,6 +836,7 @@ void MainWindow::on_saveas() {
 }
 
 void MainWindow::on_export() {
+  CheckEnabled;
   ExportDialog d;
   if (d.exec()) {
     auto res = d.getResult();
@@ -793,13 +875,22 @@ void MainWindow::on_exit() {
   editor->scale(1, 1);
   iSaved->setPixmap(infoSaveg);
   iReadWrite->setPixmap(inforwg);
+  status->showMessage("");
+  curfilename.clear();
 }
 
-void MainWindow::on_undo() { undo.undo(); }
+void MainWindow::on_undo() {
+  CheckEnabled;
+  undo.undo();
+}
 
-void MainWindow::on_redo() { undo.redo(); }
+void MainWindow::on_redo() {
+  CheckEnabled;
+  undo.redo();
+}
 
 void MainWindow::on_copy() {
+  CheckEnabled;
   auto sels = imglist->selectionModel()->selectedRows();
   QVector<int> indices;
   for (auto &i : sels) {
@@ -809,6 +900,7 @@ void MainWindow::on_copy() {
 }
 
 void MainWindow::on_cut() {
+  CheckEnabled;
   auto sels = imglist->selectionModel()->selectedRows();
   QVector<int> indices;
   for (auto &i : sels) {
@@ -819,6 +911,7 @@ void MainWindow::on_cut() {
 }
 
 void MainWindow::on_paste() {
+  CheckEnabled;
   auto pos = imglist->currentRow() + 1;
   QVector<Magick::Image> imgs;
   clip->getImageFrames(imgs);
@@ -828,6 +921,7 @@ void MainWindow::on_paste() {
 }
 
 void MainWindow::on_save() {
+  CheckEnabled;
   if (curfilename == ":") {
     on_saveas();
     return;
@@ -843,22 +937,26 @@ void MainWindow::on_save() {
 }
 
 void MainWindow::on_reverse() {
+  CheckEnabled;
   undo.push(new ReverseFrameCommand(&gif));
   refreshImglist();
 }
 
 void MainWindow::on_moveleft() {
+  CheckEnabled;
   auto pos = imglist->currentRow();
   undo.push(new MoveFrameCommand(&gif, imglist, MoveFrameDirection::Left, pos));
 }
 
 void MainWindow::on_moveright() {
+  CheckEnabled;
   auto pos = imglist->currentRow();
   undo.push(
       new MoveFrameCommand(&gif, imglist, MoveFrameDirection::Right, pos));
 }
 
 void MainWindow::on_createreverse() {
+  CheckEnabled;
   CreateReverseDialog d(imglist->count(), this);
   if (d.exec()) {
     auto res = d.getResult();
@@ -870,6 +968,7 @@ void MainWindow::on_createreverse() {
 }
 
 void MainWindow::on_setdelay() {
+  CheckEnabled;
   auto indices = imglist->selectionModel()->selectedRows();
   bool ok;
   auto time10s = DInputDialog::getInt(this, tr("DelayTime"), tr("Input10ms"), 2,
@@ -885,6 +984,7 @@ void MainWindow::on_setdelay() {
 }
 
 void MainWindow::on_scaledelay() {
+  CheckEnabled;
   auto indices = imglist->selectionModel()->selectedRows();
   bool ok;
   auto scale = DInputDialog::getInt(this, tr("ScaleDelayTime"),
@@ -899,6 +999,7 @@ void MainWindow::on_scaledelay() {
 }
 
 void MainWindow::on_insertpic() {
+  CheckEnabled;
   auto filenames = QFileDialog::getOpenFileNames(
       this, tr("ChooseFile"), lastusedpath, tr("Images (*.jpg *.tiff *.png)"));
 
@@ -912,6 +1013,7 @@ void MainWindow::on_insertpic() {
 }
 
 void MainWindow::on_merge() {
+  CheckEnabled;
   auto filenames = QFileDialog::getOpenFileNames(this, tr("ChooseFile"),
                                                  lastusedpath, "gif (*.gif)");
 
@@ -925,6 +1027,7 @@ void MainWindow::on_merge() {
 }
 
 void MainWindow::on_scalepic() {
+  CheckEnabled;
   ScaleGIFDialog d(gif.size(), this);
   if (d.exec()) {
     auto res = d.getResult();
@@ -933,6 +1036,7 @@ void MainWindow::on_scalepic() {
 }
 
 void MainWindow::on_cutpic() {
+  CheckEnabled;
   setEditMode(false);
   QRectF rect;
   editor->initCrop(rect);
@@ -942,22 +1046,27 @@ void MainWindow::on_cutpic() {
 }
 
 void MainWindow::on_fliph() {
+  CheckEnabled;
   undo.push(new FlipFrameCommand(&gif, FlipDirection::Horizontal));
 }
 
 void MainWindow::on_flipv() {
+  CheckEnabled;
   undo.push(new FlipFrameCommand(&gif, FlipDirection::Vertical));
 }
 
 void MainWindow::on_clockwise() {
+  CheckEnabled;
   undo.push(new RotateFrameCommand(&gif, true));
 }
 
 void MainWindow::on_anticlockwise() {
+  CheckEnabled;
   undo.push(new RotateFrameCommand(&gif, false));
 }
 
 void MainWindow::on_exportapply() {
+  CheckEnabled;
   auto filename = QFileDialog::getSaveFileName(this, tr("ChooseSaveFile"),
                                                lastusedpath, "png (*.png)");
   if (filename.isEmpty())
@@ -971,6 +1080,7 @@ void MainWindow::on_exportapply() {
 }
 
 void MainWindow::on_applypic() {
+  CheckEnabled;
   auto indices = imglist->selectionModel()->selectedRows();
   if (!indices.count()) {
     DMessageManager::instance()->sendMessage(this, ICONRES("model"),
@@ -999,6 +1109,7 @@ void MainWindow::on_applypic() {
 }
 
 void MainWindow::on_onion() {
+  CheckEnabled;
   bool ok;
   auto index =
       DInputDialog::getInt(this, tr("OnionMask"), tr("PleaseInputIndex"),

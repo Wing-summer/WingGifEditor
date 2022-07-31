@@ -55,6 +55,7 @@ private:
   bool ensureSafeClose();
   void setSaved(bool b);
   void setWritable(bool b);
+  void showGifMessage(QString message = "");
 
 private:
   void on_new_frompics();
