@@ -88,4 +88,10 @@ sudo apt install graphicsmagick-libmagick-dev-compat
 
 ## WIKI
 
+&emsp;&emsp;点击 [此链接](https://code.gitlink.org.cn/wingsummer/WingGifEditor/wiki/%E4%BB%8B%E7%BB%8D) 进入，注意此时 WiKi 暂时没有软件功能相关介绍，主要是提交 Bug 和 PR 相关手册介绍。
+
+> 等待公测完毕后进行建设
+
 ## 应用商店
+
+> 等公测结束之后发布
