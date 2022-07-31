@@ -48,6 +48,9 @@ class MainWindow : public DMainWindow {
 public:
   MainWindow(DMainWindow *parent = nullptr);
 
+  void openGif(QString filename);
+  bool checkIsGif(QString filename);
+
 private:
   void refreshImglist();
   void refreshListLabel(int start = 0);
@@ -56,6 +59,9 @@ private:
   void setSaved(bool b);
   void setWritable(bool b);
   void showGifMessage(QString message = "");
+
+  void saveWindowStatus();
+  void loadWindowStatus();
 
 private:
   void on_new_frompics();
@@ -134,6 +140,8 @@ private:
 protected:
   void closeEvent(QCloseEvent *event) override;
   void resizeEvent(QResizeEvent *event) override;
+  void dragEnterEvent(QDragEnterEvent *event) override;
+  void dropEvent(QDropEvent *event) override;
 
 private:
   DIconButton *iSetfitInView;

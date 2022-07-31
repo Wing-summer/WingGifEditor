@@ -4,6 +4,8 @@
 #include <DMessageBox>
 #include <DTitlebar>
 #include <DWidgetUtil>
+#include <QCommandLineParser>
+#include <QFileInfo>
 #include <QTranslator>
 
 DWIDGET_USE_NAMESPACE
@@ -49,11 +51,24 @@ int main(int argc, char *argv[]) {
   a.loadTranslator();
   a.setApplicationDisplayName(QObject::tr("WingGifEditor"));
 
+  QCommandLineParser parser;
+  parser.process(a);
+  QStringList arguments = parser.positionalArguments();
+
+  QString filename;
+
+  if (arguments.count() > 0)
+    filename = QFileInfo(arguments.first()).absoluteFilePath();
+
   // 保存程序的窗口主题设置
   DApplicationSettings as;
   Q_UNUSED(as)
 
   MainWindow w;
+
+  if (filename.length() && w.checkIsGif(filename))
+    w.openGif(filename);
+
   w.show();
   Dtk::Widget::moveToCenter(&w);
   return a.exec();

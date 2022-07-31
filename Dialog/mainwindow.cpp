@@ -24,13 +24,18 @@
 #include <DToolBar>
 #include <DToolButton>
 #include <Magick++.h>
+#include <QApplication>
 #include <QClipboard>
 #include <QCloseEvent>
 #include <QDesktopServices>
+#include <QDragEnterEvent>
+#include <QDropEvent>
 #include <QFileDialog>
 #include <QListWidgetItem>
 #include <QMessageBox>
+#include <QMimeData>
 #include <QRubberBand>
+#include <QSettings>
 #include <QShortcut>
 #include <QVBoxLayout>
 #include <QWidget>
@@ -612,6 +617,29 @@ MainWindow::MainWindow(DMainWindow *parent) : DMainWindow(parent) {
   ConnectShortCut(keyscalepic, MainWindow::on_scalepic);
   ConnectShortCut(keycutpic, MainWindow::on_cutpic);
   ConnectShortCut(keyscaledelay, MainWindow::on_scaledelay);
+
+  loadWindowStatus();
+}
+
+void MainWindow::openGif(QString filename) {
+  if (!gif.load(filename)) {
+    setEditMode(false);
+    DMessageManager::instance()->sendMessage(this, ICONRES("icon"),
+                                             "OpenError");
+    return;
+  }
+  curfilename = filename;
+  imglist->setCurrentRow(0);
+  editor->refreshEditor();
+  setEditMode(true);
+  setSaved(true);
+  setWritable(QFileInfo(filename).permission(QFile::WriteUser));
+  showGifMessage();
+}
+
+bool MainWindow::checkIsGif(QString filename) {
+  Magick::Image img(filename.toStdString());
+  return !img.magick().compare("GIF");
 }
 
 void MainWindow::refreshImglist() {
@@ -643,7 +671,17 @@ void MainWindow::setEditMode(bool b) {
   iSetfitInView->setEnabled(b);
 }
 
-bool MainWindow::ensureSafeClose() { return true; }
+bool MainWindow::ensureSafeClose() {
+  if (!undo.isClean()) {
+    if (QMessageBox::question(
+            this, tr("ConfirmClose"),
+            tr("ConfirmSave") + "\n" +
+                (curfilename == ":" ? tr("Untitle") : curfilename)) ==
+        QMessageBox::No)
+      return false;
+  }
+  return true;
+}
 
 void MainWindow::setSaved(bool b) {
   iSaved->setPixmap(b ? infoSaved : infoUnsaved);
@@ -658,6 +696,20 @@ void MainWindow::showGifMessage(QString message) {
                       QString(tr("%1 frame | %2 total")
                                   .arg(imglist->currentRow())
                                   .arg(gif.frameCount())));
+}
+
+void MainWindow::saveWindowStatus() {
+  QSettings settings(QApplication::organizationName(),
+                     QApplication::applicationName());
+  restoreGeometry(settings.value("geometry").toByteArray());
+  restoreState(settings.value("windowState").toByteArray());
+}
+
+void MainWindow::loadWindowStatus() {
+  QSettings settings(QApplication::organizationName(),
+                     QApplication::applicationName());
+  settings.setValue("geometry", saveGeometry());
+  settings.setValue("windowState", saveState());
 }
 
 void MainWindow::on_new_frompics() {
@@ -692,21 +744,11 @@ void MainWindow::on_open() {
                                                  lastusedpath, "gif (*.gif)");
     if (filename.isEmpty())
       return;
-    auto info = QFileInfo(filename);
-    lastusedpath = info.absoluteDir().absolutePath();
-    if (!gif.load(filename)) {
-      setEditMode(false);
-      DMessageManager::instance()->sendMessage(this, ICONRES("icon"),
-                                               "OpenError");
-      return;
-    }
-    curfilename = filename;
-    imglist->setCurrentRow(0);
-    editor->refreshEditor();
-    setEditMode(true);
-    setSaved(true);
-    setWritable(info.permission(QFile::WriteUser));
-    showGifMessage();
+
+    lastusedpath = QFileInfo(filename).absoluteDir().absolutePath();
+
+    if (checkIsGif(filename))
+      openGif(filename);
   }
 }
 
@@ -870,13 +912,15 @@ void MainWindow::on_export() {
 }
 
 void MainWindow::on_exit() {
-  gif.close();
-  editor->setBackgroudPix(QPixmap(":/images/icon.png"));
-  editor->scale(1, 1);
-  iSaved->setPixmap(infoSaveg);
-  iReadWrite->setPixmap(inforwg);
-  status->showMessage("");
-  curfilename.clear();
+  if (ensureSafeClose()) {
+    gif.close();
+    editor->setBackgroudPix(QPixmap(":/images/icon.png"));
+    editor->scale(1, 1);
+    iSaved->setPixmap(infoSaveg);
+    iReadWrite->setPixmap(inforwg);
+    status->showMessage("");
+    curfilename.clear();
+  }
 }
 
 void MainWindow::on_undo() {
@@ -1136,7 +1180,25 @@ void MainWindow::on_wiki() {
 
 void MainWindow::closeEvent(QCloseEvent *event) {
   player->stop();
-  event->accept();
+  if (ensureSafeClose()) {
+    saveWindowStatus();
+    event->accept();
+  } else
+    event->ignore();
 }
 
 void MainWindow::resizeEvent(QResizeEvent *event) { Q_UNUSED(event); }
+
+void MainWindow::dragEnterEvent(QDragEnterEvent *event) {
+  if (event->mimeData()->hasUrls())
+    event->acceptProposedAction();
+  else
+    event->ignore();
+}
+
+void MainWindow::dropEvent(QDropEvent *event) {
+  const QMimeData *mimeData = event->mimeData();
+  if (mimeData->hasUrls()) {
+    auto filename = mimeData->urls().first().toLocalFile();
+  }
+}
