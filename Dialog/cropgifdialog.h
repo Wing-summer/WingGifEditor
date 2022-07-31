@@ -15,6 +15,7 @@ public:
   CropGifDialog(DMainWindow *parent = nullptr);
 
   void setMaxSize(QSize maxsize);
+  void sigSelRectChanged();
 
 public slots:
   void setSelRect(QRectF rect);

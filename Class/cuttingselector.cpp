@@ -3,8 +3,9 @@
 
 CuttingSelector::CuttingSelector(QGraphicsItem *parent)
     : QGraphicsRectItem(parent) {
-  setFlags(QGraphicsItem::ItemIsMovable |
-           QGraphicsItem::ItemSendsGeometryChanges);
+  // Issue 解决后取消注释: #I5JR3S
+  //  setFlags(QGraphicsItem::ItemIsMovable |
+  //           QGraphicsItem::ItemSendsGeometryChanges);
 }
 
 void CuttingSelector::setLimitArea(QRectF rect) { limitArea = rect; }

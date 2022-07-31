@@ -29,8 +29,9 @@ SizeGripItem::HandleItem::HandleItem(int positionFlags, SizeGripItem *parent)
     : QGraphicsRectItem(-4, -4, 8, 8, parent), positionFlags_(positionFlags),
       parent_(parent) {
   setBrush(QBrush(Qt::lightGray));
-  setFlag(ItemIsMovable);
-  setFlag(ItemSendsGeometryChanges);
+  // Issue 解决后取消注释: #I5JR3S
+  // setFlag(ItemIsMovable);
+  // setFlag(ItemSendsGeometryChanges);
   hide();
 }
 

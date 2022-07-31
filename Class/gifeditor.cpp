@@ -78,7 +78,10 @@ void GifEditor::refreshEditor() {
   fitInView(r, Qt::KeepAspectRatio);
 }
 
-void GifEditor::initCrop() { scene->setCuttingMode(true); }
+void GifEditor::initCrop(QRectF &rect) {
+  scene->setCuttingMode(true);
+  rect = scene->contentBounding();
+}
 
 void GifEditor::endCrop() { scene->setCuttingMode(false); }
 

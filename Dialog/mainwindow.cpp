@@ -58,7 +58,7 @@ MainWindow::MainWindow(DMainWindow *parent) : DMainWindow(parent) {
   imglist->setFixedHeight(140);
   imglist->setLayoutDirection(Qt::LayoutDirection::LeftToRight);
   imglist->setResizeMode(QListView::Adjust);
-  imglist->setDragDropMode(QListWidget::DragDropMode::InternalMove);
+  imglist->setDragDropMode(QListWidget::DragDropMode::NoDragDrop);
   imglist->setDefaultDropAction(Qt::DropAction::TargetMoveAction);
   vlayout->addWidget(imglist);
 
@@ -543,12 +543,20 @@ MainWindow::MainWindow(DMainWindow *parent) : DMainWindow(parent) {
     redomenu->setEnabled(b);
     redotool->setEnabled(b);
   });
+  connect(&undo, &QUndoStack::cleanChanged, this, [=](bool clean) {
+
+  });
 
   cuttingdlg = new CropGifDialog(this);
   connect(cuttingdlg, &CropGifDialog::selRectChanged, editor,
           &GifEditor::setSelRect);
   connect(cuttingdlg, &CropGifDialog::crop, this,
-          [=](int x, int y, int w, int h) {});
+          [=](int x, int y, int w, int h) {
+            editor->endCrop();
+            this->setEditMode(true);
+            gif.crop(x, y, w, h);
+            editor->refreshEditor();
+          });
   connect(cuttingdlg, &CropGifDialog::pressCancel, this, [=] {
     editor->endCrop();
     this->setEditMode(true);
@@ -586,6 +594,10 @@ void MainWindow::setEditMode(bool b) {
 }
 
 bool MainWindow::ensureSafeClose() { return true; }
+
+void MainWindow::setSaved(bool b) {
+  iSaved->setPixmap(b ? infoSaved : infoUnsaved);
+}
 
 void MainWindow::on_new_frompics() {
   if (ensureSafeClose()) {
@@ -908,10 +920,12 @@ void MainWindow::on_scalepic() {
 }
 
 void MainWindow::on_cutpic() {
-  cuttingdlg->show();
-
-  editor->initCrop();
   setEditMode(false);
+  QRectF rect;
+  editor->initCrop(rect);
+  cuttingdlg->setMaxSize(rect.size().toSize());
+  cuttingdlg->setSelRect(rect);
+  cuttingdlg->show();
 }
 
 void MainWindow::on_fliph() {
@@ -991,7 +1005,10 @@ void MainWindow::on_sponsor() {
   d.exec();
 }
 
-void MainWindow::on_wiki() { QDesktopServices::openUrl(QUrl("")); }
+void MainWindow::on_wiki() {
+  QDesktopServices::openUrl(QUrl("https://code.gitlink.org.cn/wingsummer/"
+                                 "WingGifEditor/wiki/%E4%BB%8B%E7%BB%8D"));
+}
 
 void MainWindow::closeEvent(QCloseEvent *event) {
   player->stop();

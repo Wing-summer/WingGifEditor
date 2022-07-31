@@ -20,7 +20,7 @@ public:
   void setZoom(int value);
   void refreshEditor();
 
-  void initCrop();
+  void initCrop(QRectF &rect);
   void endCrop();
 
 public slots:
