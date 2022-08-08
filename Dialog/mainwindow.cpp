@@ -487,7 +487,7 @@ MainWindow::MainWindow(DMainWindow *parent) : DMainWindow(parent) {
   iSetfitInView->setEnabled(false);
   AddStatusLabel(QString(5, ' '));
   connect(iSetfitInView, &DIconButton::clicked, this,
-          [=] { editor->refreshEditor(); });
+          [=] { editor->fitPicEditor(); });
   setStatusBar(status);
 
   auto pgif = &gif;
@@ -571,7 +571,7 @@ MainWindow::MainWindow(DMainWindow *parent) : DMainWindow(parent) {
             editor->endCrop();
             this->setEditMode(true);
             gif.crop(x, y, w, h);
-            editor->refreshEditor();
+            editor->fitPicEditor();
           });
   connect(cuttingdlg, &CropGifDialog::pressCancel, this, [=] {
     CheckEnabled;
@@ -630,7 +630,8 @@ void MainWindow::openGif(QString filename) {
   }
   curfilename = filename;
   imglist->setCurrentRow(0);
-  editor->refreshEditor();
+  editor->fitPicEditor();
+  editor->scale(1, 1);
   setEditMode(true);
   setSaved(true);
   setWritable(QFileInfo(filename).permission(QFile::WriteUser));

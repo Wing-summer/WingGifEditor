@@ -18,7 +18,7 @@ public:
   void zoomIn();
   void zoomOut();
   void setZoom(int value);
-  void refreshEditor();
+  void fitPicEditor();
 
   void initCrop(QRectF &rect);
   void endCrop();

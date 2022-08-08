@@ -72,7 +72,7 @@ void GifEditor::wheelEvent(QWheelEvent *event) {
   event->accept();
 }
 
-void GifEditor::refreshEditor() {
+void GifEditor::fitPicEditor() {
   auto r = scene->contentBounding();
   setSceneRect(r);
   fitInView(r, Qt::KeepAspectRatio);
