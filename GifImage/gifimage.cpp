@@ -84,11 +84,20 @@ void GifImage::loadfromGifs(QStringList gifs) {
 
 bool GifImage::save(QString filename) {
   std::vector<Magick::Image> frames;
-  Magick::deconstructImages(&frames, m_frames.begin(), m_frames.end());
   try {
+    try {
+      Magick::deconstructImages(&frames, m_frames.begin(), m_frames.end());
+    } catch (const Magick::Exception &) {
+      frames = m_frames;
+      QMessageBox::critical(nullptr, tr("UnSolvedBug"),
+                            tr("GIFUnSolveBugInfo"));
+    }
     GifSaver saver(frames.begin(), frames.end(), filename.toStdString());
     StartWaitFinish(saver);
     return true;
+  } catch (const Magick::Exception &ex) {
+    showError(ex.what());
+    return false;
   } catch (...) {
     return false;
   }
