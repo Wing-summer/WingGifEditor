@@ -628,14 +628,15 @@ void MainWindow::openGif(QString filename) {
                                              "OpenError");
     return;
   }
+  showWaitNotify();
   curfilename = filename;
   imglist->setCurrentRow(0);
   editor->fitPicEditor();
-  editor->scale(1, 1);
   setEditMode(true);
   setSaved(true);
   setWritable(QFileInfo(filename).permission(QFile::WriteUser));
   showGifMessage();
+  showProcessSuccess();
 }
 
 bool MainWindow::checkIsGif(QString filename) {
@@ -713,15 +714,30 @@ void MainWindow::loadWindowStatus() {
   settings.setValue("windowState", saveState());
 }
 
+void MainWindow::showWaitNotify() {
+  DMessageManager::instance()->sendMessage(this, ICONRES("icon"),
+                                           tr("PleaseWait!"));
+}
+
+void MainWindow::showProcessSuccess() {
+  DMessageManager::instance()->sendMessage(this, ICONRES("icon"),
+                                           tr("ProcessSuccess"));
+}
+
 void MainWindow::on_new_frompics() {
   if (ensureSafeClose()) {
     NewDialog d(NewType::FromPics, this);
     if (d.exec()) {
+      showWaitNotify();
       gif.loadfromImages(d.getResult());
+      showProcessSuccess();
       curfilename = ":"; //表示新建
       setSaved(false);
       setWritable(true);
+      setEditMode(true);
+      imglist->setCurrentRow(0);
       showGifMessage();
+      showProcessSuccess();
     }
   }
 }
@@ -730,11 +746,15 @@ void MainWindow::on_new_fromgifs() {
   if (ensureSafeClose()) {
     NewDialog d(NewType::FromGifs, this);
     if (d.exec()) {
+      showWaitNotify();
       gif.loadfromGifs(d.getResult());
       curfilename = ":"; //表示新建
       setSaved(false);
       setWritable(true);
+      setEditMode(true);
+      imglist->setCurrentRow(0);
       showGifMessage();
+      showProcessSuccess();
     }
   }
 }

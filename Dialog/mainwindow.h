@@ -62,6 +62,8 @@ private:
 
   void saveWindowStatus();
   void loadWindowStatus();
+  void showWaitNotify();
+  void showProcessSuccess();
 
 private:
   void on_new_frompics();
