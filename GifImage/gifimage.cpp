@@ -2,6 +2,7 @@
 #include <QApplication>
 #include <QDebug>
 #include <QFile>
+#include <QMessageBox>
 #include <QPixmap>
 #include <QThreadPool>
 
@@ -26,9 +27,13 @@ bool GifImage::load(QString filename) {
     StartWaitFinish(coalescer);
     return true;
   } catch (const Magick::Exception &ex) {
-    qDebug() << ex.what();
+    showError(ex.what());
     return false;
-  } catch (const std::bad_alloc &) {
+  } catch (const std::bad_alloc &ex) {
+    showError(ex.what());
+    return false;
+  } catch (...) {
+    showError(tr("Unknown Error!"));
     return false;
   }
 }
@@ -54,14 +59,14 @@ void GifImage::loadfromGifs(QStringList gifs) {
     GifReader freader(&buffer, gifs.first().toStdString());
     StartWaitFinish(freader);
 
-    GifCoalescer fcoalescer(&cbuffer, cbuffer.begin(), cbuffer.end());
+    GifCoalescer fcoalescer(&cbuffer, buffer.begin(), buffer.end());
     StartWaitFinish(fcoalescer);
     m_frames.insert(m_frames.end(), cbuffer.begin(), cbuffer.end());
     auto gifsize = cbuffer[0].size();
     for (auto p = gifs.begin() + 1; p != gifs.end(); p++) {
       GifReader reader(&buffer, (*p).toStdString());
       StartWaitFinish(reader);
-      GifCoalescer coalescer(&cbuffer, cbuffer.begin(), cbuffer.end());
+      GifCoalescer coalescer(&cbuffer, buffer.begin(), buffer.end());
       StartWaitFinish(coalescer);
       for (auto &img : cbuffer) {
         img.scale(gifsize);
@@ -69,8 +74,11 @@ void GifImage::loadfromGifs(QStringList gifs) {
       m_frames.insert(m_frames.end(), cbuffer.begin(), cbuffer.end());
     }
   } catch (const Magick::Exception &ex) {
-    qDebug() << ex.what();
-  } catch (const std::bad_alloc &) {
+    showError(ex.what());
+  } catch (const std::bad_alloc &ex) {
+    showError(ex.what());
+  } catch (...) {
+    showError(tr("Unknown Error!"));
   }
 }
 
@@ -340,4 +348,8 @@ QImage GifImage::Image2QImage(const Magick::Image &img) {
   }
 
   return qimg;
+}
+
+void GifImage::showError(QString err) {
+  QMessageBox::critical(nullptr, tr("Error"), err);
 }

@@ -139,6 +139,8 @@ private:
   void waitThreadPool();
   QImage Image2QImage(const Magick::Image &img);
 
+  void showError(QString err);
+
 private:
   std::vector<Magick::Image> m_frames;
 };
