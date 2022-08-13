@@ -1,11 +1,11 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
-#include "Class/clipboardhelper.h"
+//#include "Class/clipboardhelper.h"
 #include "Class/gifeditor.h"
 #include "Class/playgifmanager.h"
-#include "GifImage/gifhelper.h"
-#include "GifImage/gifimage.h"
+#include "GifImage/decoder/gifdecoder.h"
+#include "GifImage/encoder/GifEncoder.h"
 #include "cropgifdialog.h"
 #include <DGraphicsView>
 #include <DLabel>
@@ -15,33 +15,8 @@
 #include <QListWidget>
 #include <QUndoStack>
 
+using namespace blk;
 DWIDGET_USE_NAMESPACE
-
-enum GifError {
-  E_GIF_ERR_OPEN_FAILED = 1,
-  E_GIF_ERR_WRITE_FAILED,
-  E_GIF_ERR_HAS_SCRN_DSCR,
-  E_GIF_ERR_HAS_IMAG_DSCR,
-  E_GIF_ERR_NO_COLOR_MAP,
-  E_GIF_ERR_DATA_TOO_BIG,
-  E_GIF_ERR_NOT_ENOUGH_MEM,
-  E_GIF_ERR_DISK_IS_FULL,
-  E_GIF_ERR_CLOSE_FAILED,
-  E_GIF_ERR_NOT_WRITEABLE,
-  D_GIF_ERR_OPEN_FAILED = 101,
-  D_GIF_ERR_READ_FAILED,
-  D_GIF_ERR_NOT_GIF_FILE,
-  D_GIF_ERR_NO_SCRN_DSCR,
-  D_GIF_ERR_NO_IMAG_DSCR,
-  D_GIF_ERR_NO_COLOR_MAP,
-  D_GIF_ERR_WRONG_RECORD,
-  D_GIF_ERR_DATA_TOO_BIG,
-  D_GIF_ERR_NOT_ENOUGH_MEM,
-  D_GIF_ERR_CLOSE_FAILED,
-  D_GIF_ERR_NOT_READABLE,
-  D_GIF_ERR_IMAGE_DEFECT,
-  D_GIF_ERR_EOF_TOO_SOON
-};
 
 class MainWindow : public DMainWindow {
   Q_OBJECT
@@ -64,6 +39,8 @@ private:
   void loadWindowStatus();
   void showWaitNotify();
   void showProcessSuccess();
+
+  bool saveGif(QString filename);
 
 private:
   void on_new_frompics();
@@ -125,13 +102,14 @@ private:
   GifEditor *editor;
   QListWidget *imglist;
   DStatusBar *status;
-  GifHelper gif;
 
   QString lastusedpath;
   QString curfilename;
 
+  GifDecoder gif;
+
   PlayGifManager *player;
-  ClipBoardHelper *clip;
+  // ClipBoardHelper *clip;
 
   CropGifDialog *cuttingdlg;
 

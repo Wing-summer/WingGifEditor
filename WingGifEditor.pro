@@ -15,8 +15,6 @@ SOURCES += \
     Dialog/scalegifdialog.cpp \
     Dialog/reduceframedialog.cpp \
     Class/playgifmanager.cpp \
-    GifImage/gifimage.cpp \
-    GifImage/gifhelper.cpp \
     Dialog/aboutsoftwaredialog.cpp \
     Class/clipboardhelper.cpp \
     Dialog/cropgifdialog.cpp \
@@ -34,7 +32,7 @@ SOURCES += \
     UndoCommand/delframedircommand.cpp \
     UndoCommand/reduceframecommand.cpp \
     UndoCommand/scaleframecommand.cpp \
-    UndoCommand/replaceframecommand.cpp
+    UndoCommand/replaceframecommand.cpp 
 
 RESOURCES += resources.qrc
 
@@ -46,8 +44,6 @@ HEADERS += Dialog/mainwindow.h \
     Dialog/scalegifdialog.h \
     Dialog/reduceframedialog.h \
     Class/playgifmanager.h \
-    GifImage/gifimage.h \
-    GifImage/gifhelper.h \
     Dialog/aboutsoftwaredialog.h \
     Class/clipboardhelper.h \
     Dialog/cropgifdialog.h \
@@ -65,13 +61,11 @@ HEADERS += Dialog/mainwindow.h \
     UndoCommand/delframedircommand.h \
     UndoCommand/reduceframecommand.h \
     UndoCommand/scaleframecommand.h \
-    UndoCommand/replaceframecommand.h
-
-QMAKE_CXXFLAGS += $(shell Magick++-config --cppflags --cxxflags)
-
-LIBS += $(shell Magick++-config --ldflags --libs)
+    UndoCommand/replaceframecommand.h 
 
 DISTFILES +=
 
 TRANSLATIONS += \
     $$PWD/lang/zh.ts
+
+include($$PWD/GifImage/WingGif.pri)
