@@ -625,7 +625,7 @@ void MainWindow::openGif(QString filename) {
     setEditMode(false);
     DMessageManager::instance()->sendMessage(this, ICONRES("icon"),
                                              "OpenError");
-    QMessageBox::critical(this, "",
+    QMessageBox::critical(this, tr("OpenError"),
                           QString(GifErrorString(gif.getLastError())));
     return;
   }
@@ -1035,6 +1035,7 @@ void MainWindow::on_exit() {
     iReadWrite->setPixmap(inforwg);
     status->showMessage("");
     curfilename.clear();
+    undo.clear();
   }
 }
 
@@ -1329,5 +1330,6 @@ void MainWindow::dropEvent(QDropEvent *event) {
   const QMimeData *mimeData = event->mimeData();
   if (mimeData->hasUrls()) {
     auto filename = mimeData->urls().first().toLocalFile();
+    openGif(filename);
   }
 }

@@ -14,4 +14,5 @@ void CropImageCommand::undo() {
 
 void CropImageCommand::redo() {
   gif->crop(rect.x(), rect.y(), rect.width(), rect.height());
+  gif->frameImageChanged();
 }

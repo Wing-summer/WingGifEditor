@@ -322,6 +322,7 @@ bool GifDecoder::exportImages(QString folder, QString ext) {
 void GifDecoder::close() {
   frameInfos.clear();
   canvasSize = QSize();
+  emit frameRefreshAll();
 }
 
 void GifDecoder::setOnionIndex(int index) {
@@ -363,6 +364,7 @@ void GifDecoder::setFrameDelay(int index, int delay) {
   if (index < 0 || index >= frameInfos.count())
     return;
   frameInfos[index].delayTime = delay;
+  emit frameDelaySet(index, delay);
 }
 
 void GifDecoder::setAllFrameDelay(int delay) {
@@ -420,6 +422,7 @@ void GifDecoder::scale(int w, int h) {
     auto &img = frame.image;
     img = img.scaled(w, h);
   }
+  emit frameImageChanged();
 }
 
 QVector<QRgb>

@@ -19,23 +19,17 @@
 
 &emsp;&emsp;有关本软件提建议的时候不要天马行空，本软件的定位是提供简单易用满足基本需求的 GIF 编辑器，并不是像`ScreenToGif`，一是没有相关基础知识，自己一个人搞不动；二是没必要，我不想把这个软件搞个大而全，配合`Gimp`等优秀的图像编辑器作为辅助，来编辑 GIF 图像绰绰有余了。
 
-### 软件依赖
+### GIF 库
 
-&emsp;&emsp;本软件基于`ImageMagick`，它是一个强大的图片处理库，这个是官网介绍：
+&emsp;&emsp;本软件基于两个库修改定制而得，一个负责读：`QtGifImage`，另一个负责写：`BurstLinker`。
 
-> Use ImageMagick® to create, edit, compose, or convert digital images. It can read and write images in a variety of formats (over 200) including PNG, JPEG, GIF, WebP, HEIC, SVG, PDF, DPX, EXR and TIFF. ImageMagick can resize, flip, mirror, rotate, distort, shear and transform images, adjust image colors, apply various special effects, or draw text, lines, polygons, ellipses and Bézier curves.
+&emsp;&emsp;`BurstLinker`是`Android`平台上一个`GIF`编码库，还不错。它的底层实现是`C++`，所以我可以进行略微的修改定制得到，仓库 [链接](https://github.com/yutianzuo/BurstLinker) 。
 
-&emsp;&emsp;功能挺强大的，似乎对于该软件有点大材小用，不过我会尽量充分利用该库，实现与 GIF 编辑相关的操作。
+&emsp;&emsp;`QtGifImage`是`Qt`上的`GIF`读写库，可以将`GIF`解析为`QImage`序列，基于`giflib`。这个我改动比较大，只保留了读取部分，并与我的软件做了适配（这个库写`GIF`图片的质量有点太差），仓库 [链接](https://github.com/jiangcaiyang/QtGifImage) 。
 
 ### 编译安装
 
-&emsp;&emsp;由于本软件依赖`ImageMagick`和`DTK`，`DTK`直接在深度应用商店下载就行了，前者你需要在终端输入：
-
-```bash
-sudo apt install graphicsmagick-libmagick-dev-compat
-```
-
-&emsp;&emsp;安装完毕后，打开项目，你就可以直接编译该软件了。
+&emsp;&emsp;由于本软件依赖`Qt`和`DTK`，`DTK`直接在深度应用商店下载就行了。安装完毕后，打开项目，你就可以直接编译该软件了。
 
 ### 参与贡献
 
@@ -62,6 +56,10 @@ sudo apt install graphicsmagick-libmagick-dev-compat
 <img alt="效果图" src="screenshot.png">
 <p align="center">羽云 GIF 编辑器</p>
 </p>
+
+## TODO
+
+&emsp;&emsp;本软件保存生成的 GIF 会比原来的大很多，这个是由于原理导致的。本想通过保留每个帧之间不同的部分实现减小体积，的确小了很多，比原文件稍大一点点，但是 GIF 播放有的部分会有白块，该实现代码已被注释掉，以备不时之需。
 
 ## 捐助
 

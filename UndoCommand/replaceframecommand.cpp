@@ -10,7 +10,9 @@ void ReplaceFrameCommand::undo() {
   auto frames = gif->frames();
   auto len = olds.count();
   for (auto i = 0; i < len; i++) {
-    frames[olds[i]].image.swap(bufferimage[i]);
+    auto index = olds[i];
+    frames[index].image.swap(bufferimage[i]);
+    gif->frameRefreshImg(index);
   }
 }
 
@@ -18,6 +20,8 @@ void ReplaceFrameCommand::redo() {
   auto frames = gif->frames();
   auto len = olds.count();
   for (auto i = 0; i < len; i++) {
-    frames[olds[i]].image.swap(bufferimage[i]);
+    auto index = olds[i];
+    frames[index].image.swap(bufferimage[i]);
+    gif->frameRefreshImg(index);
   }
 }

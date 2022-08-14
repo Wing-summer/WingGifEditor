@@ -79,27 +79,120 @@
     </message>
 </context>
 <context>
+    <name>GifDecoder</name>
+    <message>
+        <location filename="../GifImage/decoder/gifdecoder.cpp" line="159"/>
+        <location filename="../GifImage/decoder/gifdecoder.cpp" line="189"/>
+        <source>Failed to open given file</source>
+        <translation>打开所给文件失败！</translation>
+    </message>
+    <message>
+        <location filename="../GifImage/decoder/gifdecoder.cpp" line="162"/>
+        <source>Failed to write to given file</source>
+        <translation>无法写入文件！</translation>
+    </message>
+    <message>
+        <location filename="../GifImage/decoder/gifdecoder.cpp" line="165"/>
+        <source>Screen descriptor has already been set</source>
+        <translation>屏幕描述符已被设置！</translation>
+    </message>
+    <message>
+        <location filename="../GifImage/decoder/gifdecoder.cpp" line="168"/>
+        <source>Image descriptor is still active</source>
+        <translation>图像描述符仍处于活跃状态！</translation>
+    </message>
+    <message>
+        <location filename="../GifImage/decoder/gifdecoder.cpp" line="171"/>
+        <location filename="../GifImage/decoder/gifdecoder.cpp" line="204"/>
+        <source>Neither global nor local color map</source>
+        <translation>没有颜色表！</translation>
+    </message>
+    <message>
+        <location filename="../GifImage/decoder/gifdecoder.cpp" line="174"/>
+        <location filename="../GifImage/decoder/gifdecoder.cpp" line="210"/>
+        <source>Number of pixels bigger than width * height</source>
+        <translation>像素数超过宽度和高度积</translation>
+    </message>
+    <message>
+        <location filename="../GifImage/decoder/gifdecoder.cpp" line="177"/>
+        <location filename="../GifImage/decoder/gifdecoder.cpp" line="213"/>
+        <source>Failed to allocate required memory</source>
+        <translation>申请所需内存失败！</translation>
+    </message>
+    <message>
+        <location filename="../GifImage/decoder/gifdecoder.cpp" line="180"/>
+        <source>Write failed (disk full?)</source>
+        <translation>写入失败，可能由于磁盘已满！</translation>
+    </message>
+    <message>
+        <location filename="../GifImage/decoder/gifdecoder.cpp" line="183"/>
+        <location filename="../GifImage/decoder/gifdecoder.cpp" line="216"/>
+        <source>Failed to close given file</source>
+        <translation>关闭文件失败！</translation>
+    </message>
+    <message>
+        <location filename="../GifImage/decoder/gifdecoder.cpp" line="186"/>
+        <source>Given file was not opened for write</source>
+        <translation>文件不可写！</translation>
+    </message>
+    <message>
+        <location filename="../GifImage/decoder/gifdecoder.cpp" line="192"/>
+        <source>Failed to read from given file</source>
+        <translation>从文件读取数据失败！</translation>
+    </message>
+    <message>
+        <location filename="../GifImage/decoder/gifdecoder.cpp" line="195"/>
+        <source>Data is not in GIF format</source>
+        <translation>数据不是 GIF 格式！</translation>
+    </message>
+    <message>
+        <location filename="../GifImage/decoder/gifdecoder.cpp" line="198"/>
+        <source>No screen descriptor detected</source>
+        <translation>没有检测到屏幕描述符！</translation>
+    </message>
+    <message>
+        <location filename="../GifImage/decoder/gifdecoder.cpp" line="201"/>
+        <source>No Image Descriptor detected</source>
+        <translation>没有检测到图像描述符！</translation>
+    </message>
+    <message>
+        <location filename="../GifImage/decoder/gifdecoder.cpp" line="207"/>
+        <source>Wrong record type detected</source>
+        <translation>检测到错误的记录类型！</translation>
+    </message>
+    <message>
+        <location filename="../GifImage/decoder/gifdecoder.cpp" line="219"/>
+        <source>Given file was not opened for read</source>
+        <translation>所给文件无法打开读取数据！</translation>
+    </message>
+    <message>
+        <location filename="../GifImage/decoder/gifdecoder.cpp" line="222"/>
+        <source>Image is defective, decoding aborted</source>
+        <translation>图像有缺陷，解码中止！</translation>
+    </message>
+    <message>
+        <location filename="../GifImage/decoder/gifdecoder.cpp" line="225"/>
+        <source>Image EOF detected before image complete</source>
+        <translation>在图像完成之前检测到图像结尾！</translation>
+    </message>
+</context>
+<context>
     <name>GifImage</name>
     <message>
-        <location filename="../GifImage/gifimage.cpp" line="36"/>
-        <location filename="../GifImage/gifimage.cpp" line="81"/>
         <source>Unknown Error!</source>
-        <translation>未知错误！</translation>
+        <translation type="vanished">未知错误！</translation>
     </message>
     <message>
-        <location filename="../GifImage/gifimage.cpp" line="92"/>
         <source>UnSolvedBug</source>
-        <translation>恭喜你触发了 Bug</translation>
+        <translation type="vanished">恭喜你触发了 Bug</translation>
     </message>
     <message>
-        <location filename="../GifImage/gifimage.cpp" line="93"/>
         <source>GIFUnSolveBugInfo</source>
-        <translation>我不清楚怎么解决，这个是调用 deconstructImages 函数失败导致的结果。这个函数可以大大降低 GIF 图片的大小，但我不知道为什么，保存使用深度录屏 GIF 会抛出异常。该程序将会执行缓解措施，但保存的文件大小巨大。</translation>
+        <translation type="vanished">我不清楚怎么解决，这个是调用 deconstructImages 函数失败导致的结果。这个函数可以大大降低 GIF 图片的大小，但我不知道为什么，保存使用深度录屏 GIF 会抛出异常。该程序将会执行缓解措施，但保存的文件大小巨大。</translation>
     </message>
     <message>
-        <location filename="../GifImage/gifimage.cpp" line="363"/>
         <source>Error</source>
-        <translation>出错了</translation>
+        <translation type="vanished">出错了</translation>
     </message>
 </context>
 <context>
@@ -223,7 +316,7 @@
     <message>
         <location filename="../Dialog/mainwindow.cpp" line="206"/>
         <location filename="../Dialog/mainwindow.cpp" line="376"/>
-        <location filename="../Dialog/mainwindow.cpp" line="809"/>
+        <location filename="../Dialog/mainwindow.cpp" line="891"/>
         <source>Goto</source>
         <translation>跳转</translation>
     </message>
@@ -390,7 +483,7 @@
     </message>
     <message>
         <location filename="../Dialog/mainwindow.cpp" line="293"/>
-        <location filename="../Dialog/mainwindow.cpp" line="1180"/>
+        <location filename="../Dialog/mainwindow.cpp" line="1289"/>
         <source>OnionMask</source>
         <translation>设置洋葱帧</translation>
     </message>
@@ -438,108 +531,117 @@
         <translation>缩放以适合视图</translation>
     </message>
     <message>
-        <location filename="../Dialog/mainwindow.cpp" line="679"/>
+        <location filename="../Dialog/mainwindow.cpp" line="628"/>
+        <source>OpenError</source>
+        <translation>打开错误！</translation>
+    </message>
+    <message>
+        <location filename="../Dialog/mainwindow.cpp" line="687"/>
         <source>ConfirmClose</source>
         <translation>确认关闭</translation>
     </message>
     <message>
-        <location filename="../Dialog/mainwindow.cpp" line="680"/>
+        <location filename="../Dialog/mainwindow.cpp" line="688"/>
         <source>ConfirmSave</source>
         <translation>有修改未保存，您确定丢弃吗？</translation>
     </message>
     <message>
-        <location filename="../Dialog/mainwindow.cpp" line="681"/>
+        <location filename="../Dialog/mainwindow.cpp" line="689"/>
         <source>Untitle</source>
         <translation>未命名.gif</translation>
     </message>
     <message>
-        <location filename="../Dialog/mainwindow.cpp" line="698"/>
+        <location filename="../Dialog/mainwindow.cpp" line="706"/>
         <source>%1 frame | %2 total</source>
         <translation>第 %1 帧 | 共 %2 帧</translation>
     </message>
     <message>
-        <location filename="../Dialog/mainwindow.cpp" line="719"/>
+        <location filename="../Dialog/mainwindow.cpp" line="727"/>
         <source>PleaseWait!</source>
         <translation>正在处理，请等待！</translation>
     </message>
     <message>
-        <location filename="../Dialog/mainwindow.cpp" line="724"/>
+        <location filename="../Dialog/mainwindow.cpp" line="732"/>
         <source>ProcessSuccess</source>
         <translation>处理完毕！</translation>
     </message>
     <message>
-        <location filename="../Dialog/mainwindow.cpp" line="764"/>
-        <location filename="../Dialog/mainwindow.cpp" line="1069"/>
-        <location filename="../Dialog/mainwindow.cpp" line="1082"/>
-        <location filename="../Dialog/mainwindow.cpp" line="1156"/>
+        <location filename="../Dialog/mainwindow.cpp" line="846"/>
+        <location filename="../Dialog/mainwindow.cpp" line="1167"/>
+        <location filename="../Dialog/mainwindow.cpp" line="1181"/>
+        <location filename="../Dialog/mainwindow.cpp" line="1256"/>
         <source>ChooseFile</source>
         <translation>请选择文件</translation>
     </message>
     <message>
-        <location filename="../Dialog/mainwindow.cpp" line="809"/>
-        <location filename="../Dialog/mainwindow.cpp" line="1180"/>
+        <location filename="../Dialog/mainwindow.cpp" line="891"/>
+        <location filename="../Dialog/mainwindow.cpp" line="1289"/>
         <source>PleaseInputIndex</source>
         <translation>请输入跳转帧索引</translation>
     </message>
     <message>
-        <location filename="../Dialog/mainwindow.cpp" line="886"/>
-        <location filename="../Dialog/mainwindow.cpp" line="1135"/>
+        <location filename="../Dialog/mainwindow.cpp" line="979"/>
+        <location filename="../Dialog/mainwindow.cpp" line="1235"/>
         <source>ChooseSaveFile</source>
         <translation>请选择保存文件路径</translation>
     </message>
     <message>
-        <location filename="../Dialog/mainwindow.cpp" line="893"/>
+        <location filename="../Dialog/mainwindow.cpp" line="987"/>
         <source>SaveAsSuccess</source>
         <translation>另存为成功！</translation>
     </message>
     <message>
-        <location filename="../Dialog/mainwindow.cpp" line="927"/>
-        <location filename="../Dialog/mainwindow.cpp" line="1144"/>
+        <location filename="../Dialog/mainwindow.cpp" line="1021"/>
+        <location filename="../Dialog/mainwindow.cpp" line="1244"/>
         <source>ExportSuccess</source>
         <translation>导出成功！</translation>
     </message>
     <message>
-        <location filename="../Dialog/mainwindow.cpp" line="930"/>
+        <location filename="../Dialog/mainwindow.cpp" line="1024"/>
         <source>ExportFail</source>
         <translation>导出失败！</translation>
     </message>
     <message>
-        <location filename="../Dialog/mainwindow.cpp" line="998"/>
+        <location filename="../Dialog/mainwindow.cpp" line="1097"/>
         <source>SaveSuccess</source>
         <translation>保存成功</translation>
     </message>
     <message>
-        <location filename="../Dialog/mainwindow.cpp" line="1039"/>
+        <location filename="../Dialog/mainwindow.cpp" line="1138"/>
         <source>DelayTime</source>
         <translation>设置延时</translation>
     </message>
     <message>
-        <location filename="../Dialog/mainwindow.cpp" line="1039"/>
-        <source>Input10ms</source>
-        <translation>请输入延时（单位 10ms）</translation>
+        <location filename="../Dialog/mainwindow.cpp" line="1138"/>
+        <source>Inputms</source>
+        <translation>请输入延时（单位 ms）</translation>
     </message>
     <message>
-        <location filename="../Dialog/mainwindow.cpp" line="1055"/>
+        <source>Input10ms</source>
+        <translation type="vanished">请输入延时（单位 10ms）</translation>
+    </message>
+    <message>
+        <location filename="../Dialog/mainwindow.cpp" line="1153"/>
         <source>ScaleDelayTime</source>
         <translation>缩放延时</translation>
     </message>
     <message>
-        <location filename="../Dialog/mainwindow.cpp" line="1056"/>
+        <location filename="../Dialog/mainwindow.cpp" line="1154"/>
         <source>InputPercent</source>
         <translation>请输入缩放比例</translation>
     </message>
     <message>
-        <location filename="../Dialog/mainwindow.cpp" line="1069"/>
+        <location filename="../Dialog/mainwindow.cpp" line="1167"/>
         <source>Images (*.jpg *.tiff *.png)</source>
         <translation>图片 (*.jpg *.tiff *.png)</translation>
     </message>
     <message>
-        <location filename="../Dialog/mainwindow.cpp" line="1152"/>
+        <location filename="../Dialog/mainwindow.cpp" line="1252"/>
         <source>NoSelection</source>
         <translation>未选择任何帧！</translation>
     </message>
     <message>
-        <location filename="../Dialog/mainwindow.cpp" line="1172"/>
+        <location filename="../Dialog/mainwindow.cpp" line="1282"/>
         <source>InvalidModel</source>
         <translation>无效应用模型！</translation>
     </message>
