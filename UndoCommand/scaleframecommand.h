@@ -1,24 +1,22 @@
-//#ifndef SCALEFRAMECOMMAND_H
-//#define SCALEFRAMECOMMAND_H
+#ifndef SCALEFRAMECOMMAND_H
+#define SCALEFRAMECOMMAND_H
 
-//#include "GifImage/gifhelper.h"
-//#include <QListWidget>
-//#include <QTemporaryFile>
-//#include <QUndoCommand>
+#include "GifImage/decoder/gifdecoder.h"
+#include <QListWidget>
+#include <QUndoCommand>
 
-// class ScaleFrameCommand : public QUndoCommand {
-// public:
-//   ScaleFrameCommand(GifHelper *helper, int w, int h, QListWidget *imglist,
-//                     QUndoCommand *parent = nullptr);
+class ScaleFrameCommand : public QUndoCommand {
+public:
+  ScaleFrameCommand(GifDecoder *helper, int w, int h,
+                    QUndoCommand *parent = nullptr);
 
-//  void undo() override;
-//  void redo() override;
+  void undo() override;
+  void redo() override;
 
-// private:
-//   GifHelper *gif;
-//   QTemporaryFile tmp;
-//   QListWidget *listimg;
-//   int _w, _h;
-// };
+private:
+  GifDecoder *gif;
+  QList<QImage> buffer;
+  int _w, _h;
+};
 
-//#endif // SCALEFRAMECOMMAND_H
+#endif // SCALEFRAMECOMMAND_H

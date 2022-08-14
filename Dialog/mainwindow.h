@@ -1,7 +1,7 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
-//#include "Class/clipboardhelper.h"
+#include "Class/clipboardhelper.h"
 #include "Class/gifeditor.h"
 #include "Class/playgifmanager.h"
 #include "GifImage/decoder/gifdecoder.h"
@@ -109,7 +109,6 @@ private:
   GifDecoder gif;
 
   PlayGifManager *player;
-  // ClipBoardHelper *clip;
 
   CropGifDialog *cuttingdlg;
 

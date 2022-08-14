@@ -1,22 +1,21 @@
-//#ifndef REPLACEFRAMECOMMAND_H
-//#define REPLACEFRAMECOMMAND_H
+#ifndef REPLACEFRAMECOMMAND_H
+#define REPLACEFRAMECOMMAND_H
 
-//#include "GifImage/gifhelper.h"
-//#include <QUndoCommand>
+#include "GifImage/decoder/gifdecoder.h"
+#include <QUndoCommand>
 
-// class ReplaceFrameCommand : public QUndoCommand {
-// public:
-//   ReplaceFrameCommand(GifHelper *helper, QVector<int> &indices,
-//                       QVector<Magick::Image> newimgs,
-//                       QUndoCommand *parent = nullptr);
+class ReplaceFrameCommand : public QUndoCommand {
+public:
+  ReplaceFrameCommand(GifDecoder *helper, QVector<int> &indices,
+                      QVector<QImage> &newimgs, QUndoCommand *parent = nullptr);
 
-//  void undo() override;
-//  void redo() override;
+  void undo() override;
+  void redo() override;
 
-// private:
-//   GifHelper *gif;
-//   QVector<int> olds;
-//   QVector<Magick::Image> newimages, oldimages;
-// };
+private:
+  GifDecoder *gif;
+  QVector<int> olds;
+  QVector<QImage> bufferimage;
+};
 
-//#endif // REPLACEFRAMECOMMAND_H
+#endif // REPLACEFRAMECOMMAND_H

@@ -6,17 +6,18 @@
 #include "Dialog/reduceframedialog.h"
 #include "Dialog/scalegifdialog.h"
 #include "Dialog/sponsordialog.h"
+#include "UndoCommand/cropimagecommand.h"
 #include "UndoCommand/delayframecommand.h"
 #include "UndoCommand/delframedircommand.h"
 #include "UndoCommand/flipframecommand.h"
 #include "UndoCommand/insertframecommand.h"
 #include "UndoCommand/moveframecommand.h"
-//#include "UndoCommand/reduceframecommand.h"
-//#include "UndoCommand/removeframecommand.h"
-//#include "UndoCommand/replaceframecommand.h"
+#include "UndoCommand/reduceframecommand.h"
+#include "UndoCommand/removeframecommand.h"
+#include "UndoCommand/replaceframecommand.h"
 #include "UndoCommand/reverseframecommand.h"
 #include "UndoCommand/rotateframecommand.h"
-//#include "UndoCommand/scaleframecommand.h"
+#include "UndoCommand/scaleframecommand.h"
 #include <DInputDialog>
 #include <DMenu>
 #include <DMessageManager>
@@ -540,8 +541,6 @@ MainWindow::MainWindow(DMainWindow *parent) : DMainWindow(parent) {
     editor->setBackgroudPix(gif.frameimg(imglist->currentRow()));
   });
 
-  // clip = new ClipBoardHelper(pgif, this);
-
   player = new PlayGifManager(this);
   connect(player, &PlayGifManager::tick, this,
           [=](int index) { imglist->setCurrentRow(index); });
@@ -570,7 +569,7 @@ MainWindow::MainWindow(DMainWindow *parent) : DMainWindow(parent) {
             CheckEnabled;
             editor->endCrop();
             this->setEditMode(true);
-            gif.crop(x, y, w, h);
+            undo.push(new CropImageCommand(&gif, x, y, w, h));
             editor->fitPicEditor();
           });
   connect(cuttingdlg, &CropGifDialog::pressCancel, this, [=] {
@@ -746,6 +745,8 @@ bool MainWindow::saveGif(QString filename) {
     for (auto &frame : gif.frames()) {
       auto &img = frame.image;
       QImage timg = img;
+
+      // TODO : 通过只保留不同区域图片实现，但效果不好，故注释，以备用
       //      if (i) {
       //        auto bpl = lastimg.bytesPerLine();
       //        auto ls = lastimg.height();
@@ -860,7 +861,7 @@ void MainWindow::on_del() {
   for (auto item : imglist->selectionModel()->selectedIndexes()) {
     indices.append(item.row());
   }
-  // undo.push(new RemoveFrameCommand(&gif, indices));
+  undo.push(new RemoveFrameCommand(&gif, indices));
 }
 
 void MainWindow::on_selall() {
@@ -942,13 +943,22 @@ void MainWindow::on_decreaseframe() {
   ReduceFrameDialog d(imglist->count(), this);
   if (d.exec()) {
     auto res = d.getResult();
+    auto from = res.start;
+    auto step = res.end;
+    auto to = res.end;
     QVector<int> delindices, modinter;
-    // QVector<Magick::Image> delimgs;
-    //     gif.getReduceFrame(res.start, res.end, res.stepcount, delindices,
-    //     delimgs,
-    //                        modinter);
-    //     undo.push(new ReduceFrameCommand(&gif, delindices, delimgs,
-    //     modinter));
+    auto ii = from + 1;
+    auto q = step + 1;
+    for (auto i = ii; i <= to; i++) {
+      if (i == ii + step) {
+        ii += step;
+        delindices.append(i);
+      } else {
+        modinter.append(gif.frameDelay(i) * (q + 1) / q);
+      }
+    }
+
+    undo.push(new ReduceFrameCommand(&gif, delindices, modinter));
   }
 }
 
@@ -1041,32 +1051,36 @@ void MainWindow::on_redo() {
 void MainWindow::on_copy() {
   CheckEnabled;
   auto sels = imglist->selectionModel()->selectedRows();
-  QVector<int> indices;
+  QList<QGifFrameInfoData> sel;
+  auto frames = gif.frames();
   for (auto &i : sels) {
-    indices.append(i.row());
+    sel.append(frames[i.row()]);
   }
-  // clip->setImageFrames(indices);
+  ClipBoardHelper::setImageFrames(sel);
 }
 
 void MainWindow::on_cut() {
   CheckEnabled;
   auto sels = imglist->selectionModel()->selectedRows();
+  QList<QGifFrameInfoData> sel;
   QVector<int> indices;
+  auto frames = gif.frames();
   for (auto &i : sels) {
     indices.append(i.row());
+    sel.append(frames[i.row()]);
   }
-  // clip->setImageFrames(indices);
-  // undo.push(new RemoveFrameCommand(&gif, indices));
+  ClipBoardHelper::setImageFrames(sel);
+  undo.push(new RemoveFrameCommand(&gif, indices));
 }
 
 void MainWindow::on_paste() {
   CheckEnabled;
   auto pos = imglist->currentRow() + 1;
-  // QVector<Magick::Image> imgs;
-  //  clip->getImageFrames(imgs);
-  // if (imgs.count()) {
-  // undo.push(new InsertFrameCommand(&gif, imglist, pos, imgs));
-  //}
+  QList<QGifFrameInfoData> imgs;
+  ClipBoardHelper::getImageFrames(imgs);
+  if (imgs.count()) {
+    undo.push(new InsertFrameCommand(&gif, imglist, pos, imgs));
+  }
 }
 
 void MainWindow::on_save() {
@@ -1155,33 +1169,10 @@ void MainWindow::on_insertpic() {
     return;
   lastusedpath = QFileInfo(filenames.first()).absoluteDir().absolutePath();
   auto pos = imglist->currentRow() + 1;
-  QList<QGifFrameInfoData> imgs;
-  QImage img;
-  while (filenames.count()) {
-    if (img.load(filenames.first())) {
-      filenames.removeFirst();
-      QGifFrameInfoData d;
-      d.image.swap(img);
-      d.delayTime = 40;
-      d.interlace = false;
-      d.transparentColor = Qt::transparent;
-      imgs.append(d);
-      break;
-    }
-    filenames.removeFirst();
-  }
-
-  for (auto &f : filenames) {
-    if (img.load(f)) {
-      QGifFrameInfoData d;
-      d.image.swap(img);
-      d.delayTime = 40;
-      d.interlace = false;
-      d.transparentColor = Qt::transparent;
-      imgs.append(d);
-    }
-  }
-  undo.push(new InsertFrameCommand(&gif, imglist, pos, imgs));
+  GifDecoder buffer;
+  buffer.loadfromImages(filenames);
+  undo.push(new InsertFrameCommand(&gif, imglist, pos, buffer.frames()));
+  buffer.close();
 }
 
 void MainWindow::on_merge() {
@@ -1193,9 +1184,10 @@ void MainWindow::on_merge() {
     return;
   lastusedpath = QFileInfo(filenames.first()).absoluteDir().absolutePath();
   auto pos = imglist->currentRow() + 1;
-
-  // TODO
-  // undo.push(new InsertFrameCommand(&gif, imglist, pos, imgs));
+  GifDecoder buffer;
+  buffer.loadfromGifs(filenames);
+  undo.push(new InsertFrameCommand(&gif, imglist, pos, buffer.frames()));
+  buffer.close();
 }
 
 void MainWindow::on_scalepic() {
@@ -1203,7 +1195,7 @@ void MainWindow::on_scalepic() {
   ScaleGIFDialog d(gif.size(), this);
   if (d.exec()) {
     auto res = d.getResult();
-    // undo.push(new ScaleFrameCommand(&gif, res.width, res.height, imglist));
+    undo.push(new ScaleFrameCommand(&gif, res.width, res.height));
   }
 }
 
@@ -1268,16 +1260,25 @@ void MainWindow::on_applypic() {
   lastusedpath = QFileInfo(filename).absoluteDir().absolutePath();
 
   QVector<int> rows;
-  for (auto i : indices)
-    rows.append(i.row());
+  QVector<QImage> imgs;
 
-  // QVector<Magick::Image> imgs;
-  //   if (gif.getModeledFrames(filename, rows, imgs)) {
-  //     undo.push(new ReplaceFrameCommand(&gif, rows, imgs));
-  //   } else {
-  //     DMessageManager::instance()->sendMessage(this, ICONRES("model"),
-  //                                              tr("InvalidModel"));
-  //   }
+  QImage img;
+  if (img.load(filename)) {
+    if (img.size() == gif.size()) {
+      auto frames = gif.frames();
+      for (auto i : indices) {
+        rows.append(i.row());
+        QImage bimg = frames[i.row()].image.copy();
+        QPainter painter(&bimg);
+        painter.drawImage(QPoint(), img, img.rect());
+        imgs.append(bimg);
+      }
+      undo.push(new ReplaceFrameCommand(&gif, rows, imgs));
+      return;
+    }
+  }
+  DMessageManager::instance()->sendMessage(this, ICONRES("model"),
+                                           tr("InvalidModel"));
 }
 
 void MainWindow::on_onion() {

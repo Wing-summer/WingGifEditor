@@ -1,23 +1,23 @@
-//#include "replaceframecommand.h"
+#include "replaceframecommand.h"
 
-// ReplaceFrameCommand::ReplaceFrameCommand(GifHelper *helper,
-//                                          QVector<int> &indices,
-//                                          QVector<Magick::Image> newimgs,
-//                                          QUndoCommand *parent)
-//     : QUndoCommand(parent), gif(helper), olds(indices), newimages(newimgs) {
-//   gif->getNativeFrames(indices, oldimages);
-// }
+ReplaceFrameCommand::ReplaceFrameCommand(GifDecoder *helper,
+                                         QVector<int> &indices,
+                                         QVector<QImage> &newimgs,
+                                         QUndoCommand *parent)
+    : QUndoCommand(parent), gif(helper), olds(indices), bufferimage(newimgs) {}
 
-// void ReplaceFrameCommand::undo() {
-//   auto len = olds.count();
-//   for (auto i = 0; i < len; i++) {
-//     gif->applyNativeImage(oldimages[i], olds[i]);
-//   }
-// }
+void ReplaceFrameCommand::undo() {
+  auto frames = gif->frames();
+  auto len = olds.count();
+  for (auto i = 0; i < len; i++) {
+    frames[olds[i]].image.swap(bufferimage[i]);
+  }
+}
 
-// void ReplaceFrameCommand::redo() {
-//   auto len = olds.count();
-//   for (auto i = 0; i < len; i++) {
-//     gif->applyNativeImage(newimages[i], olds[i]);
-//   }
-// }
+void ReplaceFrameCommand::redo() {
+  auto frames = gif->frames();
+  auto len = olds.count();
+  for (auto i = 0; i < len; i++) {
+    frames[olds[i]].image.swap(bufferimage[i]);
+  }
+}

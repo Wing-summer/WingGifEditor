@@ -12,10 +12,9 @@ enum class FlipDirection { Horizontal, Vertical };
 
 class QGifFrameInfoData {
 public:
-  QGifFrameInfoData() : delayTime(-1), interlace(false) {}
+  QGifFrameInfoData() : delayTime(-1) {}
   QImage image;
   int delayTime;
-  bool interlace;
   QColor transparentColor;
 };
 
@@ -25,6 +24,8 @@ public:
   explicit GifDecoder(QObject *parent = nullptr);
   bool load(const QString &fileName);
   QList<QGifFrameInfoData> &frames();
+  void dumpImage(QList<QImage> &list);
+  void swap(QList<QImage> &list);
   QSize size();
 
   static QString GetErrorString(int ErrorCode);
@@ -55,6 +56,7 @@ public:
 
   void flip(FlipDirection dir);
   void rotate(bool clockwise);
+  void scale(int w, int h);
 
 signals:
   void frameRemoved(int index);

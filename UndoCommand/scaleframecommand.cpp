@@ -1,16 +1,14 @@
-//#include "scaleframecommand.h"
+#include "scaleframecommand.h"
 
-// ScaleFrameCommand::ScaleFrameCommand(GifHelper *helper, int w, int h,
-//                                      QListWidget *imglist, QUndoCommand
-//                                      *parent)
-//     : QUndoCommand(parent), gif(helper), listimg(imglist), _w(w), _h(h) {
-//   gif->save(tmp.fileName());
-// }
+ScaleFrameCommand::ScaleFrameCommand(GifDecoder *helper, int w, int h,
+                                     QUndoCommand *parent)
+    : QUndoCommand(parent), gif(helper), _w(w), _h(h) {
+  helper->dumpImage(buffer);
+}
 
-// void ScaleFrameCommand::undo() {
-//   auto p = listimg->currentRow();
-//   gif->load(tmp.fileName());
-//   listimg->setCurrentRow(p);
-// }
+void ScaleFrameCommand::undo() {
+  gif->swap(buffer);
+  gif->frameImageChanged();
+}
 
-// void ScaleFrameCommand::redo() { gif->scale(_w, _h); }
+void ScaleFrameCommand::redo() { gif->scale(_w, _h); }

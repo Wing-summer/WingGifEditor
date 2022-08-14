@@ -73,7 +73,7 @@ bool GifDecoder::load(const QString &fileName) {
     if (transColorIndex != -1)
       frameInfo.transparentColor = colorTable[transColorIndex];
     frameInfo.delayTime = gcb.DelayTime * 10; // convert to milliseconds
-    frameInfo.interlace = gifImage.ImageDesc.Interlace;
+    // frameInfo.interlace = gifImage.ImageDesc.Interlace;
     // frameInfo.offset = QPoint(left, top);
 
     QImage image(width, height, QImage::Format_Indexed8);
@@ -130,6 +130,25 @@ bool GifDecoder::load(const QString &fileName) {
 }
 
 QList<QGifFrameInfoData> &GifDecoder::frames() { return frameInfos; }
+
+void GifDecoder::dumpImage(QList<QImage> &list) {
+  list.clear();
+  for (auto &item : frameInfos) {
+    list.append(item.image);
+  }
+}
+
+void GifDecoder::swap(QList<QImage> &list) {
+  if (list.count() != this->frameInfos.count())
+    return;
+
+  auto p = list.begin();
+  auto pc = frameInfos.begin();
+
+  for (; p != list.end(); p++) {
+    (*pc).image.swap(*p);
+  }
+}
 
 QSize GifDecoder::size() { return canvasSize; }
 
@@ -266,8 +285,7 @@ void GifDecoder::loadfromImages(QStringList filenames) {
       QGifFrameInfoData frame;
       frame.image = img.scaled(osize);
       frame.transparentColor = Qt::transparent;
-      frame.delayTime = 4; // 40 ms
-      frame.interlace = false;
+      frame.delayTime = 40; // 40 ms
       frameInfos.append(frame);
     }
   }
@@ -372,14 +390,14 @@ void GifDecoder::flip(FlipDirection dir) {
   case FlipDirection::Horizontal: {
     for (auto &item : frameInfos) {
       auto &img = item.image;
-      img = img.mirrored();
+      img = img.mirrored(true, false);
     }
     break;
   }
   case FlipDirection::Vertical: {
     for (auto &item : frameInfos) {
       auto &img = item.image;
-      img = img.mirrored(true, false);
+      img = img.mirrored();
     }
     break;
   }
@@ -392,9 +410,16 @@ void GifDecoder::rotate(bool clockwise) {
   trans.rotate(clockwise ? -90 : 90);
   for (auto &frame : frameInfos) {
     auto &img = frame.image;
-    img.transformed(trans, Qt::SmoothTransformation);
+    img = img.transformed(trans, Qt::SmoothTransformation);
   }
   emit frameImageChanged();
+}
+
+void GifDecoder::scale(int w, int h) {
+  for (auto &frame : frameInfos) {
+    auto &img = frame.image;
+    img = img.scaled(w, h);
+  }
 }
 
 QVector<QRgb>

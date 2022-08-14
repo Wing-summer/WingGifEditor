@@ -32,7 +32,8 @@ SOURCES += \
     UndoCommand/delframedircommand.cpp \
     UndoCommand/reduceframecommand.cpp \
     UndoCommand/scaleframecommand.cpp \
-    UndoCommand/replaceframecommand.cpp 
+    UndoCommand/replaceframecommand.cpp \ 
+    UndoCommand/cropimagecommand.cpp
 
 RESOURCES += resources.qrc
 
@@ -61,7 +62,8 @@ HEADERS += Dialog/mainwindow.h \
     UndoCommand/delframedircommand.h \
     UndoCommand/reduceframecommand.h \
     UndoCommand/scaleframecommand.h \
-    UndoCommand/replaceframecommand.h 
+    UndoCommand/replaceframecommand.h \ 
+    UndoCommand/cropimagecommand.h
 
 DISTFILES +=
 
