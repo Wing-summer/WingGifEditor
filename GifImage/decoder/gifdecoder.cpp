@@ -145,8 +145,9 @@ void GifDecoder::swap(QList<QImage> &list) {
   auto p = list.begin();
   auto pc = frameInfos.begin();
 
-  for (; p != list.end(); p++) {
-    (*pc).image.swap(*p);
+  for (; p != list.end(); p++, pc++) {
+    QImage img = p->copy();
+    (*pc).image.swap(img);
   }
 }
 
@@ -330,7 +331,7 @@ void GifDecoder::setOnionIndex(int index) {
     return;
   }
   onionIndex = index;
-  emit frameRefreshImg(index);
+  emit frameRefreshImgCurrent();
 }
 
 int GifDecoder::getLastError() { return _lasterr; }

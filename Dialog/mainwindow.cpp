@@ -515,6 +515,8 @@ MainWindow::MainWindow(DMainWindow *parent) : DMainWindow(parent) {
     imglist->item(index)->setIcon(gif.thumbnail(index));
     imglist->itemSelectionChanged();
   });
+  connect(pgif, &GifDecoder::frameRefreshImgCurrent, this,
+          [=] { imglist->itemSelectionChanged(); });
   connect(pgif, &GifDecoder::frameRefreshLabel, this,
           &MainWindow::refreshListLabel);
   connect(pgif, &GifDecoder::frameMerge, this, [=](int start, int count) {
@@ -1139,7 +1141,7 @@ void MainWindow::on_setdelay() {
   CheckEnabled;
   auto indices = imglist->selectionModel()->selectedRows();
   bool ok;
-  auto time = DInputDialog::getInt(this, tr("DelayTime"), tr("Inputms"), 2, 1,
+  auto time = DInputDialog::getInt(this, tr("DelayTime"), tr("Inputms"), 40, 1,
                                    INT_MAX, 1, &ok);
   if (ok) {
     QVector<int> is;
@@ -1289,9 +1291,9 @@ void MainWindow::on_applypic() {
 void MainWindow::on_onion() {
   CheckEnabled;
   bool ok;
-  auto index =
-      DInputDialog::getInt(this, tr("OnionMask"), tr("PleaseInputIndex"),
-                           imglist->currentRow(), 0, imglist->count(), 1, &ok);
+  auto index = DInputDialog::getInt(
+      this, tr("OnionMask"), tr("PleaseInputIndex"), imglist->currentRow() + 1,
+      -1, imglist->count(), 1, &ok);
   if (ok) {
     gif.setOnionIndex(index);
   }

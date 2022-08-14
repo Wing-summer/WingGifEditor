@@ -1,8 +1,9 @@
 #include "clipboardhelper.h"
-#include <Magick++.h>
 #include <QApplication>
+#include <QBuffer>
 #include <QClipboard>
 #include <QMimeData>
+#include <QPainter>
 
 void ClipBoardHelper::setImageFrames(QList<QGifFrameInfoData> &frames) {
   auto clipboard = qApp->clipboard();
@@ -10,10 +11,13 @@ void ClipBoardHelper::setImageFrames(QList<QGifFrameInfoData> &frames) {
   auto len = frames.count();
   buffer.append(reinterpret_cast<const char *>(&len), sizeof(int));
   for (auto &frame : frames) {
-    auto bits = frame.image.constBits();
-    len = int(frame.image.sizeInBytes());
+    QByteArray img;
+    QBuffer bu(&img);
+    bu.open(QBuffer::WriteOnly);
+    frame.image.save(&bu, "PNG");
+    len = img.count();
     buffer.append(reinterpret_cast<const char *>(&len), sizeof(int));
-    buffer.append(reinterpret_cast<const char *>(bits), len);
+    buffer.append(img);
     buffer.append(reinterpret_cast<const char *>(&frame.delayTime),
                   sizeof(int));
     auto tcolor = frame.transparentColor.rgba();
@@ -39,7 +43,10 @@ void ClipBoardHelper::getImageFrames(QList<QGifFrameInfoData> &frames) {
       QImage img;
       if (img.loadFromData(reinterpret_cast<const uchar *>(pb), imgbytes)) {
         QGifFrameInfoData d;
-        d.image.swap(img);
+        QImage im(img.size(), QImage::Format_RGBA8888);
+        QPainter p(&im);
+        p.drawImage(QPoint(), img);
+        d.image.swap(im);
         pb += imgbytes;
         d.delayTime = *reinterpret_cast<int *>(pb);
         pb += sizeof(int);

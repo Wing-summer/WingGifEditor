@@ -64,6 +64,7 @@ signals:
   void frameMoved(int from, int to);
   void frameDelaySet(int index, int time);
   void frameRefreshImg(int index);
+  void frameRefreshImgCurrent();
   void frameRefreshLabel(int start);
   void frameMerge(int start, int count);
   void frameInsert(int index);
