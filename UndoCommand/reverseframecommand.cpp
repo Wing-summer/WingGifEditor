@@ -1,9 +1,17 @@
-//#include "reverseframecommand.h"
+#include "reverseframecommand.h"
 
-// ReverseFrameCommand::ReverseFrameCommand(GifHelper *helper,
-//                                          QUndoCommand *parent)
-//     : QUndoCommand(parent), gif(helper) {}
+ReverseFrameCommand::ReverseFrameCommand(GifDecoder *helper,
+                                         QUndoCommand *parent)
+    : QUndoCommand(parent), gif(helper) {}
 
-// void ReverseFrameCommand::undo() { gif->reverse(); }
+void ReverseFrameCommand::undo() {
+  auto frames = gif->frames();
+  std::reverse(frames.begin(), frames.end());
+  gif->frameRefreshAll();
+}
 
-// void ReverseFrameCommand::redo() { gif->reverse(); }
+void ReverseFrameCommand::redo() {
+  auto frames = gif->frames();
+  std::reverse(frames.begin(), frames.end());
+  gif->frameRefreshAll();
+}

@@ -9,14 +9,13 @@
 
 namespace blk {
 
-    class NoDitherer : public Ditherer {
+class NoDitherer : public Ditherer {
 
-    public:
+public:
+  void dither(std::vector<ARGB> &origin, std::vector<ARGB> &quantize,
+              uint8_t *colorIndices) override;
+};
 
-        void dither(std::vector<ARGB> &origin, std::vector<ARGB> &quantize, uint8_t *colorIndices) override;
+} // namespace blk
 
-    };
-
-}
-
-#endif //BURSTLINKER_NODITHERER_H
+#endif // BURSTLINKER_NODITHERER_H

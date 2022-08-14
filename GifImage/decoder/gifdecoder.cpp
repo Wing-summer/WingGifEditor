@@ -133,6 +133,84 @@ QList<QGifFrameInfoData> &GifDecoder::frames() { return frameInfos; }
 
 QSize GifDecoder::size() { return canvasSize; }
 
+QString GifDecoder::GetErrorString(int ErrorCode) {
+  QString Err;
+  switch (ErrorCode) {
+  case E_GIF_ERR_OPEN_FAILED:
+    Err = tr("Failed to open given file");
+    break;
+  case E_GIF_ERR_WRITE_FAILED:
+    Err = tr("Failed to write to given file");
+    break;
+  case E_GIF_ERR_HAS_SCRN_DSCR:
+    Err = tr("Screen descriptor has already been set");
+    break;
+  case E_GIF_ERR_HAS_IMAG_DSCR:
+    Err = tr("Image descriptor is still active");
+    break;
+  case E_GIF_ERR_NO_COLOR_MAP:
+    Err = tr("Neither global nor local color map");
+    break;
+  case E_GIF_ERR_DATA_TOO_BIG:
+    Err = tr("Number of pixels bigger than width * height");
+    break;
+  case E_GIF_ERR_NOT_ENOUGH_MEM:
+    Err = tr("Failed to allocate required memory");
+    break;
+  case E_GIF_ERR_DISK_IS_FULL:
+    Err = tr("Write failed (disk full?)");
+    break;
+  case E_GIF_ERR_CLOSE_FAILED:
+    Err = tr("Failed to close given file");
+    break;
+  case E_GIF_ERR_NOT_WRITEABLE:
+    Err = tr("Given file was not opened for write");
+    break;
+  case D_GIF_ERR_OPEN_FAILED:
+    Err = tr("Failed to open given file");
+    break;
+  case D_GIF_ERR_READ_FAILED:
+    Err = tr("Failed to read from given file");
+    break;
+  case D_GIF_ERR_NOT_GIF_FILE:
+    Err = tr("Data is not in GIF format");
+    break;
+  case D_GIF_ERR_NO_SCRN_DSCR:
+    Err = tr("No screen descriptor detected");
+    break;
+  case D_GIF_ERR_NO_IMAG_DSCR:
+    Err = tr("No Image Descriptor detected");
+    break;
+  case D_GIF_ERR_NO_COLOR_MAP:
+    Err = tr("Neither global nor local color map");
+    break;
+  case D_GIF_ERR_WRONG_RECORD:
+    Err = tr("Wrong record type detected");
+    break;
+  case D_GIF_ERR_DATA_TOO_BIG:
+    Err = tr("Number of pixels bigger than width * height");
+    break;
+  case D_GIF_ERR_NOT_ENOUGH_MEM:
+    Err = tr("Failed to allocate required memory");
+    break;
+  case D_GIF_ERR_CLOSE_FAILED:
+    Err = tr("Failed to close given file");
+    break;
+  case D_GIF_ERR_NOT_READABLE:
+    Err = tr("Given file was not opened for read");
+    break;
+  case D_GIF_ERR_IMAGE_DEFECT:
+    Err = tr("Image is defective, decoding aborted");
+    break;
+  case D_GIF_ERR_EOF_TOO_SOON:
+    Err = tr("Image EOF detected before image complete");
+    break;
+  default:
+    break;
+  }
+  return Err;
+}
+
 QIcon GifDecoder::thumbnail(int index) { return QIcon(frameimg(index)); }
 
 QPixmap GifDecoder::frameimg(int index) {
@@ -237,6 +315,87 @@ void GifDecoder::setOnionIndex(int index) {
 }
 
 int GifDecoder::getLastError() { return _lasterr; }
+
+void GifDecoder::crop(int x, int y, int w, int h) {
+  for (auto &frame : frameInfos) {
+    auto &img = frame.image;
+    img = img.copy(x, y, w, h);
+  }
+}
+
+bool GifDecoder::moveleft(int index) {
+  if (index > 0 && index < frameInfos.count()) {
+    frameInfos.move(index, index - 1);
+    emit frameMoved(index, index - 1);
+    return true;
+  }
+  return false;
+}
+
+bool GifDecoder::moveright(int index) {
+  if (index >= 0 && index < frameInfos.count() - 1) {
+    frameInfos.move(index, index + 1);
+    emit frameMoved(index, index + 1);
+    return true;
+  }
+  return false;
+}
+
+void GifDecoder::setFrameDelay(int index, int delay) {
+  if (index < 0 || index >= frameInfos.count())
+    return;
+  frameInfos[index].delayTime = delay;
+}
+
+void GifDecoder::setAllFrameDelay(int delay) {
+  for (auto &frame : frameInfos) {
+    frame.delayTime = delay;
+  }
+}
+
+void GifDecoder::removeFrame(int index) {
+  if (index < 0 || index >= int(frameInfos.size()))
+    return;
+  frameInfos.removeAt(index);
+  emit frameRemoved(index);
+}
+
+void GifDecoder::insertFrame(int index, QGifFrameInfoData &frame) {
+  if (index < 0 || index > int(frameInfos.size()))
+    return;
+  frameInfos.insert(index, frame);
+  emit frameInsert(index);
+}
+
+void GifDecoder::flip(FlipDirection dir) {
+  switch (dir) {
+  case FlipDirection::Horizontal: {
+    for (auto &item : frameInfos) {
+      auto &img = item.image;
+      img = img.mirrored();
+    }
+    break;
+  }
+  case FlipDirection::Vertical: {
+    for (auto &item : frameInfos) {
+      auto &img = item.image;
+      img = img.mirrored(true, false);
+    }
+    break;
+  }
+  }
+  emit frameImageChanged();
+}
+
+void GifDecoder::rotate(bool clockwise) {
+  QTransform trans;
+  trans.rotate(clockwise ? -90 : 90);
+  for (auto &frame : frameInfos) {
+    auto &img = frame.image;
+    img.transformed(trans, Qt::SmoothTransformation);
+  }
+  emit frameImageChanged();
+}
 
 QVector<QRgb>
 GifDecoder::colorTableFromColorMapObject(ColorMapObject *colorMap,

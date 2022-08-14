@@ -6,16 +6,16 @@
 #include "Dialog/reduceframedialog.h"
 #include "Dialog/scalegifdialog.h"
 #include "Dialog/sponsordialog.h"
-//#include "UndoCommand/delayframecommand.h"
-//#include "UndoCommand/delframedircommand.h"
-//#include "UndoCommand/flipframecommand.h"
-//#include "UndoCommand/insertframecommand.h"
-//#include "UndoCommand/moveframecommand.h"
+#include "UndoCommand/delayframecommand.h"
+#include "UndoCommand/delframedircommand.h"
+#include "UndoCommand/flipframecommand.h"
+#include "UndoCommand/insertframecommand.h"
+#include "UndoCommand/moveframecommand.h"
 //#include "UndoCommand/reduceframecommand.h"
 //#include "UndoCommand/removeframecommand.h"
 //#include "UndoCommand/replaceframecommand.h"
-//#include "UndoCommand/reverseframecommand.h"
-//#include "UndoCommand/rotateframecommand.h"
+#include "UndoCommand/reverseframecommand.h"
+#include "UndoCommand/rotateframecommand.h"
 //#include "UndoCommand/scaleframecommand.h"
 #include <DInputDialog>
 #include <DMenu>
@@ -23,7 +23,6 @@
 #include <DTitlebar>
 #include <DToolBar>
 #include <DToolButton>
-#include <Magick++.h>
 #include <QApplication>
 #include <QClipboard>
 #include <QCloseEvent>
@@ -571,7 +570,7 @@ MainWindow::MainWindow(DMainWindow *parent) : DMainWindow(parent) {
             CheckEnabled;
             editor->endCrop();
             this->setEditMode(true);
-            // gif.crop(x, y, w, h);
+            gif.crop(x, y, w, h);
             editor->fitPicEditor();
           });
   connect(cuttingdlg, &CropGifDialog::pressCancel, this, [=] {
@@ -741,14 +740,65 @@ bool MainWindow::saveGif(QString filename) {
                     uint16_t(size.height()), 0)) {
     std::vector<std::vector<uint32_t>> images;
     std::vector<uint32_t> delay;
+    std::vector<QRect> rects;
+    int i = 0;
+    QImage lastimg;
     for (auto &frame : gif.frames()) {
       auto &img = frame.image;
-      std::vector<uint32_t> buffer(ulong(img.sizeInBytes()));
-      memcpy(buffer.data(), img.constBits(), buffer.size());
+      QImage timg = img;
+      //      if (i) {
+      //        auto bpl = lastimg.bytesPerLine();
+      //        auto ls = lastimg.height();
+      //        int x, y, x0, y0;
+      //        for (y = 0; y < ls; y++) {
+      //          auto o = lastimg.constScanLine(y);
+      //          auto d = img.constScanLine(y);
+      //          if (memcmp(o, d, size_t(bpl))) {
+      //            break;
+      //          }
+      //        }
+      //        for (y0 = ls - 1; y0 > y; y0--) {
+      //          auto o = lastimg.constScanLine(y0);
+      //          auto d = img.constScanLine(y0);
+      //          if (memcmp(o, d, size_t(bpl))) {
+      //            break;
+      //          }
+      //        }
+
+      //        //比较列
+      //        QTransform trans;
+      //        trans.rotate(-90);
+      //        timg = img.copy().transformed(trans);
+      //        lastimg = lastimg.transformed(trans);
+      //        bpl = lastimg.bytesPerLine();
+      //        ls = lastimg.height();
+      //        for (x = 0; x < ls; x++) {
+      //          auto o = lastimg.constScanLine(x);
+      //          auto d = timg.constScanLine(x);
+      //          if (memcmp(o, d, size_t(bpl))) {
+      //            break;
+      //          }
+      //        }
+      //        for (x0 = ls - 1; x0 > x; x0--) {
+      //          auto o = lastimg.constScanLine(x0);
+      //          auto d = timg.constScanLine(x0);
+      //          if (memcmp(o, d, size_t(bpl))) {
+      //            break;
+      //          }
+      //        }
+      //        timg = img.copy(x, y, x0 - x + 1, y0 - y + 1);
+      //        rects.push_back(QRect(QPoint(x, y), timg.size()));
+      //      } else {
+      rects.push_back(QRect(QPoint(), img.size()));
+      //      }
+      std::vector<uint32_t> buffer(ulong(timg.sizeInBytes()));
+      memcpy(buffer.data(), timg.constBits(), buffer.size());
       images.push_back(buffer);
       delay.push_back(uint32_t(frame.delayTime));
+      lastimg = img;
+      i++;
     }
-    gifsaver.addImages(images, delay);
+    gifsaver.addImages(images, delay, rects);
     gifsaver.finishEncoding();
     return true;
   }
@@ -893,26 +943,25 @@ void MainWindow::on_decreaseframe() {
   if (d.exec()) {
     auto res = d.getResult();
     QVector<int> delindices, modinter;
-    QVector<Magick::Image> delimgs;
-    //    gif.getReduceFrame(res.start, res.end, res.stepcount, delindices,
-    //    delimgs,
-    //                       modinter);
-    //    undo.push(new ReduceFrameCommand(&gif, delindices, delimgs,
-    //    modinter));
+    // QVector<Magick::Image> delimgs;
+    //     gif.getReduceFrame(res.start, res.end, res.stepcount, delindices,
+    //     delimgs,
+    //                        modinter);
+    //     undo.push(new ReduceFrameCommand(&gif, delindices, delimgs,
+    //     modinter));
   }
 }
 
 void MainWindow::on_delbefore() {
   CheckEnabled;
   auto pos = imglist->currentRow();
-  // undo.push(new DelFrameDirCommand(&gif, pos, DelDirection::Before,
-  // imglist));
+  undo.push(new DelFrameDirCommand(&gif, pos, DelDirection::Before, imglist));
 }
 
 void MainWindow::on_delafter() {
   CheckEnabled;
   auto pos = imglist->currentRow();
-  // undo.push(new DelFrameDirCommand(&gif, pos, DelDirection::After, imglist));
+  undo.push(new DelFrameDirCommand(&gif, pos, DelDirection::After, imglist));
 }
 
 void MainWindow::on_saveas() {
@@ -1013,11 +1062,11 @@ void MainWindow::on_cut() {
 void MainWindow::on_paste() {
   CheckEnabled;
   auto pos = imglist->currentRow() + 1;
-  QVector<Magick::Image> imgs;
-  // clip->getImageFrames(imgs);
-  if (imgs.count()) {
-    // undo.push(new InsertFrameCommand(&gif, imglist, pos, imgs));
-  }
+  // QVector<Magick::Image> imgs;
+  //  clip->getImageFrames(imgs);
+  // if (imgs.count()) {
+  // undo.push(new InsertFrameCommand(&gif, imglist, pos, imgs));
+  //}
 }
 
 void MainWindow::on_save() {
@@ -1038,22 +1087,21 @@ void MainWindow::on_save() {
 
 void MainWindow::on_reverse() {
   CheckEnabled;
-  // undo.push(new ReverseFrameCommand(&gif));
+  undo.push(new ReverseFrameCommand(&gif));
   refreshImglist();
 }
 
 void MainWindow::on_moveleft() {
   CheckEnabled;
   auto pos = imglist->currentRow();
-  // undo.push(new MoveFrameCommand(&gif, imglist, MoveFrameDirection::Left,
-  // pos));
+  undo.push(new MoveFrameCommand(&gif, imglist, MoveFrameDirection::Left, pos));
 }
 
 void MainWindow::on_moveright() {
   CheckEnabled;
   auto pos = imglist->currentRow();
-  //  undo.push(
-  //      new MoveFrameCommand(&gif, imglist, MoveFrameDirection::Right, pos));
+  undo.push(
+      new MoveFrameCommand(&gif, imglist, MoveFrameDirection::Right, pos));
 }
 
 void MainWindow::on_createreverse() {
@@ -1061,11 +1109,10 @@ void MainWindow::on_createreverse() {
   CreateReverseDialog d(imglist->count(), this);
   if (d.exec()) {
     auto res = d.getResult();
-    QVector<Magick::Image> imgs;
-    //    gif.getReverse(res.start, res.end, imgs);
-    //    undo.push(
-    //        new InsertFrameCommand(&gif, imglist, imglist->currentRow(),
-    //        imgs));
+    auto frames = gif.frames();
+    auto bu = frames.mid(res.start, res.end - res.start + 1);
+    std::reverse(bu.begin(), bu.end());
+    undo.push(new InsertFrameCommand(&gif, imglist, imglist->currentRow(), bu));
   }
 }
 
@@ -1073,15 +1120,14 @@ void MainWindow::on_setdelay() {
   CheckEnabled;
   auto indices = imglist->selectionModel()->selectedRows();
   bool ok;
-  auto time10s = DInputDialog::getInt(this, tr("DelayTime"), tr("Input10ms"), 2,
-                                      1, INT_MAX, 1, &ok);
+  auto time = DInputDialog::getInt(this, tr("DelayTime"), tr("Inputms"), 2, 1,
+                                   INT_MAX, 1, &ok);
   if (ok) {
-    auto time = time10s * 10;
     QVector<int> is;
     for (auto i : indices) {
       is.append(i.row());
     }
-    // undo.push(new DelayFrameCommand(&gif, is, time));
+    undo.push(new DelayFrameCommand(&gif, is, time));
   }
 }
 
@@ -1096,7 +1142,7 @@ void MainWindow::on_scaledelay() {
     for (auto i : indices) {
       is.append(i.row());
     }
-    // undo.push(new DelayScaleCommand(&gif, is, scale));
+    undo.push(new DelayScaleCommand(&gif, is, scale));
   }
 }
 
@@ -1109,9 +1155,33 @@ void MainWindow::on_insertpic() {
     return;
   lastusedpath = QFileInfo(filenames.first()).absoluteDir().absolutePath();
   auto pos = imglist->currentRow() + 1;
-  QVector<Magick::Image> imgs;
-  // gif.getNativeImages(filenames, imgs);
-  // undo.push(new InsertFrameCommand(&gif, imglist, pos, imgs));
+  QList<QGifFrameInfoData> imgs;
+  QImage img;
+  while (filenames.count()) {
+    if (img.load(filenames.first())) {
+      filenames.removeFirst();
+      QGifFrameInfoData d;
+      d.image.swap(img);
+      d.delayTime = 40;
+      d.interlace = false;
+      d.transparentColor = Qt::transparent;
+      imgs.append(d);
+      break;
+    }
+    filenames.removeFirst();
+  }
+
+  for (auto &f : filenames) {
+    if (img.load(f)) {
+      QGifFrameInfoData d;
+      d.image.swap(img);
+      d.delayTime = 40;
+      d.interlace = false;
+      d.transparentColor = Qt::transparent;
+      imgs.append(d);
+    }
+  }
+  undo.push(new InsertFrameCommand(&gif, imglist, pos, imgs));
 }
 
 void MainWindow::on_merge() {
@@ -1123,8 +1193,8 @@ void MainWindow::on_merge() {
     return;
   lastusedpath = QFileInfo(filenames.first()).absoluteDir().absolutePath();
   auto pos = imglist->currentRow() + 1;
-  QVector<Magick::Image> imgs;
-  // gif.getNativeMergeGifFrames(filenames, imgs);
+
+  // TODO
   // undo.push(new InsertFrameCommand(&gif, imglist, pos, imgs));
 }
 
@@ -1149,22 +1219,22 @@ void MainWindow::on_cutpic() {
 
 void MainWindow::on_fliph() {
   CheckEnabled;
-  // undo.push(new FlipFrameCommand(&gif, FlipDirection::Horizontal));
+  undo.push(new FlipFrameCommand(&gif, FlipDirection::Horizontal));
 }
 
 void MainWindow::on_flipv() {
   CheckEnabled;
-  // undo.push(new FlipFrameCommand(&gif, FlipDirection::Vertical));
+  undo.push(new FlipFrameCommand(&gif, FlipDirection::Vertical));
 }
 
 void MainWindow::on_clockwise() {
   CheckEnabled;
-  // undo.push(new RotateFrameCommand(&gif, true));
+  undo.push(new RotateFrameCommand(&gif, true));
 }
 
 void MainWindow::on_anticlockwise() {
   CheckEnabled;
-  // undo.push(new RotateFrameCommand(&gif, false));
+  undo.push(new RotateFrameCommand(&gif, false));
 }
 
 void MainWindow::on_exportapply() {
@@ -1201,13 +1271,13 @@ void MainWindow::on_applypic() {
   for (auto i : indices)
     rows.append(i.row());
 
-  QVector<Magick::Image> imgs;
-  //  if (gif.getModeledFrames(filename, rows, imgs)) {
-  //    undo.push(new ReplaceFrameCommand(&gif, rows, imgs));
-  //  } else {
-  //    DMessageManager::instance()->sendMessage(this, ICONRES("model"),
-  //                                             tr("InvalidModel"));
-  //  }
+  // QVector<Magick::Image> imgs;
+  //   if (gif.getModeledFrames(filename, rows, imgs)) {
+  //     undo.push(new ReplaceFrameCommand(&gif, rows, imgs));
+  //   } else {
+  //     DMessageManager::instance()->sendMessage(this, ICONRES("model"),
+  //                                              tr("InvalidModel"));
+  //   }
 }
 
 void MainWindow::on_onion() {

@@ -8,6 +8,8 @@
 #include <QPixmap>
 #include <QPoint>
 
+enum class FlipDirection { Horizontal, Vertical };
+
 class QGifFrameInfoData {
 public:
   QGifFrameInfoData() : delayTime(-1), interlace(false) {}
@@ -25,6 +27,8 @@ public:
   QList<QGifFrameInfoData> &frames();
   QSize size();
 
+  static QString GetErrorString(int ErrorCode);
+
   QIcon thumbnail(int index);
   QPixmap frameimg(int index);
   QImage img(int index);
@@ -39,6 +43,18 @@ public:
 
   void setOnionIndex(int index);
   int getLastError();
+
+  void crop(int x, int y, int w, int h);
+  bool moveleft(int index);
+  bool moveright(int index);
+
+  void setFrameDelay(int index, int delay);
+  void setAllFrameDelay(int delay);
+  void removeFrame(int index);
+  void insertFrame(int index, QGifFrameInfoData &frame);
+
+  void flip(FlipDirection dir);
+  void rotate(bool clockwise);
 
 signals:
   void frameRemoved(int index);
@@ -61,7 +77,6 @@ private:
 private:
   QSize canvasSize;
   int loopCount;
-  int defaultDelayTime;
   QColor defaultTransparentColor;
 
   QVector<QRgb> globalColorTable;

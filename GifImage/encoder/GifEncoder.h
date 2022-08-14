@@ -4,6 +4,7 @@
 
 #include "./GifImage/ThreadPool.h"
 #include <QObject>
+#include <QRect>
 #include <cstdint>
 #include <fstream>
 #include <vector>
@@ -89,7 +90,7 @@ public:
   bool init(const char *path, uint16_t width, uint16_t height,
             uint32_t loopCount, uint32_t threadCount = 8);
   void addImages(const std::vector<std::vector<uint32_t>> &images,
-                 std::vector<uint32_t> &delay,
+                 std::vector<uint32_t> &delay, std::vector<QRect> &imgRect,
                  QuantizerType qType = QuantizerType::Octree,
                  DitherType dType = DitherType::No,
                  int32_t transparencyOption = 1);
@@ -101,8 +102,7 @@ private:
   std::vector<uint8_t> addImage(const std::vector<uint32_t> &original,
                                 uint32_t delay, QuantizerType qType,
                                 DitherType dType, int32_t transparencyOption,
-                                uint16_t left, uint16_t top,
-                                std::vector<uint8_t> &content);
+                                QRect imgRect, std::vector<uint8_t> &content);
 
   std::ofstream outfile;
 };

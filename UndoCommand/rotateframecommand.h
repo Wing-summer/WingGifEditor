@@ -1,20 +1,20 @@
-//#ifndef ROTATEFRAMECOMMAND_H
-//#define ROTATEFRAMECOMMAND_H
+#ifndef ROTATEFRAMECOMMAND_H
+#define ROTATEFRAMECOMMAND_H
 
-//#include "GifImage/gifhelper.h"
-//#include <QUndoCommand>
+#include "GifImage/decoder/gifdecoder.h"
+#include <QUndoCommand>
 
-// class RotateFrameCommand : public QUndoCommand {
-// public:
-//   RotateFrameCommand(GifHelper *helper, bool isclockwise,
-//                      QUndoCommand *parent = nullptr);
+class RotateFrameCommand : public QUndoCommand {
+public:
+  RotateFrameCommand(GifDecoder *helper, bool isclockwise,
+                     QUndoCommand *parent = nullptr);
 
-//  void undo() override;
-//  void redo() override;
+  void undo() override;
+  void redo() override;
 
-// private:
-//   GifHelper *gif;
-//   bool clockwise;
-// };
+private:
+  GifDecoder *gif;
+  bool clockwise;
+};
 
-//#endif // ROTATEFRAMECOMMAND_H
+#endif // ROTATEFRAMECOMMAND_H

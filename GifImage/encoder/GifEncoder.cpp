@@ -18,6 +18,7 @@
 #include "M2Ditherer.h"
 #include "NoDitherer.h"
 #include <QDebug>
+#include <QPoint>
 #include <cstdint>
 #include <fstream>
 #include <iostream>
@@ -64,7 +65,8 @@ bool GifEncoder::init(const char *path, uint16_t width, uint16_t height,
 }
 
 void GifEncoder::addImages(const std::vector<std::vector<uint32_t>> &images,
-                           std::vector<uint32_t> &delay, QuantizerType qType,
+                           std::vector<uint32_t> &delay,
+                           std::vector<QRect> &imgRect, QuantizerType qType,
                            DitherType dType, int32_t transparencyOption) {
   size_t size = images.size();
   std::vector<std::future<std::vector<uint8_t>>> tasks;
@@ -72,7 +74,7 @@ void GifEncoder::addImages(const std::vector<std::vector<uint32_t>> &images,
     auto result = threadPool->enqueue([=, &images]() {
       std::vector<uint8_t> content;
       auto &image = images[k];
-      addImage(image, delay[k], qType, dType, transparencyOption, 0, 0,
+      addImage(image, delay[k], qType, dType, transparencyOption, imgRect[k],
                content);
       return content;
     });
@@ -88,7 +90,7 @@ std::vector<uint8_t> GifEncoder::addImage(const std::vector<uint32_t> &original,
                                           uint32_t delay, QuantizerType qType,
                                           DitherType dType,
                                           int32_t transparencyOption,
-                                          uint16_t left, uint16_t top,
+                                          QRect imgRect,
                                           std::vector<uint8_t> &content) {
   qDebug() << "Get image pixel " << original.size() << "\n";
   uint32_t size = screenWidth * screenHeight;
@@ -208,7 +210,8 @@ std::vector<uint8_t> GifEncoder::addImage(const std::vector<uint32_t> &original,
       content, 2, false, hasTransparentColor, delay / 10,
       hasTransparentColor ? transparentColorIndex : 0);
   GifBlockWriter::writeImageDescriptorBlock(
-      content, left, top, screenWidth, screenHeight, true, false, false,
+      content, uint16_t(imgRect.left()), uint16_t(imgRect.top()),
+      uint16_t(imgRect.width()), uint16_t(imgRect.height()), true, false, false,
       getColorTableSizeField(paddedColorCount));
   GifBlockWriter::writeColorTableEntity(content, quantizeOut, paddedColorCount);
 
