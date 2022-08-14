@@ -5,13 +5,13 @@ ReverseFrameCommand::ReverseFrameCommand(GifDecoder *helper,
     : QUndoCommand(parent), gif(helper) {}
 
 void ReverseFrameCommand::undo() {
-  auto frames = gif->frames();
+  auto &frames = gif->frames();
   std::reverse(frames.begin(), frames.end());
   gif->frameRefreshAll();
 }
 
 void ReverseFrameCommand::redo() {
-  auto frames = gif->frames();
+  auto &frames = gif->frames();
   std::reverse(frames.begin(), frames.end());
   gif->frameRefreshAll();
 }

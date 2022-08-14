@@ -7,7 +7,7 @@ ReplaceFrameCommand::ReplaceFrameCommand(GifDecoder *helper,
     : QUndoCommand(parent), gif(helper), olds(indices), bufferimage(newimgs) {}
 
 void ReplaceFrameCommand::undo() {
-  auto frames = gif->frames();
+  auto &frames = gif->frames();
   auto len = olds.count();
   for (auto i = 0; i < len; i++) {
     auto index = olds[i];
@@ -17,7 +17,7 @@ void ReplaceFrameCommand::undo() {
 }
 
 void ReplaceFrameCommand::redo() {
-  auto frames = gif->frames();
+  auto &frames = gif->frames();
   auto len = olds.count();
   for (auto i = 0; i < len; i++) {
     auto index = olds[i];

@@ -19,7 +19,7 @@ DelFrameDirCommand::DelFrameDirCommand(GifDecoder *helper, int index,
 }
 
 void DelFrameDirCommand::undo() {
-  auto frames = gif->frames();
+  auto &frames = gif->frames();
   switch (olddir) {
   case DelDirection::Before: {
     for (auto p = oldimgs.rbegin(); p != oldimgs.rend(); p++) {
@@ -31,7 +31,7 @@ void DelFrameDirCommand::undo() {
     break;
   }
   case DelDirection::After: {
-    for (auto item : oldimgs) {
+    for (auto &item : oldimgs) {
       frames.append(item);
       gif->frameInsert(frames.count() - 1);
     }
@@ -44,11 +44,10 @@ void DelFrameDirCommand::undo() {
 }
 
 void DelFrameDirCommand::redo() {
-  auto frames = gif->frames();
   switch (olddir) {
   case DelDirection::Before: {
     for (auto i = 0; i < oldindex; i++) {
-      frames.removeFirst();
+      gif->removeFrame(0);
     }
     gif->frameRefreshLabel(0);
     listimg->setCurrentRow(0);
@@ -56,10 +55,9 @@ void DelFrameDirCommand::redo() {
   }
   case DelDirection::After: {
     auto len = gif->frameCount() - oldindex - 1;
-    for (auto i = oldindex + 1; i < len; i++) {
-      frames.removeLast();
+    for (auto i = 0; i < len; i++) {
+      gif->removeFrame(gif->frameCount() - 1);
     }
-    gif->frameRefreshLabel(oldindex);
     listimg->setCurrentRow(oldindex);
     break;
   }

@@ -495,6 +495,7 @@ MainWindow::MainWindow(DMainWindow *parent) : DMainWindow(parent) {
     auto item = imglist->item(index);
     imglist->removeItemWidget(item);
     delete item;
+    this->showGifMessage();
   });
   connect(pgif, &GifDecoder::frameMoved, this, [=](int from, int to) {
     auto max = qMax(from, to);
@@ -525,6 +526,7 @@ MainWindow::MainWindow(DMainWindow *parent) : DMainWindow(parent) {
       p->setSizeHint(QSize(120, 120));
       imglist->insertItem(start, p);
     }
+    this->showGifMessage();
   });
   connect(pgif, &GifDecoder::frameInsert, this, [=](int index) {
     auto p = new QListWidgetItem(
@@ -532,6 +534,7 @@ MainWindow::MainWindow(DMainWindow *parent) : DMainWindow(parent) {
         QString("%1   %2 ms").arg(index).arg(gif.frameDelay(index)));
     p->setSizeHint(QSize(120, 120));
     imglist->insertItem(index, p);
+    this->showGifMessage();
   });
   connect(pgif, &GifDecoder::frameImageChanged, this, [=] {
     auto len = imglist->count();
@@ -663,6 +666,7 @@ void MainWindow::refreshImglist() {
     p->setSizeHint(QSize(120, 120));
   }
   imglist->setCurrentRow(pos);
+  this->showGifMessage();
 }
 
 void MainWindow::refreshListLabel(int start) {
@@ -944,14 +948,14 @@ void MainWindow::on_decreaseframe() {
   if (d.exec()) {
     auto res = d.getResult();
     auto from = res.start;
-    auto step = res.end;
+    auto step = res.stepcount;
     auto to = res.end;
     QVector<int> delindices, modinter;
     auto ii = from + 1;
     auto q = step + 1;
     for (auto i = ii; i <= to; i++) {
       if (i == ii + step) {
-        ii += step;
+        ii += q;
         delindices.append(i);
       } else {
         modinter.append(gif.frameDelay(i) * (q + 1) / q);
@@ -1312,6 +1316,7 @@ void MainWindow::closeEvent(QCloseEvent *event) {
   player->stop();
   if (ensureSafeClose()) {
     saveWindowStatus();
+    gif.close();
     event->accept();
   } else
     event->ignore();
