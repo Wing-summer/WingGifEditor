@@ -34,7 +34,9 @@ SOURCES += \
     UndoCommand/scaleframecommand.cpp \
     UndoCommand/replaceframecommand.cpp \ 
     UndoCommand/cropimagecommand.cpp \
-    Dialog/waitingdialog.cpp
+    Dialog/waitingdialog.cpp \
+    settingdialog.cpp \
+    Class/settings.cpp
 
 RESOURCES += resources.qrc
 
@@ -65,7 +67,8 @@ HEADERS += Dialog/mainwindow.h \
     UndoCommand/scaleframecommand.h \
     UndoCommand/replaceframecommand.h \ 
     UndoCommand/cropimagecommand.h \
-    Dialog/waitingdialog.h
+    Dialog/waitingdialog.h \
+    Class/settings.h
 
 DISTFILES +=
 

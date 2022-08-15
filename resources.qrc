@@ -65,5 +65,8 @@
         <file>images/readonly.png</file>
         <file>images/rwg.png</file>
         <file>images/fitinview.png</file>
+        <file>settings.json</file>
+        <file>images/setting.png</file>
+        <file>images/fullscreen.png</file>
     </qresource>
 </RCC>

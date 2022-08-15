@@ -1,0 +1,60 @@
+{
+    "groups": [
+        {
+            "key": "editor",
+            "name": "Editor",
+            "groups": [
+                {
+                    "key": "image",
+                    "name": "Image",
+                    "options": [
+                        {
+                            "key": "ditherer",
+                            "name": "Ditherer",
+                            "type": "combobox",
+                            "text": "Ditherer",
+                            "default": "No"
+                        },
+                        {
+                            "key": "quantizer",
+                            "name": "Quantizer",
+                            "type": "combobox",
+                            "text": "Quantizer",
+                            "default": "Octree"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "key": "appearance",
+            "name": "Appearance",
+            "groups": [
+                {
+                    "key": "window",
+                    "name": "Window",
+                    "options": [
+                        {
+                            "key": "windowsize",
+                            "name": "Window size",
+                            "type": "combobox",
+                            "default": "window_normal"
+                        },
+                        {
+                            "key": "window_width",
+                            "hide": true,
+                            "reset": false,
+                            "default": 0.6
+                        },
+                        {
+                            "key": "window_height",
+                            "hide": true,
+                            "reset": false,
+                            "default": 0.6
+                        }
+                    ]
+                }
+           ]
+        }
+    ]
+}

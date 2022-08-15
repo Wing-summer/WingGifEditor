@@ -4,6 +4,7 @@
 #include "Class/clipboardhelper.h"
 #include "Class/gifeditor.h"
 #include "Class/playgifmanager.h"
+#include "Class/settings.h"
 #include "Dialog/waitingdialog.h"
 #include "GifImage/decoder/gifdecoder.h"
 #include "GifImage/encoder/GifEncoder.h"
@@ -35,10 +36,6 @@ private:
   void setSaved(bool b);
   void setWritable(bool b);
   void showGifMessage(QString message = "");
-
-  void saveWindowStatus();
-  void loadWindowStatus();
-
   bool saveGif(QString filename);
 
 private:
@@ -49,6 +46,7 @@ private:
   void on_saveas();
   void on_export();
   void on_exit();
+  void on_setting();
 
   void on_undo();
   void on_redo();
@@ -91,7 +89,7 @@ private:
   void on_applypic();
 
   void on_onion();
-
+  void on_fullscreen();
   void on_about();
   void on_sponsor();
   void on_wiki();
@@ -114,6 +112,11 @@ private:
   // DToolBar *toolmain, *toolplay, *tooledit, *tooleffect;
   QList<QAction *> dismenu, distool;
   QAction *undotool, *undomenu, *redotool, *redomenu;
+
+  Settings *m_settings;
+  QuantizerType m_quantizer = QuantizerType::Octree;
+  DitherType m_ditherer = DitherType::No;
+  QString _windowmode;
 
 protected:
   void closeEvent(QCloseEvent *event) override;

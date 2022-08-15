@@ -298,6 +298,10 @@ MainWindow::MainWindow(DMainWindow *parent) : DMainWindow(parent) {
   tm = new DMenu(this);
   tm->setTitle(tr("Author"));
   tm->setIcon(ICONRES("author"));
+  AddMenuIconAction("setting", tr("Setting"), MainWindow::on_setting, tm);
+  AddMenuIconAction("fullscreen", tr("FullScreen"), MainWindow::on_fullscreen,
+                    tm);
+  tm->addSeparator();
   AddMenuIconAction("soft", tr("About"), MainWindow::on_about, tm);
   AddMenuIconAction("sponsor", tr("Sponsor"), MainWindow::on_sponsor, tm);
   AddMenuIconAction("wiki", tr("Wiki"), MainWindow::on_wiki, tm);
@@ -378,6 +382,7 @@ MainWindow::MainWindow(DMainWindow *parent) : DMainWindow(parent) {
   AddToolBarTool("jmp", MainWindow::on_goto, tr("Goto"));
   AddToolDB();
   toolbar->addSeparator();
+  AddToolBarTool("setting", MainWindow::on_setting, tr("Setting"));
   AddToolBarTool("soft", MainWindow::on_about, tr("About"));
   AddToolBarTool("sponsor", MainWindow::on_sponsor, tr("Sponsor"));
   AddToolBarTool("wiki", MainWindow::on_wiki, tr("Wiki"));
@@ -627,7 +632,53 @@ MainWindow::MainWindow(DMainWindow *parent) : DMainWindow(parent) {
   ConnectShortCut(keycutpic, MainWindow::on_cutpic);
   ConnectShortCut(keyscaledelay, MainWindow::on_scaledelay);
 
-  loadWindowStatus();
+  m_settings = new Settings(this);
+  connect(m_settings, &Settings::sigAdjustDither, this, [=](QString v) {
+    // compare more faster
+    if (v[0] == 'N') {
+      m_ditherer = DitherType::No;
+    } else if (v[0] == 'M') {
+      m_ditherer = DitherType::M2;
+    } else if (v[0] == 'B') {
+      m_ditherer = DitherType::Bayer;
+    } else if (v[0] == 'F') {
+      m_ditherer = DitherType::FloydSteinberg;
+    }
+  });
+
+  connect(m_settings, &Settings::sigAdjustQuantizer, this, [=](QString v) {
+    // compare more faster
+    if (v[0] == 'U') {
+      m_quantizer = QuantizerType::Uniform;
+    } else if (v[0] == 'M') {
+      m_quantizer = QuantizerType::MedianCut;
+    } else if (v[0] == 'K') {
+      m_quantizer = QuantizerType::KMeans;
+    } else if (v[0] == 'R') {
+      m_quantizer = QuantizerType::Random;
+    } else if (v[0] == 'O') {
+      m_quantizer = QuantizerType::Octree;
+    } else if (v[0] == 'N') {
+      m_quantizer = QuantizerType::NeuQuant;
+    }
+  });
+  connect(m_settings, &Settings::sigChangeWindowState,
+          [=](QString mode) { _windowmode = mode; });
+
+  m_settings->applySetting();
+
+  if (_windowmode == "window_normal") {
+    setWindowState(Qt::WindowState::WindowActive);
+  } else if (_windowmode == "window_maximum") {
+    setWindowState(Qt::WindowState::WindowMaximized);
+  } else if (_windowmode == "window_minimum") {
+    setWindowState(Qt::WindowState::WindowMinimized);
+  } else {
+    setWindowState(Qt::WindowState::WindowFullScreen);
+  }
+
+  m_settings->loadWindowState(this);
+  lastusedpath = m_settings->loadFileDialogCurrent();
 }
 
 void MainWindow::openGif(QString filename) {
@@ -720,20 +771,6 @@ void MainWindow::showGifMessage(QString message) {
                                   .arg(gif.frameCount())));
 }
 
-void MainWindow::saveWindowStatus() {
-  QSettings settings(QApplication::organizationName(),
-                     QApplication::applicationName());
-  restoreGeometry(settings.value("geometry").toByteArray());
-  restoreState(settings.value("windowState").toByteArray());
-}
-
-void MainWindow::loadWindowStatus() {
-  QSettings settings(QApplication::organizationName(),
-                     QApplication::applicationName());
-  settings.setValue("geometry", saveGeometry());
-  settings.setValue("windowState", saveState());
-}
-
 bool MainWindow::saveGif(QString filename) {
   GifEncoder gifsaver;
   auto size = gif.size();
@@ -799,7 +836,7 @@ bool MainWindow::saveGif(QString filename) {
       lastimg = img;
       i++;
     }
-    gifsaver.addImages(images, delay, rects);
+    gifsaver.addImages(images, delay, rects, m_quantizer, m_ditherer);
     gifsaver.finishEncoding();
     return true;
   }
@@ -1069,6 +1106,15 @@ void MainWindow::on_exit() {
     curfilename.clear();
     undo.clear();
   }
+}
+
+void MainWindow::on_setting() {
+  DSettingsDialog *dialog = new DSettingsDialog(this);
+  m_settings->setSettingDialog(dialog);
+  dialog->updateSettings(m_settings->settings);
+  dialog->exec();
+  delete dialog;
+  m_settings->settings->sync();
 }
 
 void MainWindow::on_undo() {
@@ -1394,6 +1440,8 @@ void MainWindow::on_onion() {
   }
 }
 
+void MainWindow::on_fullscreen() { showFullScreen(); }
+
 void MainWindow::on_about() {
   AboutSoftwareDialog d;
   d.exec();
@@ -1412,7 +1460,7 @@ void MainWindow::on_wiki() {
 void MainWindow::closeEvent(QCloseEvent *event) {
   player->stop();
   if (ensureSafeClose()) {
-    saveWindowStatus();
+    m_settings->saveWindowState(this);
     gif.close();
     event->accept();
   } else
