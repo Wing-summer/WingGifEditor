@@ -4,6 +4,7 @@
 #include "Class/clipboardhelper.h"
 #include "Class/gifeditor.h"
 #include "Class/playgifmanager.h"
+#include "Dialog/waitingdialog.h"
 #include "GifImage/decoder/gifdecoder.h"
 #include "GifImage/encoder/GifEncoder.h"
 #include "cropgifdialog.h"
@@ -37,8 +38,6 @@ private:
 
   void saveWindowStatus();
   void loadWindowStatus();
-  void showWaitNotify();
-  void showProcessSuccess();
 
   bool saveGif(QString filename);
 

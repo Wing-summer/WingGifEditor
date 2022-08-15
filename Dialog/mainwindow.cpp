@@ -39,6 +39,7 @@
 #include <QShortcut>
 #include <QVBoxLayout>
 #include <QWidget>
+#include <QtConcurrent>
 
 #define ICONRES(name) QIcon(":/images/" name ".png")
 
@@ -638,7 +639,6 @@ void MainWindow::openGif(QString filename) {
                           QString(GifErrorString(gif.getLastError())));
     return;
   }
-  showWaitNotify();
   curfilename = filename;
   imglist->setCurrentRow(0);
   editor->fitPicEditor();
@@ -646,7 +646,6 @@ void MainWindow::openGif(QString filename) {
   setSaved(true);
   setWritable(QFileInfo(filename).permission(QFile::WriteUser));
   showGifMessage();
-  showProcessSuccess();
 }
 
 bool MainWindow::checkIsGif(QString filename) {
@@ -732,16 +731,6 @@ void MainWindow::loadWindowStatus() {
   settings.setValue("windowState", saveState());
 }
 
-void MainWindow::showWaitNotify() {
-  DMessageManager::instance()->sendMessage(this, ICONRES("icon"),
-                                           tr("PleaseWait!"));
-}
-
-void MainWindow::showProcessSuccess() {
-  DMessageManager::instance()->sendMessage(this, ICONRES("icon"),
-                                           tr("ProcessSuccess"));
-}
-
 bool MainWindow::saveGif(QString filename) {
   GifEncoder gifsaver;
   auto size = gif.size();
@@ -755,8 +744,6 @@ bool MainWindow::saveGif(QString filename) {
     for (auto &frame : gif.frames()) {
       auto &img = frame.image;
       QImage timg = img;
-
-      // TODO : 通过只保留不同区域图片实现，但效果不好，故注释，以备用
       if (i) {
         auto bpl = lastimg.bytesPerLine();
         auto ls = lastimg.height();
@@ -820,16 +807,16 @@ void MainWindow::on_new_frompics() {
   if (ensureSafeClose()) {
     NewDialog d(NewType::FromPics, this);
     if (d.exec()) {
-      showWaitNotify();
+      // showWaitNotify("");
       gif.loadfromImages(d.getResult());
-      showProcessSuccess();
+      // showProcessSuccess();
       curfilename = ":"; //表示新建
       setSaved(false);
       setWritable(true);
       setEditMode(true);
       imglist->setCurrentRow(0);
       showGifMessage();
-      showProcessSuccess();
+      // showProcessSuccess();
     }
   }
 }
@@ -838,7 +825,7 @@ void MainWindow::on_new_fromgifs() {
   if (ensureSafeClose()) {
     NewDialog d(NewType::FromGifs, this);
     if (d.exec()) {
-      showWaitNotify();
+      // showWaitNotify("");
       gif.loadfromGifs(d.getResult());
       curfilename = ":"; //表示新建
       setSaved(false);
@@ -846,7 +833,7 @@ void MainWindow::on_new_fromgifs() {
       setEditMode(true);
       imglist->setCurrentRow(0);
       showGifMessage();
-      showProcessSuccess();
+      // showProcessSuccess();
     }
   }
 }
@@ -862,8 +849,15 @@ void MainWindow::on_open() {
     gif.close();
     undo.clear();
 
-    if (checkIsGif(filename))
+    if (checkIsGif(filename)) {
+      WaitingDialog d;
+      d.start(tr("OpenGif"));
       openGif(filename);
+      d.close();
+    } else {
+      DMessageManager::instance()->sendMessage(this, ICONRES("open"),
+                                               tr("InvalidGif"));
+    }
   }
 }
 
@@ -994,6 +988,8 @@ void MainWindow::on_saveas() {
     return;
   lastusedpath = QFileInfo(filename).absoluteDir().absolutePath();
 
+  WaitingDialog d;
+  d.start(tr("SaveAsGif"));
   if (saveGif(filename)) {
     DMessageManager::instance()->sendMessage(this, ICONRES("saveas"),
                                              tr("SaveAsSuccess"));
@@ -1002,6 +998,7 @@ void MainWindow::on_saveas() {
     DMessageManager::instance()->sendMessage(this, ICONRES("saveas"),
                                              "SaveAsFail");
   }
+  d.stop();
 }
 
 void MainWindow::on_export() {
@@ -1028,6 +1025,9 @@ void MainWindow::on_export() {
       break;
     }
     }
+
+    WaitingDialog d;
+    d.start(tr("ExportFrames"));
     if (gif.exportImages(res.path, ext)) {
       DMessageManager::instance()->sendMessage(this, ICONRES("saveas"),
                                                tr("ExportSuccess"));
@@ -1035,6 +1035,7 @@ void MainWindow::on_export() {
       DMessageManager::instance()->sendMessage(this, ICONRES("saveas"),
                                                tr("ExportFail"));
     }
+    d.stop();
   }
 }
 
@@ -1103,6 +1104,8 @@ void MainWindow::on_save() {
     return;
   }
 
+  WaitingDialog d;
+  d.start(tr("SaveGif"));
   if (saveGif(curfilename)) {
     undo.setClean();
     DMessageManager::instance()->sendMessage(this, ICONRES("save"),
@@ -1110,6 +1113,7 @@ void MainWindow::on_save() {
   } else {
     DMessageManager::instance()->sendMessage(this, ICONRES("save"), "SaveFail");
   }
+  d.stop();
 }
 
 void MainWindow::on_reverse() {
