@@ -14,6 +14,7 @@ void InsertFrameCommand::undo() {
     gif->removeFrame(oldindex);
   }
   gif->frameRefreshLabel(oldindex);
+  imgw->clearSelection();
   imgw->setCurrentRow(oldindex);
 }
 
@@ -21,7 +22,7 @@ void InsertFrameCommand::redo() {
   for (auto p = oldimgs.rbegin(); p != oldimgs.rend(); p++) {
     gif->insertFrame(oldindex, *p);
   }
-  auto len = oldindex + oldimgs.count();
-  gif->frameRefreshLabel(len);
-  imgw->setCurrentRow(len);
+  gif->frameRefreshLabel(oldindex);
+  imgw->clearSelection();
+  imgw->setCurrentRow(oldindex);
 }

@@ -306,6 +306,7 @@ MainWindow::MainWindow(DMainWindow *parent) : DMainWindow(parent) {
   menu->addMenu(tm);
 
   auto toolbar = new DToolBar(this);
+  toolbar->toggleViewAction()->setVisible(false);
 
 #define AddToolBarAction(Icon, Owner, Slot, ToolTip)                           \
   a = new QAction(Owner);                                                      \
@@ -384,6 +385,7 @@ MainWindow::MainWindow(DMainWindow *parent) : DMainWindow(parent) {
 
   addToolBarBreak();
   toolbar = new DToolBar(this);
+  toolbar->toggleViewAction()->setVisible(false);
   AddToolBarTool("rmframe", MainWindow::on_decreaseframe, tr("ReduceFrame"));
   AddToolDB();
   AddToolBarTool("rml", MainWindow::on_delbefore, tr("DeleteBefore"));
@@ -420,6 +422,7 @@ MainWindow::MainWindow(DMainWindow *parent) : DMainWindow(parent) {
   addToolBar(toolbar);
 
   toolbar = new DToolBar(this);
+  toolbar->toggleViewAction()->setVisible(false);
   AddToolBarTool("first", MainWindow::on_beginframe, tr("FirstFrame"));
   AddToolDB();
   AddToolBarTool("back", MainWindow::on_last, tr("LastFrame"));
@@ -436,6 +439,7 @@ MainWindow::MainWindow(DMainWindow *parent) : DMainWindow(parent) {
   addToolBar(toolbar);
 
   toolbar = new DToolBar(this);
+  toolbar->toggleViewAction()->setVisible(false);
   AddToolBarTool("blank", MainWindow::on_exportapply, tr("ExportBlank"));
   AddToolDB();
   AddToolBarTool("model", MainWindow::on_applypic, tr("ApplyModel"));
@@ -855,6 +859,8 @@ void MainWindow::on_open() {
       return;
 
     lastusedpath = QFileInfo(filename).absoluteDir().absolutePath();
+    gif.close();
+    undo.clear();
 
     if (checkIsGif(filename))
       openGif(filename);
@@ -1133,7 +1139,7 @@ void MainWindow::on_createreverse() {
     auto frames = gif.frames();
     auto bu = frames.mid(res.start, res.end - res.start + 1);
     std::reverse(bu.begin(), bu.end());
-    undo.push(new InsertFrameCommand(&gif, imglist, imglist->currentRow(), bu));
+    undo.push(new InsertFrameCommand(&gif, imglist, res.end, bu));
   }
 }
 

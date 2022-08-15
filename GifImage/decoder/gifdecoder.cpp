@@ -307,6 +307,7 @@ void GifDecoder::loadfromGifs(QStringList gifs) {
       }
     }
   }
+  emit frameRefreshAll();
 }
 
 bool GifDecoder::exportImages(QString folder, QString ext) {
