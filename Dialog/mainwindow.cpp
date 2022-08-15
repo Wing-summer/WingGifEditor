@@ -757,51 +757,51 @@ bool MainWindow::saveGif(QString filename) {
       QImage timg = img;
 
       // TODO : 通过只保留不同区域图片实现，但效果不好，故注释，以备用
-      //      if (i) {
-      //        auto bpl = lastimg.bytesPerLine();
-      //        auto ls = lastimg.height();
-      //        int x, y, x0, y0;
-      //        for (y = 0; y < ls; y++) {
-      //          auto o = lastimg.constScanLine(y);
-      //          auto d = img.constScanLine(y);
-      //          if (memcmp(o, d, size_t(bpl))) {
-      //            break;
-      //          }
-      //        }
-      //        for (y0 = ls - 1; y0 > y; y0--) {
-      //          auto o = lastimg.constScanLine(y0);
-      //          auto d = img.constScanLine(y0);
-      //          if (memcmp(o, d, size_t(bpl))) {
-      //            break;
-      //          }
-      //        }
+      if (i) {
+        auto bpl = lastimg.bytesPerLine();
+        auto ls = lastimg.height();
+        int x, y, x0, y0;
+        for (y = 0; y < ls; y++) {
+          auto o = lastimg.constScanLine(y);
+          auto d = img.constScanLine(y);
+          if (memcmp(o, d, size_t(bpl))) {
+            break;
+          }
+        }
+        for (y0 = ls - 1; y0 > y; y0--) {
+          auto o = lastimg.constScanLine(y0);
+          auto d = img.constScanLine(y0);
+          if (memcmp(o, d, size_t(bpl))) {
+            break;
+          }
+        }
 
-      //        //比较列
-      //        QTransform trans;
-      //        trans.rotate(-90);
-      //        timg = img.copy().transformed(trans);
-      //        lastimg = lastimg.transformed(trans);
-      //        bpl = lastimg.bytesPerLine();
-      //        ls = lastimg.height();
-      //        for (x = 0; x < ls; x++) {
-      //          auto o = lastimg.constScanLine(x);
-      //          auto d = timg.constScanLine(x);
-      //          if (memcmp(o, d, size_t(bpl))) {
-      //            break;
-      //          }
-      //        }
-      //        for (x0 = ls - 1; x0 > x; x0--) {
-      //          auto o = lastimg.constScanLine(x0);
-      //          auto d = timg.constScanLine(x0);
-      //          if (memcmp(o, d, size_t(bpl))) {
-      //            break;
-      //          }
-      //        }
-      //        timg = img.copy(x, y, x0 - x + 1, y0 - y + 1);
-      //        rects.push_back(QRect(QPoint(x, y), timg.size()));
-      //      } else {
-      rects.push_back(QRect(QPoint(), img.size()));
-      //      }
+        //比较列
+        QTransform trans;
+        trans.rotate(-90);
+        timg = img.copy().transformed(trans);
+        lastimg = lastimg.transformed(trans);
+        bpl = lastimg.bytesPerLine();
+        ls = lastimg.height();
+        for (x = 0; x < ls; x++) {
+          auto o = lastimg.constScanLine(x);
+          auto d = timg.constScanLine(x);
+          if (memcmp(o, d, size_t(bpl))) {
+            break;
+          }
+        }
+        for (x0 = ls - 1; x0 > x; x0--) {
+          auto o = lastimg.constScanLine(x0);
+          auto d = timg.constScanLine(x0);
+          if (memcmp(o, d, size_t(bpl))) {
+            break;
+          }
+        }
+        timg = img.copy(x, y, x0 - x + 1, y0 - y + 1);
+        rects.push_back(QRect(QPoint(x, y), timg.size()));
+      } else {
+        rects.push_back(QRect(QPoint(), img.size()));
+      }
       std::vector<uint32_t> buffer(ulong(timg.sizeInBytes()));
       memcpy(buffer.data(), timg.constBits(), buffer.size());
       images.push_back(buffer);

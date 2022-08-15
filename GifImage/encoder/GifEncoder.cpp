@@ -93,7 +93,7 @@ std::vector<uint8_t> GifEncoder::addImage(const std::vector<uint32_t> &original,
                                           QRect imgRect,
                                           std::vector<uint8_t> &content) {
   qDebug() << "Get image pixel " << original.size() << "\n";
-  uint32_t size = screenWidth * screenHeight;
+  uint32_t size = uint32_t(imgRect.width() * imgRect.height());
   std::unique_ptr<ColorQuantizer> colorQuantizer;
   QString quantizerStr;
   switch (qType) {
@@ -262,7 +262,8 @@ std::vector<uint8_t> GifEncoder::addImage(const std::vector<uint32_t> &original,
   qDebug() << dithererStr.c_str();
 
   LzwEncoder lzwEncoder(paddedColorCount);
-  lzwEncoder.encode(colorIndices, screenWidth, screenHeight, content);
+  lzwEncoder.encode(colorIndices, uint16_t(imgRect.width()),
+                    uint16_t(imgRect.height()), content);
   delete[] colorIndices;
   qDebug() << "LZW encode";
   return content;
