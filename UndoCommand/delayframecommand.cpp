@@ -16,12 +16,12 @@ void DelayFrameCommand::undo() {
 }
 
 void DelayFrameCommand::redo() {
-  if (oldindices.count() == gif->frameCount())
-    gif->setAllFrameDelay(newdelay);
-  else {
+  if (oldindices.count())
     for (auto item : oldindices) {
       gif->setFrameDelay(item, newdelay);
     }
+  else {
+    gif->setAllFrameDelay(newdelay);
   }
 }
 
@@ -41,6 +41,9 @@ DelayScaleCommand::DelayScaleCommand(GifDecoder *helper, QVector<int> &indices,
 
 void DelayScaleCommand::undo() {
   auto len = oldindices.count();
+  if (!len) {
+    len = gif->frameCount();
+  }
   for (auto i = 0; i < len; i++) {
     gif->setFrameDelay(oldindices[i], olddelay[i]);
   }
@@ -48,6 +51,9 @@ void DelayScaleCommand::undo() {
 
 void DelayScaleCommand::redo() {
   auto len = oldindices.count();
+  if (!len) {
+    len = gif->frameCount();
+  }
   for (auto i = 0; i < len; i++) {
     gif->setFrameDelay(oldindices[i], newdelay[i]);
   }

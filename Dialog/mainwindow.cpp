@@ -631,6 +631,8 @@ MainWindow::MainWindow(DMainWindow *parent) : DMainWindow(parent) {
 }
 
 void MainWindow::openGif(QString filename) {
+  WaitingDialog d;
+  d.start(tr("OpenGif"));
   if (!gif.load(filename)) {
     setEditMode(false);
     DMessageManager::instance()->sendMessage(this, ICONRES("icon"),
@@ -646,6 +648,7 @@ void MainWindow::openGif(QString filename) {
   setSaved(true);
   setWritable(QFileInfo(filename).permission(QFile::WriteUser));
   showGifMessage();
+  d.close();
 }
 
 bool MainWindow::checkIsGif(QString filename) {
@@ -804,28 +807,31 @@ bool MainWindow::saveGif(QString filename) {
 }
 
 void MainWindow::on_new_frompics() {
+  player->stop();
   if (ensureSafeClose()) {
     NewDialog d(NewType::FromPics, this);
     if (d.exec()) {
-      // showWaitNotify("");
+      WaitingDialog dw;
+      dw.start(tr("NewFromPicsGif"));
       gif.loadfromImages(d.getResult());
-      // showProcessSuccess();
       curfilename = ":"; //表示新建
       setSaved(false);
       setWritable(true);
       setEditMode(true);
       imglist->setCurrentRow(0);
       showGifMessage();
-      // showProcessSuccess();
+      dw.close();
     }
   }
 }
 
 void MainWindow::on_new_fromgifs() {
+  player->stop();
   if (ensureSafeClose()) {
     NewDialog d(NewType::FromGifs, this);
     if (d.exec()) {
-      // showWaitNotify("");
+      WaitingDialog dw;
+      dw.start(tr("NewFromGifsGif"));
       gif.loadfromGifs(d.getResult());
       curfilename = ":"; //表示新建
       setSaved(false);
@@ -833,12 +839,13 @@ void MainWindow::on_new_fromgifs() {
       setEditMode(true);
       imglist->setCurrentRow(0);
       showGifMessage();
-      // showProcessSuccess();
+      dw.close();
     }
   }
 }
 
 void MainWindow::on_open() {
+  player->stop();
   if (ensureSafeClose()) {
     auto filename = QFileDialog::getOpenFileName(this, tr("ChooseFile"),
                                                  lastusedpath, "gif (*.gif)");
@@ -850,10 +857,7 @@ void MainWindow::on_open() {
     undo.clear();
 
     if (checkIsGif(filename)) {
-      WaitingDialog d;
-      d.start(tr("OpenGif"));
       openGif(filename);
-      d.close();
     } else {
       DMessageManager::instance()->sendMessage(this, ICONRES("open"),
                                                tr("InvalidGif"));
@@ -862,6 +866,7 @@ void MainWindow::on_open() {
 }
 
 void MainWindow::on_del() {
+  player->stop();
   CheckEnabled;
   QVector<int> indices;
   for (auto item : imglist->selectionModel()->selectedIndexes()) {
@@ -871,11 +876,13 @@ void MainWindow::on_del() {
 }
 
 void MainWindow::on_selall() {
+  player->stop();
   CheckEnabled;
   imglist->selectAll();
 }
 
 void MainWindow::on_selreverse() {
+  player->stop();
   CheckEnabled;
   auto len = imglist->count();
   for (auto i = 0; i < len; i++) {
@@ -885,12 +892,14 @@ void MainWindow::on_selreverse() {
 }
 
 void MainWindow::on_desel() {
+  player->stop();
   CheckEnabled;
   auto cur = imglist->currentRow();
   imglist->setCurrentRow(cur);
 }
 
 void MainWindow::on_goto() {
+  player->stop();
   CheckEnabled;
   bool ok;
   auto index =
@@ -902,11 +911,13 @@ void MainWindow::on_goto() {
 }
 
 void MainWindow::on_beginframe() {
+  player->stop();
   CheckEnabled;
   imglist->setCurrentRow(0);
 }
 
 void MainWindow::on_last() {
+  player->stop();
   CheckEnabled;
   auto pos = imglist->currentRow();
   if (pos > 0) {
@@ -931,6 +942,7 @@ void MainWindow::on_stop() {
 }
 
 void MainWindow::on_next() {
+  player->stop();
   CheckEnabled;
   auto pos = imglist->currentRow();
   auto max = imglist->count();
@@ -940,11 +952,13 @@ void MainWindow::on_next() {
 }
 
 void MainWindow::on_endframe() {
+  player->stop();
   CheckEnabled;
   imglist->setCurrentRow(imglist->count() - 1);
 }
 
 void MainWindow::on_decreaseframe() {
+  player->stop();
   CheckEnabled;
   ReduceFrameDialog d(imglist->count(), this);
   if (d.exec()) {
@@ -969,18 +983,21 @@ void MainWindow::on_decreaseframe() {
 }
 
 void MainWindow::on_delbefore() {
+  player->stop();
   CheckEnabled;
   auto pos = imglist->currentRow();
   undo.push(new DelFrameDirCommand(&gif, pos, DelDirection::Before, imglist));
 }
 
 void MainWindow::on_delafter() {
+  player->stop();
   CheckEnabled;
   auto pos = imglist->currentRow();
   undo.push(new DelFrameDirCommand(&gif, pos, DelDirection::After, imglist));
 }
 
 void MainWindow::on_saveas() {
+  player->stop();
   CheckEnabled;
   auto filename = QFileDialog::getSaveFileName(this, tr("ChooseSaveFile"),
                                                lastusedpath, "gif (*.gif)");
@@ -1002,6 +1019,7 @@ void MainWindow::on_saveas() {
 }
 
 void MainWindow::on_export() {
+  player->stop();
   CheckEnabled;
   ExportDialog d;
   if (d.exec()) {
@@ -1040,6 +1058,7 @@ void MainWindow::on_export() {
 }
 
 void MainWindow::on_exit() {
+  player->stop();
   if (ensureSafeClose()) {
     gif.close();
     editor->setBackgroudPix(QPixmap(":/images/icon.png"));
@@ -1053,16 +1072,19 @@ void MainWindow::on_exit() {
 }
 
 void MainWindow::on_undo() {
+  player->stop();
   CheckEnabled;
   undo.undo();
 }
 
 void MainWindow::on_redo() {
+  player->stop();
   CheckEnabled;
   undo.redo();
 }
 
 void MainWindow::on_copy() {
+  player->stop();
   CheckEnabled;
   auto sels = imglist->selectionModel()->selectedRows();
   QList<QGifFrameInfoData> sel;
@@ -1074,6 +1096,7 @@ void MainWindow::on_copy() {
 }
 
 void MainWindow::on_cut() {
+  player->stop();
   CheckEnabled;
   auto sels = imglist->selectionModel()->selectedRows();
   QList<QGifFrameInfoData> sel;
@@ -1088,6 +1111,7 @@ void MainWindow::on_cut() {
 }
 
 void MainWindow::on_paste() {
+  player->stop();
   CheckEnabled;
   auto pos = imglist->currentRow() + 1;
   QList<QGifFrameInfoData> imgs;
@@ -1098,6 +1122,7 @@ void MainWindow::on_paste() {
 }
 
 void MainWindow::on_save() {
+  player->stop();
   CheckEnabled;
   if (curfilename == ":") {
     on_saveas();
@@ -1117,18 +1142,21 @@ void MainWindow::on_save() {
 }
 
 void MainWindow::on_reverse() {
+  player->stop();
   CheckEnabled;
   undo.push(new ReverseFrameCommand(&gif));
   refreshImglist();
 }
 
 void MainWindow::on_moveleft() {
+  player->stop();
   CheckEnabled;
   auto pos = imglist->currentRow();
   undo.push(new MoveFrameCommand(&gif, imglist, MoveFrameDirection::Left, pos));
 }
 
 void MainWindow::on_moveright() {
+  player->stop();
   CheckEnabled;
   auto pos = imglist->currentRow();
   undo.push(
@@ -1136,6 +1164,7 @@ void MainWindow::on_moveright() {
 }
 
 void MainWindow::on_createreverse() {
+  player->stop();
   CheckEnabled;
   CreateReverseDialog d(imglist->count(), this);
   if (d.exec()) {
@@ -1148,6 +1177,7 @@ void MainWindow::on_createreverse() {
 }
 
 void MainWindow::on_setdelay() {
+  player->stop();
   CheckEnabled;
   auto indices = imglist->selectionModel()->selectedRows();
   bool ok;
@@ -1155,29 +1185,39 @@ void MainWindow::on_setdelay() {
                                    INT_MAX, 1, &ok);
   if (ok) {
     QVector<int> is;
-    for (auto i : indices) {
-      is.append(i.row());
+    if (QGuiApplication::keyboardModifiers() !=
+        Qt::KeyboardModifier::ControlModifier) {
+      for (auto i : indices) {
+        is.append(i.row());
+      }
     }
     undo.push(new DelayFrameCommand(&gif, is, time));
   }
 }
 
 void MainWindow::on_scaledelay() {
+  player->stop();
   CheckEnabled;
-  auto indices = imglist->selectionModel()->selectedRows();
+
   bool ok;
   auto scale = DInputDialog::getInt(this, tr("ScaleDelayTime"),
                                     tr("InputPercent"), 100, 1, 100, 1, &ok);
+  QVector<int> is;
   if (ok) {
-    QVector<int> is;
-    for (auto i : indices) {
-      is.append(i.row());
+    if (QGuiApplication::keyboardModifiers() !=
+        Qt::KeyboardModifier::ControlModifier) {
+      auto indices = imglist->selectionModel()->selectedRows();
+
+      for (auto i : indices) {
+        is.append(i.row());
+      }
     }
     undo.push(new DelayScaleCommand(&gif, is, scale));
   }
 }
 
 void MainWindow::on_insertpic() {
+  player->stop();
   CheckEnabled;
   auto filenames = QFileDialog::getOpenFileNames(
       this, tr("ChooseFile"), lastusedpath, tr("Images (*.jpg *.tiff *.png)"));
@@ -1193,6 +1233,7 @@ void MainWindow::on_insertpic() {
 }
 
 void MainWindow::on_merge() {
+  player->stop();
   CheckEnabled;
   auto filenames = QFileDialog::getOpenFileNames(this, tr("ChooseFile"),
                                                  lastusedpath, "gif (*.gif)");
@@ -1208,6 +1249,7 @@ void MainWindow::on_merge() {
 }
 
 void MainWindow::on_scalepic() {
+  player->stop();
   CheckEnabled;
   ScaleGIFDialog d(gif.size(), this);
   if (d.exec()) {
@@ -1217,6 +1259,7 @@ void MainWindow::on_scalepic() {
 }
 
 void MainWindow::on_cutpic() {
+  player->stop();
   CheckEnabled;
   setEditMode(false);
   QRectF rect;
@@ -1227,26 +1270,32 @@ void MainWindow::on_cutpic() {
 }
 
 void MainWindow::on_fliph() {
+  player->stop();
+  player->stop();
   CheckEnabled;
   undo.push(new FlipFrameCommand(&gif, FlipDirection::Horizontal));
 }
 
 void MainWindow::on_flipv() {
+  player->stop();
   CheckEnabled;
   undo.push(new FlipFrameCommand(&gif, FlipDirection::Vertical));
 }
 
 void MainWindow::on_clockwise() {
+  player->stop();
   CheckEnabled;
   undo.push(new RotateFrameCommand(&gif, true));
 }
 
 void MainWindow::on_anticlockwise() {
+  player->stop();
   CheckEnabled;
   undo.push(new RotateFrameCommand(&gif, false));
 }
 
 void MainWindow::on_exportapply() {
+  player->stop();
   CheckEnabled;
   auto filename = QFileDialog::getSaveFileName(this, tr("ChooseSaveFile"),
                                                lastusedpath, "png (*.png)");
@@ -1261,37 +1310,67 @@ void MainWindow::on_exportapply() {
 }
 
 void MainWindow::on_applypic() {
+  player->stop();
   CheckEnabled;
-  auto indices = imglist->selectionModel()->selectedRows();
-  if (!indices.count()) {
-    DMessageManager::instance()->sendMessage(this, ICONRES("model"),
-                                             tr("NoSelection"));
-    return;
-  }
 
-  auto filename = QFileDialog::getOpenFileName(this, tr("ChooseFile"),
-                                               lastusedpath, "png (*.png)");
-  if (filename.isEmpty())
-    return;
+  if (QGuiApplication::keyboardModifiers() ==
+      Qt::KeyboardModifier::ControlModifier) {
 
-  lastusedpath = QFileInfo(filename).absoluteDir().absolutePath();
-
-  QVector<int> rows;
-  QVector<QImage> imgs;
-
-  QImage img;
-  if (img.load(filename)) {
-    if (img.size() == gif.size()) {
-      auto frames = gif.frames();
-      for (auto i : indices) {
-        rows.append(i.row());
-        QImage bimg = frames[i.row()].image.copy();
-        QPainter painter(&bimg);
-        painter.drawImage(QPoint(), img, img.rect());
-        imgs.append(bimg);
-      }
-      undo.push(new ReplaceFrameCommand(&gif, rows, imgs));
+    auto filename = QFileDialog::getOpenFileName(this, tr("ChooseFile"),
+                                                 lastusedpath, "png (*.png)");
+    if (filename.isEmpty())
       return;
+
+    lastusedpath = QFileInfo(filename).absoluteDir().absolutePath();
+
+    QVector<QImage> imgs;
+    QVector<int> empty;
+    QImage img;
+    if (img.load(filename)) {
+      if (img.size() == gif.size()) {
+        auto frames = gif.frames();
+        for (auto &f : frames) {
+          QImage bimg = f.image.copy();
+          QPainter painter(&bimg);
+          painter.drawImage(QPoint(), img, img.rect());
+          imgs.append(bimg);
+        }
+        undo.push(new ReplaceFrameCommand(&gif, empty, imgs));
+        return;
+      }
+    }
+  } else {
+    auto indices = imglist->selectionModel()->selectedRows();
+    if (!indices.count()) {
+      DMessageManager::instance()->sendMessage(this, ICONRES("model"),
+                                               tr("NoSelection"));
+      return;
+    }
+
+    auto filename = QFileDialog::getOpenFileName(this, tr("ChooseFile"),
+                                                 lastusedpath, "png (*.png)");
+    if (filename.isEmpty())
+      return;
+
+    lastusedpath = QFileInfo(filename).absoluteDir().absolutePath();
+
+    QVector<int> rows;
+    QVector<QImage> imgs;
+
+    QImage img;
+    if (img.load(filename)) {
+      if (img.size() == gif.size()) {
+        auto frames = gif.frames();
+        for (auto i : indices) {
+          rows.append(i.row());
+          QImage bimg = frames[i.row()].image.copy();
+          QPainter painter(&bimg);
+          painter.drawImage(QPoint(), img, img.rect());
+          imgs.append(bimg);
+        }
+        undo.push(new ReplaceFrameCommand(&gif, rows, imgs));
+        return;
+      }
     }
   }
   DMessageManager::instance()->sendMessage(this, ICONRES("model"),
@@ -1299,13 +1378,19 @@ void MainWindow::on_applypic() {
 }
 
 void MainWindow::on_onion() {
+  player->stop();
   CheckEnabled;
-  bool ok;
-  auto index = DInputDialog::getInt(
-      this, tr("OnionMask"), tr("PleaseInputIndex"), imglist->currentRow() + 1,
-      -1, imglist->count(), 1, &ok);
-  if (ok) {
-    gif.setOnionIndex(index);
+  if (QGuiApplication::keyboardModifiers() ==
+      Qt::KeyboardModifier::ControlModifier) {
+    gif.setOnionIndex(-1);
+  } else {
+    bool ok;
+    auto index = DInputDialog::getInt(
+        this, tr("OnionMask"), tr("PleaseInputIndex"),
+        imglist->currentRow() + 1, -1, imglist->count(), 1, &ok);
+    if (ok) {
+      gif.setOnionIndex(index);
+    }
   }
 }
 

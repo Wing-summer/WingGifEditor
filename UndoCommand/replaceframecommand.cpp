@@ -9,19 +9,35 @@ ReplaceFrameCommand::ReplaceFrameCommand(GifDecoder *helper,
 void ReplaceFrameCommand::undo() {
   auto &frames = gif->frames();
   auto len = olds.count();
-  for (auto i = 0; i < len; i++) {
-    auto index = olds[i];
-    frames[index].image.swap(bufferimage[i]);
-    gif->frameRefreshImg(index);
+  if (len) {
+    for (auto i = 0; i < len; i++) {
+      auto index = olds[i];
+      frames[index].image.swap(bufferimage[i]);
+      gif->frameRefreshImg(index);
+    }
+  } else {
+    auto p = frames.begin();
+    auto pc = bufferimage.begin();
+    for (; p != frames.begin(); p++, pc++) {
+      (*p).image.swap(*pc);
+    }
   }
 }
 
 void ReplaceFrameCommand::redo() {
   auto &frames = gif->frames();
   auto len = olds.count();
-  for (auto i = 0; i < len; i++) {
-    auto index = olds[i];
-    frames[index].image.swap(bufferimage[i]);
-    gif->frameRefreshImg(index);
+  if (len) {
+    for (auto i = 0; i < len; i++) {
+      auto index = olds[i];
+      frames[index].image.swap(bufferimage[i]);
+      gif->frameRefreshImg(index);
+    }
+  } else {
+    auto p = frames.begin();
+    auto pc = bufferimage.begin();
+    for (; p != frames.begin(); p++, pc++) {
+      (*p).image.swap(*pc);
+    }
   }
 }
