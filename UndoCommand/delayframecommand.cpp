@@ -30,31 +30,49 @@ void DelayFrameCommand::redo() {
 DelayScaleCommand::DelayScaleCommand(GifDecoder *helper, QVector<int> &indices,
                                      int scale, QUndoCommand *parent)
     : QUndoCommand(parent), gif(helper), oldindices(indices) {
-  for (auto i : indices) {
-    auto time = gif->frameDelay(i);
-    olddelay.append(time);
-    time = time * scale / 1000;
-    time *= 10;
-    newdelay.append(time);
+  if (indices.count()) {
+    for (auto i : indices) {
+      auto time = gif->frameDelay(i);
+      olddelay.append(time);
+      time = time * scale / 1000;
+      time *= 10;
+      newdelay.append(time);
+    }
+  } else {
+    for (auto &frame : gif->frames()) {
+      auto time = frame.delayTime;
+      olddelay.append(time);
+      time = time * scale / 1000;
+      time *= 10;
+      newdelay.append(time);
+    }
   }
 }
 
 void DelayScaleCommand::undo() {
   auto len = oldindices.count();
-  if (!len) {
+  if (len) {
+    for (auto i = 0; i < len; i++) {
+      gif->setFrameDelay(oldindices[i], olddelay[i]);
+    }
+  } else {
     len = gif->frameCount();
-  }
-  for (auto i = 0; i < len; i++) {
-    gif->setFrameDelay(oldindices[i], olddelay[i]);
+    for (auto i = 0; i < len; i++) {
+      gif->setFrameDelay(i, olddelay[i]);
+    }
   }
 }
 
 void DelayScaleCommand::redo() {
   auto len = oldindices.count();
-  if (!len) {
+  if (len) {
+    for (auto i = 0; i < len; i++) {
+      gif->setFrameDelay(oldindices[i], newdelay[i]);
+    }
+  } else {
     len = gif->frameCount();
-  }
-  for (auto i = 0; i < len; i++) {
-    gif->setFrameDelay(oldindices[i], newdelay[i]);
+    for (auto i = 0; i < len; i++) {
+      gif->setFrameDelay(i, newdelay[i]);
+    }
   }
 }

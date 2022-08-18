@@ -164,7 +164,7 @@ MainWindow::MainWindow(DMainWindow *parent) : DMainWindow(parent) {
   AddMenuIconAction("export", tr("Export"), MainWindow::on_export, tm);
   tm->addSeparator();
   AddMenuDB();
-  AddMenuShortcutAction("close", tr("Close"), MainWindow::on_exit, tm,
+  AddMenuShortcutAction("close", tr("Close"), MainWindow::on_close, tm,
                         QKeySequence::Close);
 
   menu->addMenu(tm);
@@ -604,7 +604,7 @@ MainWindow::MainWindow(DMainWindow *parent) : DMainWindow(parent) {
   ConnectShortCut(QKeySequence::Open, MainWindow::on_open);
   ConnectShortCut(QKeySequence::Save, MainWindow::on_save);
   ConnectShortCut(QKeySequence::SaveAs, MainWindow::on_saveas);
-  ConnectShortCut(QKeySequence::Close, MainWindow::on_exit);
+  ConnectShortCut(QKeySequence::Close, MainWindow::on_close);
   ConnectShortCut(QKeySequence::Undo, MainWindow::on_undo);
   ConnectShortCut(QKeySequence::Redo, MainWindow::on_redo);
   ConnectShortCut(QKeySequence::Cut, MainWindow::on_cut);
@@ -1093,12 +1093,13 @@ void MainWindow::on_export() {
   }
 }
 
-void MainWindow::on_exit() {
+void MainWindow::on_close() {
   player->stop();
   if (ensureSafeClose()) {
     gif.close();
     editor->setBackgroudPix(QPixmap(":/images/icon.png"));
-    editor->scale(1, 1);
+    editor->fitPicEditor();
+    editor->scale(0.5, 0.5);
     iSaved->setPixmap(infoSaveg);
     iReadWrite->setPixmap(inforwg);
     status->showMessage("");
@@ -1224,14 +1225,14 @@ void MainWindow::on_createreverse() {
 void MainWindow::on_setdelay() {
   player->stop();
   CheckEnabled;
+  auto mod = QGuiApplication::keyboardModifiers();
   auto indices = imglist->selectionModel()->selectedRows();
   bool ok;
   auto time = DInputDialog::getInt(this, tr("DelayTime"), tr("Inputms"), 40, 1,
                                    INT_MAX, 1, &ok);
   if (ok) {
     QVector<int> is;
-    if (QGuiApplication::keyboardModifiers() !=
-        Qt::KeyboardModifier::ControlModifier) {
+    if (mod != Qt::KeyboardModifier::ControlModifier) {
       for (auto i : indices) {
         is.append(i.row());
       }
@@ -1243,14 +1244,13 @@ void MainWindow::on_setdelay() {
 void MainWindow::on_scaledelay() {
   player->stop();
   CheckEnabled;
-
+  auto mod = QGuiApplication::keyboardModifiers();
   bool ok;
   auto scale = DInputDialog::getInt(this, tr("ScaleDelayTime"),
                                     tr("InputPercent"), 100, 1, 100, 1, &ok);
   QVector<int> is;
   if (ok) {
-    if (QGuiApplication::keyboardModifiers() !=
-        Qt::KeyboardModifier::ControlModifier) {
+    if (mod != Qt::KeyboardModifier::ControlModifier) {
       auto indices = imglist->selectionModel()->selectedRows();
 
       for (auto i : indices) {
@@ -1332,13 +1332,13 @@ void MainWindow::on_flipv() {
 void MainWindow::on_clockwise() {
   player->stop();
   CheckEnabled;
-  undo.push(new RotateFrameCommand(&gif, true));
+  undo.push(new RotateFrameCommand(&gif, editor, true));
 }
 
 void MainWindow::on_anticlockwise() {
   player->stop();
   CheckEnabled;
-  undo.push(new RotateFrameCommand(&gif, false));
+  undo.push(new RotateFrameCommand(&gif, editor, false));
 }
 
 void MainWindow::on_exportapply() {

@@ -46,7 +46,7 @@ private:
   void on_save();
   void on_saveas();
   void on_export();
-  void on_exit();
+  void on_close();
   void on_setting();
 
   void on_undo();

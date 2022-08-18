@@ -1,9 +1,16 @@
 #include "rotateframecommand.h"
 
-RotateFrameCommand::RotateFrameCommand(GifDecoder *helper, bool isclockwise,
-                                       QUndoCommand *parent)
-    : QUndoCommand(parent), gif(helper), clockwise(isclockwise) {}
+RotateFrameCommand::RotateFrameCommand(GifDecoder *helper, GifEditor *editor,
+                                       bool isclockwise, QUndoCommand *parent)
+    : QUndoCommand(parent), gif(helper), m_editor(editor),
+      clockwise(isclockwise) {}
 
-void RotateFrameCommand::undo() { gif->rotate(!clockwise); }
+void RotateFrameCommand::undo() {
+  gif->rotate(!clockwise);
+  m_editor->fitPicEditor();
+}
 
-void RotateFrameCommand::redo() { gif->rotate(clockwise); }
+void RotateFrameCommand::redo() {
+  gif->rotate(clockwise);
+  m_editor->fitPicEditor();
+}

@@ -16,11 +16,11 @@ void ReplaceFrameCommand::undo() {
       gif->frameRefreshImg(index);
     }
   } else {
-    auto p = frames.begin();
-    auto pc = bufferimage.begin();
-    for (; p != frames.begin(); p++, pc++) {
-      (*p).image.swap(*pc);
+    len = frames.count();
+    for (auto i = 0; i < len; i++) {
+      frames[i].image.swap(bufferimage[i]);
     }
+    gif->frameImageChanged();
   }
 }
 
@@ -34,10 +34,10 @@ void ReplaceFrameCommand::redo() {
       gif->frameRefreshImg(index);
     }
   } else {
-    auto p = frames.begin();
-    auto pc = bufferimage.begin();
-    for (; p != frames.begin(); p++, pc++) {
-      (*p).image.swap(*pc);
+    len = frames.count();
+    for (auto i = 0; i < len; i++) {
+      frames[i].image.swap(bufferimage[i]);
     }
+    gif->frameImageChanged();
   }
 }

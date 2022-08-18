@@ -8,13 +8,9 @@ GifEditor::GifEditor(QPixmap pix, QWidget *parent) : DGraphicsView(parent) {
           &GifEditor::selRectChanged);
   setScene(scene);
   rubber = new QRubberBand(QRubberBand::Line, this);
-  scale(1, 1);
 }
 
-void GifEditor::setBackgroudPix(QPixmap pix) {
-  scene->setFrameImg(pix);
-  scale(1, 1);
-}
+void GifEditor::setBackgroudPix(QPixmap pix) { scene->setFrameImg(pix); }
 
 void GifEditor::zoomIn() { scale(1.1, 1.1); }
 
