@@ -42,7 +42,7 @@ int main(int argc, char *argv[]) {
 
   a.setOrganizationName("WingCloud");
   a.setApplicationName("WingGifEditor");
-  a.setApplicationVersion("1.0");
+  a.setApplicationVersion("1.1.0");
   a.setProductIcon(QIcon(":/images/icon.png"));
   a.setProductName(QObject::tr("WingGifEditor"));
   a.setApplicationDescription(

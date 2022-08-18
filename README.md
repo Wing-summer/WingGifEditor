@@ -21,11 +21,11 @@
 
 ### GIF 库
 
-&emsp;&emsp;本软件基于两个库修改定制而得，一个负责读：`QtGifImage`，另一个负责写：`BurstLinker`。
-
-&emsp;&emsp;`BurstLinker`是`Android`平台上一个`GIF`编码库，还不错。它的底层实现是`C++`，所以我可以进行略微的修改定制得到，仓库 [链接](https://github.com/yutianzuo/BurstLinker) 。
+&emsp;&emsp;本软件基于两个库修改定制而得，一个负责读：`QtGifImage`，另一个负责写：`GifEncoder`。
 
 &emsp;&emsp;`QtGifImage`是`Qt`上的`GIF`读写库，可以将`GIF`解析为`QImage`序列，基于`giflib`。这个我改动比较大，只保留了读取部分，并与我的软件做了适配（这个库写`GIF`图片的质量有点太差），仓库 [链接](https://github.com/jiangcaiyang/QtGifImage) 。
+
+&emsp;&emsp;`GifEncoder`是一个能够提供高质量编码的`GIF`编码库，使用神经网络算法。为了实现基本的压缩，我进行略微的修改定制得到，仓库 [链接](https://github.com/xiaozhuai/GifEncoder) 。
 
 ### 编译安装
 
@@ -77,7 +77,7 @@
 ## 有关仓库
 
 - Gitea : https://code.gitlink.org.cn/wingsummer/WingGifEditor
-- Gitee : https://gitee.com/wingsummer/wing-gif-editor
+- Gitee : https://gitee.com/wing-cloud/wing-gif-editor
 - Github : https://github.com/Wing-summer/WingGifEditor
 
 ## WIKI
