@@ -772,68 +772,75 @@ void MainWindow::showGifMessage(QString message) {
 }
 
 bool MainWindow::saveGif(QString filename) {
+  int i = 0;
+
   GifEncoder gifsaver;
   auto size = gif.size();
   if (gifsaver.open(filename.toStdString(), uint16_t(size.width()),
                     uint16_t(size.height()), 1, false, 0)) {
-    int i = 0;
-    QImage lastimg;
 
-#define OFFSET 0
+    auto frames = gif.frames();
+    auto pframe = frames.begin();
+    auto eframe = frames.end();
 
-    for (auto &frame : gif.frames()) {
-      auto &img = frame.image;
-      QImage timg = img;
-      if (i) {
-        auto bpl = lastimg.bytesPerLine();
-        auto ls = lastimg.height();
-        int x, y, x0, y0;
-        for (y = 0; y < ls - 1 - OFFSET; y++) {
-          auto o = lastimg.constScanLine(y);
-          auto d = img.constScanLine(y);
-          if (memcmp(o, d, size_t(bpl))) {
-            break;
-          }
-        }
-        for (y0 = ls - 1; y0 > y + OFFSET; y0--) {
-          auto o = lastimg.constScanLine(y0);
-          auto d = img.constScanLine(y0);
-          if (memcmp(o, d, size_t(bpl))) {
-            break;
-          }
-        }
+    auto img = pframe->image;
 
-        //比较列
-        QTransform trans;
-        trans.rotate(-90);
-        timg = img.copy().transformed(trans);
-        lastimg = lastimg.transformed(trans);
-        bpl = lastimg.bytesPerLine();
-        ls = lastimg.height();
-        for (x = 0; x < ls - OFFSET; x++) {
-          auto o = lastimg.constScanLine(x);
-          auto d = timg.constScanLine(x);
-          if (memcmp(o, d, size_t(bpl))) {
-            break;
-          }
+    gifsaver.push(GifEncoder::PIXEL_FORMAT_RGBA, img.constBits(), 0, 0,
+                  img.width(), img.height(), pframe->delayTime / 10);
+
+    auto lframe = pframe;
+    pframe++;
+    for (; pframe != eframe; pframe++, lframe++) {
+      img = pframe->image;
+      auto limg = lframe->image;
+      auto bpl = img.bytesPerLine();
+      auto ls = img.height();
+
+      int x, y, x0, y0;
+      for (y = 0; y < ls - 1; y++) {
+        auto o = limg.constScanLine(y);
+        auto d = img.constScanLine(y);
+        if (memcmp(o, d, size_t(bpl))) {
+          break;
         }
-        for (x0 = ls - 1; x0 > x + OFFSET; x0--) {
-          auto o = lastimg.constScanLine(x0);
-          auto d = timg.constScanLine(x0);
-          if (memcmp(o, d, size_t(bpl))) {
-            break;
-          }
-        }
-        timg = img.copy(x, y, x0 - x + 1, y0 - y + 1);
-        gifsaver.push(GifEncoder::PIXEL_FORMAT_RGBA, timg.constBits(), x, y,
-                      timg.width(), timg.height(), frame.delayTime / 10);
-      } else {
-        gifsaver.push(GifEncoder::PIXEL_FORMAT_RGBA, timg.constBits(), 0, 0,
-                      timg.width(), timg.height(), frame.delayTime / 10);
       }
 
-      lastimg = img;
-      i++;
+      for (y0 = ls - 1; y0 > y; y0--) {
+        auto o = limg.constScanLine(y0);
+        auto d = img.constScanLine(y0);
+        if (memcmp(o, d, size_t(bpl))) {
+          break;
+        }
+      }
+
+      QTransform trans;
+      trans.rotate(90);
+
+      auto rimg = img.transformed(trans);
+      auto rlimg = limg.transformed(trans);
+
+      rimg.save("/home/wingsummer/Desktop/1/" + QString::number(i++) + ".png");
+
+      bpl = rimg.bytesPerLine();
+      ls = rimg.height();
+      for (x = 0; x < ls - 1; x++) {
+        auto o = rlimg.constScanLine(x);
+        auto d = rimg.constScanLine(x);
+        if (memcmp(o, d, size_t(bpl))) {
+          break;
+        }
+      }
+      for (x0 = ls - 1; x0 > x; x0--) {
+        auto o = rlimg.constScanLine(x0);
+        auto d = rimg.constScanLine(x0);
+        if (memcmp(o, d, size_t(bpl))) {
+          break;
+        }
+      }
+      auto timg = img.copy(x, y, x0 - x + 1, y0 - y + 1);
+      QApplication::processEvents();
+      gifsaver.push(GifEncoder::PIXEL_FORMAT_RGBA, timg.constBits(), x, y,
+                    timg.width(), timg.height(), pframe->delayTime / 10);
     }
 
     gifsaver.close();

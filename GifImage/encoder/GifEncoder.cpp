@@ -152,7 +152,6 @@ bool GifEncoder::push(PixelFormat format, const uint8_t *frame, int x, int y,
       m_framePixels =
           reinterpret_cast<uint8_t *>(realloc(m_framePixels, ulong(needSize)));
       m_allocSize = needSize;
-      //            printf("realloc 1\n");
     }
     auto *pixels = m_framePixels + width * height * 3 * m_frameCount;
     convertToBGR(format, pixels, frame, width, height);

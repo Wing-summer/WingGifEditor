@@ -416,6 +416,7 @@ void GifDecoder::rotate(bool clockwise) {
     auto &img = frame.image;
     img = img.transformed(trans, Qt::SmoothTransformation);
   }
+  canvasSize.transpose();
   emit frameImageChanged();
 }
 
@@ -424,6 +425,8 @@ void GifDecoder::scale(int w, int h) {
     auto &img = frame.image;
     img = img.scaled(w, h);
   }
+  canvasSize.setWidth(w);
+  canvasSize.setHeight(h);
   emit frameImageChanged();
 }
 

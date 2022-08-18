@@ -2,6 +2,7 @@
 #include <DWidgetUtil>
 #include <QHideEvent>
 #include <QShowEvent>
+#include <QThread>
 
 WaitingDialog::WaitingDialog(DMainWindow *parent) : DDialog(parent) {
   setWindowTitle(tr("PleaseWait"));
@@ -23,6 +24,8 @@ WaitingDialog::WaitingDialog(DMainWindow *parent) : DDialog(parent) {
   info = new DLabel(tr("Please Waiting..."), this);
   info->setAlignment(Qt::AlignmentFlag::AlignCenter);
   addContent(info);
+
+  moveToThread(new QThread(this)); // 启用一个新线程，防止界面卡死
 
   addSpacing(50);
 }
