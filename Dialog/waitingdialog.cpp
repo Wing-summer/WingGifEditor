@@ -5,6 +5,8 @@
 #include <QThread>
 
 WaitingDialog::WaitingDialog(DMainWindow *parent) : DDialog(parent) {
+  moveToThread(new QThread(this)); // 启用一个新线程，防止界面卡死
+
   setWindowTitle(tr("PleaseWait"));
   addSpacing(50);
   pro = new DWaterProgress(this);
@@ -24,10 +26,8 @@ WaitingDialog::WaitingDialog(DMainWindow *parent) : DDialog(parent) {
   info = new DLabel(tr("Please Waiting..."), this);
   info->setAlignment(Qt::AlignmentFlag::AlignCenter);
   addContent(info);
-
-  moveToThread(new QThread(this)); // 启用一个新线程，防止界面卡死
-
   addSpacing(50);
+  Dtk::Widget::moveToCenter(this);
 }
 
 void WaitingDialog::start(QString message) {

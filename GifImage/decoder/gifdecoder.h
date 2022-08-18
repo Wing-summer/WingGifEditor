@@ -37,8 +37,8 @@ public:
   int frameCount();
   int frameDelay(int index);
 
-  void loadfromImages(QStringList filenames);
-  void loadfromGifs(QStringList gifs);
+  void loadfromImages(QStringList filenames, QSize size = QSize());
+  void loadfromGifs(QStringList gifs, QSize size = QSize());
   bool exportImages(QString folder, QString ext);
   void close();
 

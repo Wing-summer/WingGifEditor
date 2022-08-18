@@ -633,35 +633,9 @@ MainWindow::MainWindow(DMainWindow *parent) : DMainWindow(parent) {
   ConnectShortCut(keyscaledelay, MainWindow::on_scaledelay);
 
   m_settings = new Settings(this);
-  connect(m_settings, &Settings::sigAdjustDither, this, [=](QString v) {
-    // compare more faster
-    //    if (v[0] == 'N') {
-    //      m_ditherer = DitherType::No;
-    //    } else if (v[0] == 'M') {
-    //      m_ditherer = DitherType::M2;
-    //    } else if (v[0] == 'B') {
-    //      m_ditherer = DitherType::Bayer;
-    //    } else if (v[0] == 'F') {
-    //      m_ditherer = DitherType::FloydSteinberg;
-    //    }
-  });
 
-  connect(m_settings, &Settings::sigAdjustQuantizer, this, [=](QString v) {
-    // compare more faster
-    //    if (v[0] == 'U') {
-    //      m_quantizer = QuantizerType::Uniform;
-    //    } else if (v[0] == 'M') {
-    //      m_quantizer = QuantizerType::MedianCut;
-    //    } else if (v[0] == 'K') {
-    //      m_quantizer = QuantizerType::KMeans;
-    //    } else if (v[0] == 'R') {
-    //      m_quantizer = QuantizerType::Random;
-    //    } else if (v[0] == 'O') {
-    //      m_quantizer = QuantizerType::Octree;
-    //    } else if (v[0] == 'N') {
-    //      m_quantizer = QuantizerType::NeuQuant;
-    //    }
-  });
+  connect(m_settings, &Settings::sigAdjustQuality, this,
+          [=](int v) { _quality = v; });
   connect(m_settings, &Settings::sigChangeWindowState,
           [=](QString mode) { _windowmode = mode; });
 
@@ -772,12 +746,11 @@ void MainWindow::showGifMessage(QString message) {
 }
 
 bool MainWindow::saveGif(QString filename) {
-  int i = 0;
 
   GifEncoder gifsaver;
   auto size = gif.size();
   if (gifsaver.open(filename.toStdString(), uint16_t(size.width()),
-                    uint16_t(size.height()), 1, false, 0)) {
+                    uint16_t(size.height()), _quality, false, 0)) {
 
     auto frames = gif.frames();
     auto pframe = frames.begin();
@@ -819,8 +792,6 @@ bool MainWindow::saveGif(QString filename) {
       auto rimg = img.transformed(trans);
       auto rlimg = limg.transformed(trans);
 
-      rimg.save("/home/wingsummer/Desktop/1/" + QString::number(i++) + ".png");
-
       bpl = rimg.bytesPerLine();
       ls = rimg.height();
       for (x = 0; x < ls - 1; x++) {
@@ -837,16 +808,38 @@ bool MainWindow::saveGif(QString filename) {
           break;
         }
       }
-      auto timg = img.copy(x, y, x0 - x + 1, y0 - y + 1);
+
+      auto timg = img.copy(adjustImageSize(x, y, x0 - x + 1, y0 - y + 1));
       QApplication::processEvents();
       gifsaver.push(GifEncoder::PIXEL_FORMAT_RGBA, timg.constBits(), x, y,
                     timg.width(), timg.height(), pframe->delayTime / 10);
     }
 
     gifsaver.close();
+    setSaved(true);
     return true;
   }
   return false;
+}
+
+QRect MainWindow::adjustImageSize(int x, int y, int w, int h) {
+  // 由于保存图像使用神经网络算法，图片有最小值限制，这里命名为 OFFSET
+  // 这里为实验值
+#define OFFSET 16
+  if (w <= OFFSET) {
+    if (x - OFFSET > 0) {
+      x -= OFFSET;
+    }
+    w += OFFSET;
+  }
+
+  if (h <= OFFSET) {
+    if (y - OFFSET > 0) {
+      y -= OFFSET;
+    }
+    h += OFFSET;
+  }
+  return QRect(x, y, w, h);
 }
 
 void MainWindow::on_new_frompics() {
@@ -1279,8 +1272,9 @@ void MainWindow::on_insertpic() {
   lastusedpath = QFileInfo(filenames.first()).absoluteDir().absolutePath();
   auto pos = imglist->currentRow() + 1;
   GifDecoder buffer;
-  buffer.loadfromImages(filenames);
-  undo.push(new InsertFrameCommand(&gif, imglist, pos, buffer.frames()));
+  buffer.loadfromImages(filenames, gif.size());
+  if (buffer.frameCount())
+    undo.push(new InsertFrameCommand(&gif, imglist, pos, buffer.frames()));
   buffer.close();
 }
 
@@ -1295,8 +1289,9 @@ void MainWindow::on_merge() {
   lastusedpath = QFileInfo(filenames.first()).absoluteDir().absolutePath();
   auto pos = imglist->currentRow() + 1;
   GifDecoder buffer;
-  buffer.loadfromGifs(filenames);
-  undo.push(new InsertFrameCommand(&gif, imglist, pos, buffer.frames()));
+  buffer.loadfromGifs(filenames, gif.size());
+  if (buffer.frameCount())
+    undo.push(new InsertFrameCommand(&gif, imglist, pos, buffer.frames()));
   buffer.close();
 }
 

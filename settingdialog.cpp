@@ -5,8 +5,7 @@ void GenerateSettingTranslate() {
   auto group_appearance = QObject::tr("Appearance");
 
   auto editor_image = QObject::tr("Image");
-  auto image_quantizer = QObject::tr("Quantizer");
-  auto image_ditherer = QObject::tr("Ditherer");
+  auto image_quality = QObject::tr("Quality");
 
   auto window = QObject::tr("Window");
   auto app_windowstate = QObject::tr("Window size");

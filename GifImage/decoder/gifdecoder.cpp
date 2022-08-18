@@ -268,19 +268,18 @@ int GifDecoder::frameDelay(int index) {
   return frameInfos[index].delayTime;
 }
 
-void GifDecoder::loadfromImages(QStringList filenames) {
+void GifDecoder::loadfromImages(QStringList filenames, QSize size) {
   frameInfos.clear();
   QImage img;
   while (filenames.count()) {
     if (img.load(filenames.first())) {
-      filenames.removeFirst();
       break;
     }
     filenames.removeFirst();
   }
   auto oimg = img;
-  auto osize = oimg.size();
-  filenames.removeFirst();
+  auto osize = size == QSize() ? oimg.size() : size;
+
   for (auto f : filenames) {
     if (img.load(f)) {
       QGifFrameInfoData frame;
@@ -293,10 +292,13 @@ void GifDecoder::loadfromImages(QStringList filenames) {
   emit frameRefreshAll();
 }
 
-void GifDecoder::loadfromGifs(QStringList gifs) {
+void GifDecoder::loadfromGifs(QStringList gifs, QSize size) {
   GifDecoder dec;
   dec.load(gifs.first());
-  auto osize = dec.size();
+  bool needresize = size != QSize();
+  if (needresize)
+    dec.scale(size.width(), size.height());
+  auto osize = (needresize ? size : dec.size());
   this->frameInfos.swap(dec.frameInfos);
   gifs.removeFirst();
   for (auto gif : gifs) {

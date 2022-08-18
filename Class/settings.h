@@ -31,8 +31,7 @@ public:
   DSettings *settings;
 
 signals:
-  void sigAdjustQuantizer(QString type);
-  void sigAdjustDither(QString type);
+  void sigAdjustQuality(int quality);
   void sigChangeWindowState(QString state);
 
 private:

@@ -316,7 +316,7 @@
     <message>
         <location filename="../Dialog/mainwindow.cpp" line="207"/>
         <location filename="../Dialog/mainwindow.cpp" line="382"/>
-        <location filename="../Dialog/mainwindow.cpp" line="943"/>
+        <location filename="../Dialog/mainwindow.cpp" line="941"/>
         <source>Goto</source>
         <translation>跳转</translation>
     </message>
@@ -542,42 +542,42 @@
         <translation>缩放以适合视图</translation>
     </message>
     <message>
-        <location filename="../Dialog/mainwindow.cpp" line="686"/>
+        <location filename="../Dialog/mainwindow.cpp" line="660"/>
         <source>OpenGif</source>
         <translation>打开 GIF 图片中……</translation>
     </message>
     <message>
-        <location filename="../Dialog/mainwindow.cpp" line="691"/>
+        <location filename="../Dialog/mainwindow.cpp" line="665"/>
         <source>OpenError</source>
         <translation>打开错误！</translation>
     </message>
     <message>
-        <location filename="../Dialog/mainwindow.cpp" line="750"/>
+        <location filename="../Dialog/mainwindow.cpp" line="724"/>
         <source>ConfirmClose</source>
         <translation>确认关闭</translation>
     </message>
     <message>
-        <location filename="../Dialog/mainwindow.cpp" line="751"/>
+        <location filename="../Dialog/mainwindow.cpp" line="725"/>
         <source>ConfirmSave</source>
         <translation>有修改未保存，您确定丢弃吗？</translation>
     </message>
     <message>
-        <location filename="../Dialog/mainwindow.cpp" line="752"/>
+        <location filename="../Dialog/mainwindow.cpp" line="726"/>
         <source>Untitle</source>
         <translation>未命名.gif</translation>
     </message>
     <message>
-        <location filename="../Dialog/mainwindow.cpp" line="769"/>
+        <location filename="../Dialog/mainwindow.cpp" line="743"/>
         <source>%1 frame | %2 total</source>
         <translation>第 %1 帧 | 共 %2 帧</translation>
     </message>
     <message>
-        <location filename="../Dialog/mainwindow.cpp" line="852"/>
+        <location filename="../Dialog/mainwindow.cpp" line="850"/>
         <source>NewFromPicsGif</source>
         <translation>正在从图片序列新建文件中……</translation>
     </message>
     <message>
-        <location filename="../Dialog/mainwindow.cpp" line="871"/>
+        <location filename="../Dialog/mainwindow.cpp" line="869"/>
         <source>NewFromGifsGif</source>
         <translation>正在从 GIF 序列新建文件中……</translation>
     </message>
@@ -590,74 +590,74 @@
         <translation type="vanished">处理完毕！</translation>
     </message>
     <message>
-        <location filename="../Dialog/mainwindow.cpp" line="887"/>
-        <location filename="../Dialog/mainwindow.cpp" line="1269"/>
-        <location filename="../Dialog/mainwindow.cpp" line="1284"/>
+        <location filename="../Dialog/mainwindow.cpp" line="885"/>
+        <location filename="../Dialog/mainwindow.cpp" line="1267"/>
+        <location filename="../Dialog/mainwindow.cpp" line="1283"/>
         <location filename="../Dialog/mainwindow.cpp" line="1365"/>
         <location filename="../Dialog/mainwindow.cpp" line="1396"/>
         <source>ChooseFile</source>
         <translation>请选择文件</translation>
     </message>
     <message>
-        <location filename="../Dialog/mainwindow.cpp" line="900"/>
+        <location filename="../Dialog/mainwindow.cpp" line="898"/>
         <source>InvalidGif</source>
         <translation>无效 GIF 文件！</translation>
     </message>
     <message>
-        <location filename="../Dialog/mainwindow.cpp" line="943"/>
+        <location filename="../Dialog/mainwindow.cpp" line="941"/>
         <location filename="../Dialog/mainwindow.cpp" line="1435"/>
         <source>PleaseInputIndex</source>
         <translation>请输入跳转帧索引</translation>
     </message>
     <message>
-        <location filename="../Dialog/mainwindow.cpp" line="1039"/>
+        <location filename="../Dialog/mainwindow.cpp" line="1037"/>
         <location filename="../Dialog/mainwindow.cpp" line="1346"/>
         <source>ChooseSaveFile</source>
         <translation>请选择保存文件路径</translation>
     </message>
     <message>
-        <location filename="../Dialog/mainwindow.cpp" line="1046"/>
+        <location filename="../Dialog/mainwindow.cpp" line="1044"/>
         <source>SaveAsGif</source>
         <translation>正在另存为 GIF 图像中……</translation>
     </message>
     <message>
-        <location filename="../Dialog/mainwindow.cpp" line="1049"/>
+        <location filename="../Dialog/mainwindow.cpp" line="1047"/>
         <source>SaveAsSuccess</source>
         <translation>另存为成功！</translation>
     </message>
     <message>
-        <location filename="../Dialog/mainwindow.cpp" line="1085"/>
+        <location filename="../Dialog/mainwindow.cpp" line="1083"/>
         <source>ExportFrames</source>
         <translation>正在导出帧为图片中……</translation>
     </message>
     <message>
-        <location filename="../Dialog/mainwindow.cpp" line="1088"/>
+        <location filename="../Dialog/mainwindow.cpp" line="1086"/>
         <location filename="../Dialog/mainwindow.cpp" line="1355"/>
         <source>ExportSuccess</source>
         <translation>导出成功！</translation>
     </message>
     <message>
-        <location filename="../Dialog/mainwindow.cpp" line="1091"/>
+        <location filename="../Dialog/mainwindow.cpp" line="1089"/>
         <source>ExportFail</source>
         <translation>导出失败！</translation>
     </message>
     <message>
-        <location filename="../Dialog/mainwindow.cpp" line="1179"/>
+        <location filename="../Dialog/mainwindow.cpp" line="1177"/>
         <source>SaveGif</source>
         <translation>正在保存 GIF 图像中……</translation>
     </message>
     <message>
-        <location filename="../Dialog/mainwindow.cpp" line="1183"/>
+        <location filename="../Dialog/mainwindow.cpp" line="1181"/>
         <source>SaveSuccess</source>
         <translation>保存成功</translation>
     </message>
     <message>
-        <location filename="../Dialog/mainwindow.cpp" line="1230"/>
+        <location filename="../Dialog/mainwindow.cpp" line="1228"/>
         <source>DelayTime</source>
         <translation>设置延时</translation>
     </message>
     <message>
-        <location filename="../Dialog/mainwindow.cpp" line="1230"/>
+        <location filename="../Dialog/mainwindow.cpp" line="1228"/>
         <source>Inputms</source>
         <translation>请输入延时（单位 ms）</translation>
     </message>
@@ -666,17 +666,17 @@
         <translation type="vanished">请输入延时（单位 10ms）</translation>
     </message>
     <message>
-        <location filename="../Dialog/mainwindow.cpp" line="1249"/>
+        <location filename="../Dialog/mainwindow.cpp" line="1247"/>
         <source>ScaleDelayTime</source>
         <translation>缩放延时</translation>
     </message>
     <message>
-        <location filename="../Dialog/mainwindow.cpp" line="1250"/>
+        <location filename="../Dialog/mainwindow.cpp" line="1248"/>
         <source>InputPercent</source>
         <translation>请输入缩放比例</translation>
     </message>
     <message>
-        <location filename="../Dialog/mainwindow.cpp" line="1269"/>
+        <location filename="../Dialog/mainwindow.cpp" line="1267"/>
         <source>Images (*.jpg *.tiff *.png)</source>
         <translation>图片 (*.jpg *.tiff *.png)</translation>
     </message>
@@ -780,21 +780,24 @@
     </message>
     <message>
         <location filename="../settingdialog.cpp" line="8"/>
+        <source>Quality</source>
+        <translation>图片质量（ 1 - 30 ）</translation>
+    </message>
+    <message>
         <source>Quantizer</source>
-        <translation>编码器</translation>
+        <translation type="vanished">编码器</translation>
     </message>
     <message>
-        <location filename="../settingdialog.cpp" line="9"/>
         <source>Ditherer</source>
-        <translation>抖动器</translation>
+        <translation type="vanished">抖动器</translation>
     </message>
     <message>
-        <location filename="../settingdialog.cpp" line="11"/>
+        <location filename="../settingdialog.cpp" line="10"/>
         <source>Window</source>
         <translation>窗口</translation>
     </message>
     <message>
-        <location filename="../settingdialog.cpp" line="12"/>
+        <location filename="../settingdialog.cpp" line="11"/>
         <source>Window size</source>
         <translation>窗口大小状态</translation>
     </message>
@@ -853,87 +856,77 @@
 <context>
     <name>Settings</name>
     <message>
-        <location filename="../Class/settings.cpp" line="36"/>
         <source>No</source>
-        <translation>无</translation>
+        <translation type="vanished">无</translation>
     </message>
     <message>
-        <location filename="../Class/settings.cpp" line="36"/>
         <source>M2</source>
-        <translation>M2 抖动</translation>
+        <translation type="vanished">M2 抖动</translation>
     </message>
     <message>
-        <location filename="../Class/settings.cpp" line="36"/>
         <source>Bayer</source>
-        <translation>Bayer 抖动</translation>
+        <translation type="vanished">Bayer 抖动</translation>
+    </message>
+    <message>
+        <source>FloydSteinberg</source>
+        <translation type="vanished">FloydSteinberg 抖动</translation>
+    </message>
+    <message>
+        <source>Uniform</source>
+        <translation type="vanished">均衡法</translation>
+    </message>
+    <message>
+        <source>MedianCut</source>
+        <translation type="vanished">中值切割法</translation>
+    </message>
+    <message>
+        <source>KMeans</source>
+        <translation type="vanished">K均值</translation>
+    </message>
+    <message>
+        <source>Random</source>
+        <translation type="vanished">随机法</translation>
+    </message>
+    <message>
+        <source>Octree</source>
+        <translation type="vanished">八叉树法</translation>
+    </message>
+    <message>
+        <source>NeuQuant</source>
+        <translation type="vanished">神经量子法</translation>
     </message>
     <message>
         <location filename="../Class/settings.cpp" line="37"/>
-        <source>FloydSteinberg</source>
-        <translation>FloydSteinberg 抖动</translation>
-    </message>
-    <message>
-        <location filename="../Class/settings.cpp" line="50"/>
-        <source>Uniform</source>
-        <translation>均衡法</translation>
-    </message>
-    <message>
-        <location filename="../Class/settings.cpp" line="50"/>
-        <source>MedianCut</source>
-        <translation>中值切割法</translation>
-    </message>
-    <message>
-        <location filename="../Class/settings.cpp" line="51"/>
-        <source>KMeans</source>
-        <translation>K均值</translation>
-    </message>
-    <message>
-        <location filename="../Class/settings.cpp" line="51"/>
-        <source>Random</source>
-        <translation>随机法</translation>
-    </message>
-    <message>
-        <location filename="../Class/settings.cpp" line="52"/>
-        <source>Octree</source>
-        <translation>八叉树法</translation>
-    </message>
-    <message>
-        <location filename="../Class/settings.cpp" line="52"/>
-        <source>NeuQuant</source>
-        <translation>神经量子法</translation>
-    </message>
-    <message>
-        <location filename="../Class/settings.cpp" line="62"/>
         <source>Normal</source>
         <translation>正常</translation>
     </message>
     <message>
-        <location filename="../Class/settings.cpp" line="62"/>
+        <location filename="../Class/settings.cpp" line="37"/>
         <source>Maximum</source>
         <translation>最大化</translation>
     </message>
     <message>
-        <location filename="../Class/settings.cpp" line="63"/>
+        <location filename="../Class/settings.cpp" line="38"/>
         <source>Minimum</source>
         <translation>最小化</translation>
     </message>
     <message>
-        <location filename="../Class/settings.cpp" line="63"/>
+        <location filename="../Class/settings.cpp" line="38"/>
         <source>Fullscreen</source>
         <translation>全屏</translation>
     </message>
     <message>
-        <location filename="../Class/settings.cpp" line="117"/>
+        <location filename="../Class/settings.cpp" line="90"/>
         <source>Cancel</source>
         <translation>取消取消</translation>
     </message>
     <message>
-        <location filename="../Class/settings.cpp" line="118"/>
+        <location filename="../Class/settings.cpp" line="91"/>
         <source>Replace</source>
         <translation>替换</translation>
     </message>
     <message>
-        <location filename="../Class/settings.cpp" line="120"/>
+        <location filename="../Class/settings.cpp" line="93"/>
         <source>OK</source>
         <translation>确认</translation>
     </message>
@@ -954,12 +947,12 @@
 <context>
     <name>WaitingDialog</name>
     <message>
-        <location filename="../Dialog/waitingdialog.cpp" line="7"/>
+        <location filename="../Dialog/waitingdialog.cpp" line="10"/>
         <source>PleaseWait</source>
         <translation>请稍后</translation>
     </message>
     <message>
-        <location filename="../Dialog/waitingdialog.cpp" line="23"/>
+        <location filename="../Dialog/waitingdialog.cpp" line="26"/>
         <source>Please Waiting...</source>
         <translation>请稍后……</translation>
     </message>

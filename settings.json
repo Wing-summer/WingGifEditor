@@ -9,18 +9,12 @@
                     "name": "Image",
                     "options": [
                         {
-                            "key": "ditherer",
-                            "name": "Ditherer",
-                            "type": "combobox",
-                            "text": "Ditherer",
-                            "default": "No"
-                        },
-                        {
-                            "key": "quantizer",
-                            "name": "Quantizer",
-                            "type": "combobox",
-                            "text": "Quantizer",
-                            "default": "Octree"
+                            "key": "quality",
+                            "name": "Quality",
+                            "type": "spinbutton",
+                            "default": 10,
+                            "max": 30,
+                            "min": 1
                         }
                     ]
                 }

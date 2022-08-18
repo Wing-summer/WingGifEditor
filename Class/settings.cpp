@@ -25,34 +25,9 @@ Settings::Settings(QObject *parent) : QObject(parent) {
   connect(Var, &Dtk::Core::DSettingsOption::valueChanged,                      \
           this, [=](QVariant value) Signal);
 
-  auto ditherer = settings->option("editor.image.ditherer");
-  QMap<QString, QVariant> dithererMap;
-  dithererMap.insert("keys", QStringList() << "No"
-                                           << "M2"
-                                           << "Bayer"
-                                           << "FloydSteinberg");
+  BindConfigSignal(quality, "", { emit sigAdjustQuality(value.toInt()); })
 
-  dithererMap.insert("values", QStringList()
-                                   << tr("No") << tr("M2") << tr("Bayer")
-                                   << tr("FloydSteinberg"));
-  ditherer->setData("items", dithererMap);
-
-  auto quantizer = settings->option("editor.image.quantizer");
-  QMap<QString, QVariant> quantizerMap;
-  quantizerMap.insert("keys", QStringList() << "Uniform"
-                                            << "MedianCut"
-                                            << "KMeans"
-                                            << "Random"
-                                            << "Octree"
-                                            << "NeuQuant");
-
-  quantizerMap.insert("values", QStringList()
-                                    << tr("Uniform") << tr("MedianCut")
-                                    << tr("KMeans") << tr("Random")
-                                    << tr("Octree") << tr("NeuQuant"));
-  quantizer->setData("items", quantizerMap);
-
-  auto windowState = settings->option("appearance.window.windowsize");
+      auto windowState = settings->option("appearance.window.windowsize");
   QMap<QString, QVariant> windowStateMap;
   windowStateMap.insert("keys", QStringList() << "window_normal"
                                               << "window_maximum"
@@ -77,10 +52,8 @@ void Settings::applySetting() {
   if (Var != nullptr)                                                          \
     emit Signal;
 
-  Apply(ditherer, "editor.image.ditherer",
-        sigAdjustDither(ditherer->value().toString()));
-  Apply(quantizer, "editor.image.ditherer",
-        sigAdjustQuantizer(quantizer->value().toString()));
+  Apply(quality, "editor.image.quality",
+        sigAdjustQuality(quality->value().toInt()));
   Apply(windowstate, "appearance.window.windowsize",
         sigChangeWindowState(windowstate->value().toString()));
 }

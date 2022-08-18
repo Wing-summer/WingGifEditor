@@ -37,6 +37,8 @@ private:
   void showGifMessage(QString message = "");
   bool saveGif(QString filename);
 
+  QRect adjustImageSize(int x, int y, int w, int h);
+
 private:
   void on_new_frompics();
   void on_new_fromgifs();
@@ -114,6 +116,7 @@ private:
 
   Settings *m_settings;
   QString _windowmode;
+  int _quality = 10;
 
 protected:
   void closeEvent(QCloseEvent *event) override;
