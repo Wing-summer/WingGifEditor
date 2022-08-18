@@ -635,32 +635,32 @@ MainWindow::MainWindow(DMainWindow *parent) : DMainWindow(parent) {
   m_settings = new Settings(this);
   connect(m_settings, &Settings::sigAdjustDither, this, [=](QString v) {
     // compare more faster
-    if (v[0] == 'N') {
-      m_ditherer = DitherType::No;
-    } else if (v[0] == 'M') {
-      m_ditherer = DitherType::M2;
-    } else if (v[0] == 'B') {
-      m_ditherer = DitherType::Bayer;
-    } else if (v[0] == 'F') {
-      m_ditherer = DitherType::FloydSteinberg;
-    }
+    //    if (v[0] == 'N') {
+    //      m_ditherer = DitherType::No;
+    //    } else if (v[0] == 'M') {
+    //      m_ditherer = DitherType::M2;
+    //    } else if (v[0] == 'B') {
+    //      m_ditherer = DitherType::Bayer;
+    //    } else if (v[0] == 'F') {
+    //      m_ditherer = DitherType::FloydSteinberg;
+    //    }
   });
 
   connect(m_settings, &Settings::sigAdjustQuantizer, this, [=](QString v) {
     // compare more faster
-    if (v[0] == 'U') {
-      m_quantizer = QuantizerType::Uniform;
-    } else if (v[0] == 'M') {
-      m_quantizer = QuantizerType::MedianCut;
-    } else if (v[0] == 'K') {
-      m_quantizer = QuantizerType::KMeans;
-    } else if (v[0] == 'R') {
-      m_quantizer = QuantizerType::Random;
-    } else if (v[0] == 'O') {
-      m_quantizer = QuantizerType::Octree;
-    } else if (v[0] == 'N') {
-      m_quantizer = QuantizerType::NeuQuant;
-    }
+    //    if (v[0] == 'U') {
+    //      m_quantizer = QuantizerType::Uniform;
+    //    } else if (v[0] == 'M') {
+    //      m_quantizer = QuantizerType::MedianCut;
+    //    } else if (v[0] == 'K') {
+    //      m_quantizer = QuantizerType::KMeans;
+    //    } else if (v[0] == 'R') {
+    //      m_quantizer = QuantizerType::Random;
+    //    } else if (v[0] == 'O') {
+    //      m_quantizer = QuantizerType::Octree;
+    //    } else if (v[0] == 'N') {
+    //      m_quantizer = QuantizerType::NeuQuant;
+    //    }
   });
   connect(m_settings, &Settings::sigChangeWindowState,
           [=](QString mode) { _windowmode = mode; });
@@ -774,13 +774,13 @@ void MainWindow::showGifMessage(QString message) {
 bool MainWindow::saveGif(QString filename) {
   GifEncoder gifsaver;
   auto size = gif.size();
-  if (gifsaver.init(filename.toStdString().c_str(), uint16_t(size.width()),
-                    uint16_t(size.height()), 0)) {
-    std::vector<std::vector<uint32_t>> images;
-    std::vector<uint32_t> delay;
-    std::vector<QRect> rects;
+  if (gifsaver.open(filename.toStdString(), uint16_t(size.width()),
+                    uint16_t(size.height()), 1, false, 0)) {
     int i = 0;
     QImage lastimg;
+
+#define OFFSET 0
+
     for (auto &frame : gif.frames()) {
       auto &img = frame.image;
       QImage timg = img;
@@ -788,14 +788,14 @@ bool MainWindow::saveGif(QString filename) {
         auto bpl = lastimg.bytesPerLine();
         auto ls = lastimg.height();
         int x, y, x0, y0;
-        for (y = 0; y < ls; y++) {
+        for (y = 0; y < ls - 1 - OFFSET; y++) {
           auto o = lastimg.constScanLine(y);
           auto d = img.constScanLine(y);
           if (memcmp(o, d, size_t(bpl))) {
             break;
           }
         }
-        for (y0 = ls - 1; y0 > y; y0--) {
+        for (y0 = ls - 1; y0 > y + OFFSET; y0--) {
           auto o = lastimg.constScanLine(y0);
           auto d = img.constScanLine(y0);
           if (memcmp(o, d, size_t(bpl))) {
@@ -810,14 +810,14 @@ bool MainWindow::saveGif(QString filename) {
         lastimg = lastimg.transformed(trans);
         bpl = lastimg.bytesPerLine();
         ls = lastimg.height();
-        for (x = 0; x < ls; x++) {
+        for (x = 0; x < ls - OFFSET; x++) {
           auto o = lastimg.constScanLine(x);
           auto d = timg.constScanLine(x);
           if (memcmp(o, d, size_t(bpl))) {
             break;
           }
         }
-        for (x0 = ls - 1; x0 > x; x0--) {
+        for (x0 = ls - 1; x0 > x + OFFSET; x0--) {
           auto o = lastimg.constScanLine(x0);
           auto d = timg.constScanLine(x0);
           if (memcmp(o, d, size_t(bpl))) {
@@ -825,19 +825,18 @@ bool MainWindow::saveGif(QString filename) {
           }
         }
         timg = img.copy(x, y, x0 - x + 1, y0 - y + 1);
-        rects.push_back(QRect(QPoint(x, y), timg.size()));
+        gifsaver.push(GifEncoder::PIXEL_FORMAT_RGBA, timg.constBits(), x, y,
+                      timg.width(), timg.height(), frame.delayTime / 10);
       } else {
-        rects.push_back(QRect(QPoint(), img.size()));
+        gifsaver.push(GifEncoder::PIXEL_FORMAT_RGBA, timg.constBits(), 0, 0,
+                      timg.width(), timg.height(), frame.delayTime / 10);
       }
-      std::vector<uint32_t> buffer(ulong(timg.sizeInBytes()));
-      memcpy(buffer.data(), timg.constBits(), buffer.size());
-      images.push_back(buffer);
-      delay.push_back(uint32_t(frame.delayTime));
+
       lastimg = img;
       i++;
     }
-    gifsaver.addImages(images, delay, rects, m_quantizer, m_ditherer);
-    gifsaver.finishEncoding();
+
+    gifsaver.close();
     return true;
   }
   return false;

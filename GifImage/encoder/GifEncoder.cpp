@@ -1,282 +1,286 @@
 //
-// Created by succlz123 on 17-9-5.
+// Created by xiaozhuai on 2020/12/20.
 //
 
 #include "GifEncoder.h"
-#include "./GifImage/ThreadPool.h"
-#include "./GifImage/quantizer/ColorQuantizer.h"
-#include "./GifImage/quantizer/KMeansQuantizer.h"
-#include "./GifImage/quantizer/MedianCutQuantizer.h"
-#include "./GifImage/quantizer/NeuQuantQuantizer.h"
-#include "./GifImage/quantizer/OctreeQuantizer.h"
-#include "./GifImage/quantizer/RandomQuantizer.h"
-#include "./GifImage/quantizer/UniformQuantizer.h"
-#include "BayerDitherer.h"
-#include "FloydSteinbergDitherer.h"
-#include "GifBlockWriter.h"
-#include "LzwEncoder.h"
-#include "M2Ditherer.h"
-#include "NoDitherer.h"
-#include <QDebug>
-#include <QPoint>
-#include <cstdint>
-#include <fstream>
-#include <iostream>
-#include <random>
+#include "algorithm/NeuQuant.h"
+#include "gif_lib.h"
+#include <cstdlib>
+#include <cstring>
+#include <exception>
+#include <stdexcept>
+#include <string>
+#include <vector>
 
-using namespace blk;
+#define GifAddExtensionBlockFor(a, func, len, data)                            \
+  GifAddExtensionBlock(&((a)->ExtensionBlockCount), &((a)->ExtensionBlocks),   \
+                       func, len, data)
 
-static int getColorTableSizeField(int actualTableSize) {
-  int size = 0;
-  while (1 << (size + 1) < actualTableSize) {
-    ++size;
+static void getColorMap(uint8_t *colorMap, const uint8_t *pixels, int nPixels,
+                        int quality) {
+  initnet(pixels, nPixels * 3, quality);
+  learn();
+  unbiasnet();
+  inxbuild();
+  getcolourmap(colorMap);
+}
+
+static void getRasterBits(uint8_t *rasterBits, const uint8_t *pixels,
+                          int nPixels) {
+  for (int i = 0; i < nPixels; ++i) {
+    rasterBits[i] =
+        u_char(inxsearch(pixels[i * 3], pixels[i * 3 + 1], pixels[i * 3 + 2]));
   }
-  return size;
 }
 
-GifEncoder::~GifEncoder() {
-  screenWidth = 0;
-  screenHeight = 0;
-  outfile.close();
-  delete[] rsCacheDir;
+inline void RGB2BGR(uint8_t *dst, const uint8_t *src, int width, int height) {
+  for (const uint8_t *dstEnd = dst + width * height * 3; dst < dstEnd;
+       src += 3) {
+    *(dst++) = *(src + 2);
+    *(dst++) = *(src + 1);
+    *(dst++) = *(src);
+  }
 }
 
-bool GifEncoder::init(const char *path, uint16_t width, uint16_t height,
-                      uint32_t loopCount, uint32_t threadCount) {
-  outfile.open(path, std::ios::out | std::ios::binary);
-  if (!outfile.is_open()) {
+inline void BGRA2BGR(uint8_t *dst, const uint8_t *src, int width, int height) {
+  for (const uint8_t *dstEnd = dst + width * height * 3; dst < dstEnd;
+       src += 4) {
+    *(dst++) = *(src);
+    *(dst++) = *(src + 1);
+    *(dst++) = *(src + 2);
+  }
+}
+
+inline void RGBA2BGR(uint8_t *dst, const uint8_t *src, int width, int height) {
+  for (const uint8_t *dstEnd = dst + width * height * 3; dst < dstEnd;
+       src += 4) {
+    *(dst++) = *(src + 2);
+    *(dst++) = *(src + 1);
+    *(dst++) = *(src);
+  }
+}
+
+static bool convertToBGR(GifEncoder::PixelFormat format, uint8_t *dst,
+                         const uint8_t *src, int width, int height) {
+  switch (format) {
+  case GifEncoder::PIXEL_FORMAT_BGR:
+    memcpy(dst, src, size_t(width * height * 3));
+    break;
+  case GifEncoder::PIXEL_FORMAT_RGB:
+    RGB2BGR(dst, src, width, height);
+    break;
+  case GifEncoder::PIXEL_FORMAT_BGRA:
+    BGRA2BGR(dst, src, width, height);
+    break;
+  case GifEncoder::PIXEL_FORMAT_RGBA:
+    RGBA2BGR(dst, src, width, height);
+    break;
+  default:
     return false;
   }
-  this->screenWidth = width;
-  this->screenHeight = height;
-  GifBlockWriter::writeHeaderBlock(outfile);
-  GifBlockWriter::writeLogicalScreenDescriptorBlock(
-      outfile, screenWidth, screenHeight, false, 1, false, 0, 0, 0);
-  GifBlockWriter::writeNetscapeLoopingExtensionBlock(outfile, loopCount);
-  if (threadCount > 8) {
-    threadCount = 8;
-  }
-  if (threadCount >= 1) {
-    threadPool = std::make_unique<ThreadPool>(threadCount);
-  }
-
-  qDebug() << "Image size is " << width * height << "\n";
   return true;
 }
 
-void GifEncoder::addImages(const std::vector<std::vector<uint32_t>> &images,
-                           std::vector<uint32_t> &delay,
-                           std::vector<QRect> &imgRect, QuantizerType qType,
-                           DitherType dType, int32_t transparencyOption) {
-  size_t size = images.size();
-  std::vector<std::future<std::vector<uint8_t>>> tasks;
-  for (size_t k = 0; k < size; ++k) {
-    auto result = threadPool->enqueue([=, &images]() {
-      std::vector<uint8_t> content;
-      auto &image = images[k];
-      addImage(image, delay[k], qType, dType, transparencyOption, imgRect[k],
-               content);
-      return content;
-    });
-    tasks.emplace_back(std::move(result));
+bool GifEncoder::open(const std::string &file, int width, int height,
+                      int quality, bool useGlobalColorMap, int16_t loop,
+                      int preAllocSize) {
+  if (m_gifFile != nullptr) {
+    return false;
   }
-  for (auto &task : tasks) {
-    std::vector<uint8_t> result = task.get();
-    flush(result);
+
+  int error;
+  m_gifFile = EGifOpenFileName(file.c_str(), false, &error);
+  if (!m_gifFile) {
+    return false;
   }
+
+  m_quality = quality;
+  m_useGlobalColorMap = useGlobalColorMap;
+
+  reset();
+
+  if (preAllocSize > 0) {
+    m_framePixels = reinterpret_cast<uint8_t *>(malloc(ulong(preAllocSize)));
+    m_allocSize = preAllocSize;
+  }
+
+  m_gifFile->SWidth = width;
+  m_gifFile->SHeight = height;
+  m_gifFile->SColorResolution = 8;
+  m_gifFile->SBackGroundColor = 0;
+  m_gifFile->SColorMap = nullptr;
+
+  uint8_t appExt[11] = {'N', 'E', 'T', 'S', 'C', 'A', 'P', 'E', '2', '.', '0'};
+  uint8_t appExtSubBlock[3] = {
+      0x01,      // hex 0x01
+      0x00, 0x00 // little-endian short. The number of times the loop should be
+                 // executed.
+  };
+  memcpy(appExtSubBlock + 1, &loop, sizeof(loop));
+
+  GifAddExtensionBlockFor(m_gifFile, APPLICATION_EXT_FUNC_CODE, sizeof(appExt),
+                          appExt);
+  GifAddExtensionBlockFor(m_gifFile, CONTINUE_EXT_FUNC_CODE,
+                          sizeof(appExtSubBlock), appExtSubBlock);
+
+  return true;
 }
 
-std::vector<uint8_t> GifEncoder::addImage(const std::vector<uint32_t> &original,
-                                          uint32_t delay, QuantizerType qType,
-                                          DitherType dType,
-                                          int32_t transparencyOption,
-                                          QRect imgRect,
-                                          std::vector<uint8_t> &content) {
-  qDebug() << "Get image pixel " << original.size() << "\n";
-  uint32_t size = uint32_t(imgRect.width() * imgRect.height());
-  std::unique_ptr<ColorQuantizer> colorQuantizer;
-  QString quantizerStr;
-  switch (qType) {
-  case QuantizerType::Uniform:
-    colorQuantizer = std::make_unique<UniformQuantizer>();
-    quantizerStr = "UniformQuantizer";
-    break;
-  case QuantizerType::MedianCut:
-    colorQuantizer = std::make_unique<MedianCutQuantizer>();
-    quantizerStr = "MedianCutQuantizer";
-    break;
-  case QuantizerType::KMeans:
-    colorQuantizer = std::make_unique<KMeansQuantizer>();
-    quantizerStr = "KMeansQuantizer";
-    break;
-  case QuantizerType::Random:
-    colorQuantizer = std::make_unique<RandomQuantizer>();
-    quantizerStr = "RandomQuantizer";
-    break;
-  case QuantizerType::Octree:
-    colorQuantizer = std::make_unique<OctreeQuantizer>();
-    quantizerStr = "OctreeQuantizer";
-    break;
-  case QuantizerType::NeuQuant:
-    colorQuantizer = std::make_unique<NeuQuantQuantizer>();
-    quantizerStr = "NeuQuantQuantizer";
-    break;
+bool GifEncoder::push(PixelFormat format, const uint8_t *frame, int x, int y,
+                      int width, int height, int delay) {
+  if (m_gifFile == nullptr) {
+    return false;
   }
 
-  std::vector<ARGB> quantizeIn;
-  quantizeIn.reserve(size);
-  bool enableTransparentColor = ((transparencyOption & 0xff) == 1);
-  bool ignoreTranslucency = (((transparencyOption >> 8) & 0xff) == 1);
-  bool hasTransparentColor = false;
-  uint8_t a = 255;
-  for (uint32_t i = 0; i < size; i++) {
-    auto color = original[i];
-    if (enableTransparentColor) {
-      a = static_cast<uint8_t>((color >> 24) & 0xff);
-      if (!hasTransparentColor) {
-        if ((ignoreTranslucency && a != 255) ||
-            (!ignoreTranslucency && a == 0)) {
-          hasTransparentColor = true;
-        }
+  if (frame == nullptr) {
+    return false;
+  }
+
+  if (m_useGlobalColorMap) {
+    if (isFirstFrame()) {
+      m_frameWidth = width;
+      m_frameHeight = height;
+    } else {
+      if (m_frameWidth != width || m_frameHeight != height) {
+        throw std::runtime_error(
+            "Frame size must be same when use global color map!");
       }
     }
-    auto b = static_cast<uint8_t>((color >> 16) & 0xff);
-    auto g = static_cast<uint8_t>((color >> 8) & 0xff);
-    auto r = static_cast<uint8_t>(color & 0xff);
-    if (a == 255 || (!ignoreTranslucency && a != 0)) {
-      quantizeIn.emplace_back(a, r, g, b, i);
-    }
-  }
 
-  std::vector<ARGB> quantizeOut;
-  quantizeOut.reserve(256);
-  int quantizeSize = 0;
-  if (size > 256) {
-    quantizeSize = colorQuantizer->quantize(
-        quantizeIn, hasTransparentColor ? 255 : 256, quantizeOut);
+    int needSize = width * height * 3 * (m_frameCount + 1);
+    if (m_allocSize < needSize) {
+      m_framePixels =
+          reinterpret_cast<uint8_t *>(realloc(m_framePixels, ulong(needSize)));
+      m_allocSize = needSize;
+      //            printf("realloc 1\n");
+    }
+    auto *pixels = m_framePixels + width * height * 3 * m_frameCount;
+    convertToBGR(format, pixels, frame, width, height);
+
+    frameInfo finfo;
+    finfo.x = x;
+    finfo.y = y;
+    finfo.w = width;
+    finfo.h = height;
+    m_allFrames.push_back(finfo);
+
   } else {
-    quantizeSize = int(size);
-    quantizeOut.assign(quantizeIn.begin(), quantizeIn.end());
-  }
-  qDebug() << quantizerStr << " size is " << quantizeSize;
-
-  if (quantizeSize <= 0) {
-    return content;
-  }
-
-  uint8_t transparentColorR = 0;
-  uint8_t transparentColorG = 0;
-  uint8_t transparentColorB = 0;
-  if (hasTransparentColor) {
-    std::mt19937 generator(uint32_t(time(nullptr)));
-    std::uniform_int_distribution<uint32_t> sizeDis(0, size);
-    std::uniform_int_distribution<uint32_t> rgbDis(0, 255);
-    int tryCount = 0;
-    while (tryCount < 12) {
-      uint32_t random = sizeDis(generator);
-      if (tryCount >= 6) {
-        transparentColorR = static_cast<uint8_t>(rgbDis(generator));
-        transparentColorG = static_cast<uint8_t>(rgbDis(generator));
-        transparentColorB = static_cast<uint8_t>(rgbDis(generator));
-      } else {
-        transparentColorR = quantizeIn[random].r;
-        transparentColorG = quantizeIn[random].g;
-        transparentColorB = quantizeIn[random].b;
-      }
-      int repeatCount = 0;
-      for (int i = 0; i < quantizeSize; i++) {
-        auto qColor = quantizeOut[ulong(i)];
-        if (transparentColorR == qColor.r && transparentColorG == qColor.g &&
-            transparentColorB == qColor.b) {
-          break;
-        } else {
-          repeatCount++;
-        }
-      }
-      if (repeatCount == quantizeSize) {
-        break;
-      }
-      tryCount++;
+    int needSize = width * height * 3;
+    if (m_allocSize < needSize) {
+      m_framePixels =
+          reinterpret_cast<uint8_t *>(realloc(m_framePixels, ulong(needSize)));
+      m_allocSize = needSize;
+      //            printf("realloc 2\n");
     }
-    if (dType == DitherType::FloydSteinberg) {
-      dType = DitherType::Bayer;
-    }
+
+    auto *pixels = m_framePixels;
+    convertToBGR(format, pixels, frame, width, height);
+
+    auto *colorMap = GifMakeMapObject(256, nullptr);
+    getColorMap(reinterpret_cast<uint8_t *>(colorMap->Colors), pixels,
+                width * height, m_quality);
+
+    auto *rasterBits =
+        reinterpret_cast<GifByteType *>(malloc(ulong(width * height)));
+    getRasterBits(reinterpret_cast<uint8_t *>(rasterBits), pixels,
+                  width * height);
+
+    encodeFrame(x, y, width, height, delay, colorMap, rasterBits);
   }
 
-  //    int32_t paddedColorCount = GifBlockWriter::paddedSize(quantizeSize);
-  int32_t paddedColorCount = 256;
-  auto transparentColorIndex = static_cast<int32_t>(quantizeSize + 1);
-  GifBlockWriter::writeGraphicsControlExtensionBlock(
-      content, 2, false, hasTransparentColor, delay / 10,
-      hasTransparentColor ? transparentColorIndex : 0);
-  GifBlockWriter::writeImageDescriptorBlock(
-      content, uint16_t(imgRect.left()), uint16_t(imgRect.top()),
-      uint16_t(imgRect.width()), uint16_t(imgRect.height()), true, false, false,
-      getColorTableSizeField(paddedColorCount));
-  GifBlockWriter::writeColorTableEntity(content, quantizeOut, paddedColorCount);
+  m_frameCount++;
 
-  std::unique_ptr<Ditherer> ditherer;
-  std::string dithererStr;
-
-  switch (dType) {
-  case DitherType::No:
-    ditherer = std::make_unique<NoDitherer>();
-    dithererStr = "NoDitherer";
-    break;
-  case DitherType::M2:
-    ditherer = std::make_unique<M2Ditherer>();
-    dithererStr = "M2Ditherer";
-    break;
-  case DitherType::Bayer:
-    ditherer = std::make_unique<BayerDitherer>();
-    dithererStr = "BayerDitherer";
-    break;
-  case DitherType::FloydSteinberg:
-    ditherer = std::make_unique<FloydSteinbergDitherer>();
-    dithererStr = "FloydSteinbergDitherer";
-    break;
-  }
-
-  ditherer->width = screenWidth;
-  ditherer->height = screenHeight;
-  auto colorIndices = new uint8_t[size];
-
-  if (qType == QuantizerType::Octree && dType == DitherType::No &&
-      !hasTransparentColor) {
-    static_cast<OctreeQuantizer *>(colorQuantizer.get())
-        ->getColorIndices(quantizeIn, colorIndices);
-  } else {
-    ditherer->dither(quantizeIn, quantizeOut, colorIndices);
-  }
-
-  if (hasTransparentColor) {
-    GifBlockWriter::writeColorTableTransparency(
-        content, transparentColorR, transparentColorG, transparentColorB);
-    GifBlockWriter::writeColorTableUnpadded(content, transparentColorIndex,
-                                            paddedColorCount);
-  } else {
-    GifBlockWriter::writeColorTableUnpadded(content, quantizeSize,
-                                            paddedColorCount);
-  }
-
-  qDebug() << dithererStr.c_str();
-
-  LzwEncoder lzwEncoder(paddedColorCount);
-  lzwEncoder.encode(colorIndices, uint16_t(imgRect.width()),
-                    uint16_t(imgRect.height()), content);
-  delete[] colorIndices;
-  qDebug() << "LZW encode";
-  return content;
+  return true;
 }
 
-void GifEncoder::flush(const std::vector<uint8_t> &content) {
-  size_t size = content.size();
-  for (size_t i = 0; i < size; ++i) {
-    outfile.write(reinterpret_cast<const char *>(&content[i]), 1);
+bool GifEncoder::close() {
+  if (m_gifFile == nullptr) {
+    return false;
   }
+
+  ColorMapObject *globalColorMap = nullptr;
+
+  if (m_useGlobalColorMap) {
+    globalColorMap = GifMakeMapObject(256, nullptr);
+    getColorMap(reinterpret_cast<uint8_t *>(globalColorMap->Colors),
+                m_framePixels, m_frameWidth * m_frameHeight * m_frameCount,
+                m_quality);
+    m_gifFile->SColorMap = globalColorMap;
+
+    for (int i = 0; i < m_frameCount; ++i) {
+      auto *pixels = m_framePixels + m_frameWidth * m_frameHeight * 3 * i;
+      auto *rasterBits = reinterpret_cast<GifByteType *>(
+          malloc(ulong(m_frameWidth * m_frameHeight)));
+      getRasterBits(reinterpret_cast<uint8_t *>(rasterBits), pixels,
+                    m_frameWidth * m_frameHeight);
+
+      auto &finfo = m_allFrames[ulong(i)];
+
+      encodeFrame(finfo.x, finfo.y, finfo.w, finfo.h, finfo.delay, nullptr,
+                  rasterBits);
+    }
+  }
+
+  int extCount = m_gifFile->ExtensionBlockCount;
+  auto *extBlocks = m_gifFile->ExtensionBlocks;
+
+  int savedImageCount = m_gifFile->ImageCount;
+  auto *savedImages = m_gifFile->SavedImages;
+
+  if (EGifSpew(m_gifFile) == GIF_ERROR) {
+    EGifCloseFile(reinterpret_cast<GifFileType *>(m_gifFile));
+    m_gifFile = nullptr;
+    return false;
+  }
+
+  if (globalColorMap != nullptr) {
+    GifFreeMapObject(globalColorMap);
+  }
+
+  GifFreeExtensions(&extCount, &extBlocks);
+  for (auto *sp = savedImages; sp < savedImages + savedImageCount; sp++) {
+    if (sp->ImageDesc.ColorMap != nullptr) {
+      GifFreeMapObject(sp->ImageDesc.ColorMap);
+      sp->ImageDesc.ColorMap = nullptr;
+    }
+
+    if (sp->RasterBits != nullptr) {
+      free(sp->RasterBits);
+      sp->RasterBits = nullptr;
+    }
+
+    GifFreeExtensions(&sp->ExtensionBlockCount, &sp->ExtensionBlocks);
+  }
+  free(savedImages);
+
+  m_gifFile = nullptr;
+
+  reset();
+
+  return true;
 }
 
-void GifEncoder::finishEncoding() {
-  GifBlockWriter::writeTerminator(outfile);
-  outfile.close();
+void GifEncoder::encodeFrame(int x, int y, int width, int height, int delay,
+                             void *colorMap, void *rasterBits) {
+  auto *gifImage = GifMakeSavedImage(m_gifFile, nullptr);
+
+  gifImage->ImageDesc.Left = x;
+  gifImage->ImageDesc.Top = y;
+  gifImage->ImageDesc.Width = width;
+  gifImage->ImageDesc.Height = height;
+  gifImage->ImageDesc.Interlace = false;
+  gifImage->ImageDesc.ColorMap = reinterpret_cast<ColorMapObject *>(colorMap);
+  gifImage->RasterBits = reinterpret_cast<GifByteType *>(rasterBits);
+  gifImage->ExtensionBlockCount = 0;
+  gifImage->ExtensionBlocks = nullptr;
+
+  GraphicsControlBlock gcb;
+  gcb.DisposalMode = DISPOSE_DO_NOT;
+  gcb.UserInputFlag = false;
+  gcb.DelayTime = delay;
+  gcb.TransparentColor = NO_TRANSPARENT_COLOR;
+  uint8_t gcbBytes[4];
+  EGifGCBToExtension(&gcb, gcbBytes);
+  GifAddExtensionBlockFor(gifImage, GRAPHICS_EXT_FUNC_CODE, sizeof(gcbBytes),
+                          gcbBytes);
 }

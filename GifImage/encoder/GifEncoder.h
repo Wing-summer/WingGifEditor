@@ -1,112 +1,103 @@
 //
-// Created by succlz123 on 17-9-5.
+// Created by xiaozhuai on 2020/12/20.
 //
 
-#include "./GifImage/ThreadPool.h"
-#include <QObject>
-#include <QRect>
-#include <cstdint>
-#include <fstream>
+#ifndef GIF_GIFENCODER_H
+#define GIF_GIFENCODER_H
+
+#include "gif_lib.h"
+#include <string>
 #include <vector>
 
-#ifndef BURSTLINKER_GIFENCODER_H
-#define BURSTLINKER_GIFENCODER_H
-
-namespace blk {
-
-struct ARGB {
-  uint8_t a = 0;
-  uint8_t r = 0;
-  uint8_t g = 0;
-  uint8_t b = 0;
-  uint8_t index = 0;
-
-  uint32_t unTranpsparentIndex = 0;
-
-  bool operator==(const ARGB &rgb) const {
-    return rgb.r == r && rgb.g == g && rgb.b == b;
-  }
-
-  bool operator<(const ARGB &rgb) const {
-    return (r + g + b) < (rgb.r + rgb.g + rgb.b);
-  }
-
-  ARGB(uint8_t r, uint8_t g, uint8_t b) : r(r), g(g), b(b) {}
-
-  ARGB(uint8_t r, uint8_t g, uint8_t b, uint8_t index)
-      : r(r), g(g), b(b), index(index) {}
-
-  ARGB(uint8_t a, uint8_t r, uint8_t g, uint8_t b, uint32_t unTranpsparentIndex)
-      : a(a), r(r), g(g), b(b), unTranpsparentIndex(unTranpsparentIndex) {}
-
-  ARGB(uint8_t a, uint8_t r, uint8_t g, uint8_t b, uint8_t index,
-       uint32_t unTranpsparentIndex)
-      : a(a), r(r), g(g), b(b), index(index),
-        unTranpsparentIndex(unTranpsparentIndex) {}
-};
-
-struct Compare {
-  uint8_t split = 0;
-
-  explicit Compare(uint8_t split) : split(split) {}
-
-  bool operator()(const ARGB a, const ARGB b) {
-    switch (split) {
-    case 0:
-    default:
-      return a.r > b.r;
-    case 1:
-      return a.g > b.g;
-    case 2:
-      return a.b > b.b;
-    }
-  }
-};
-
-enum class QuantizerType {
-  Uniform = 0,
-  MedianCut = 1,
-  KMeans = 2,
-  Random = 3,
-  Octree = 4,
-  NeuQuant = 5
-};
-
-enum class DitherType { No = 0, M2 = 1, Bayer = 2, FloydSteinberg = 3 };
-
-class GifEncoder : public QObject {
-  Q_OBJECT
+class GifEncoder {
 public:
-  uint16_t screenWidth;
+  enum PixelFormat {
+    PIXEL_FORMAT_UNKNOWN = 0,
+    PIXEL_FORMAT_BGR = 1,
+    PIXEL_FORMAT_RGB = 2,
+    PIXEL_FORMAT_BGRA = 3,
+    PIXEL_FORMAT_RGBA = 4,
+  };
 
-  uint16_t screenHeight;
+public:
+  GifEncoder() = default;
 
-  const char *rsCacheDir = nullptr;
+  /**
+   * create gif file
+   *
+   * @param file file path
+   * @param width gif width
+   * @param height gif height
+   * @param quality 1..30, 1 is best
+   * @param useGlobalColorMap
+   * @param loop loop count, 0 is endless
+   * @param For better performance, it's suggested to set preAllocSize. If you
+   * can't determine it, set to 0. If use global color map, all frames size must
+   * be same, and preAllocSize = width * height * 3 * nFrame If use local color
+   * map, preAllocSize = MAX(width * height) * 3
+   * @return
+   */
+  bool open(const std::string &file, int width, int height, int quality,
+            bool useGlobalColorMap, int16_t loop, int preAllocSize = 0);
 
-  std::unique_ptr<ThreadPool> threadPool = nullptr;
+  /**
+   * add frame
+   *
+   * @param format pixel format
+   * @param frame frame data
+   * @param width frame width
+   * @param height frame height
+   * @param delay delay time 0.01s
+   * @return
+   */
+  bool push(PixelFormat format, const uint8_t *frame, int x, int y, int width,
+            int height, int delay);
 
-  ~GifEncoder();
-
-  bool init(const char *path, uint16_t width, uint16_t height,
-            uint32_t loopCount, uint32_t threadCount = 8);
-  void addImages(const std::vector<std::vector<uint32_t>> &images,
-                 std::vector<uint32_t> &delay, std::vector<QRect> &imgRect,
-                 QuantizerType qType = QuantizerType::Octree,
-                 DitherType dType = DitherType::No,
-                 int32_t transparencyOption = 1);
-  void flush(const std::vector<uint8_t> &content);
-
-  void finishEncoding();
+  /**
+   * close gif file
+   *
+   * @return
+   */
+  bool close();
 
 private:
-  std::vector<uint8_t> addImage(const std::vector<uint32_t> &original,
-                                uint32_t delay, QuantizerType qType,
-                                DitherType dType, int32_t transparencyOption,
-                                QRect imgRect, std::vector<uint8_t> &content);
+  inline bool isFirstFrame() const { return m_frameCount == 0; }
 
-  std::ofstream outfile;
+  inline void reset() {
+    if (m_framePixels != nullptr) {
+      free(m_framePixels);
+      m_framePixels = nullptr;
+    }
+    m_allocSize = 0;
+    m_allFrames.clear();
+    m_frameCount = 0;
+    m_frameWidth = -1;
+    m_frameHeight = -1;
+  }
+
+  void encodeFrame(int x, int y, int width, int height, int delay,
+                   void *colorMap, void *rasterBits);
+
+private:
+  struct frameInfo {
+    int delay;
+    int x;
+    int y;
+    int w;
+    int h;
+  };
+
+  GifFileType *m_gifFile = nullptr;
+
+  int m_quality = 10;
+  bool m_useGlobalColorMap = false;
+
+  uint8_t *m_framePixels = nullptr;
+  int m_allocSize = 0;
+  std::vector<frameInfo> m_allFrames{};
+  int m_frameCount = 0;
+  int m_frameWidth = -1;
+  int m_frameHeight = -1;
 };
 
-} // namespace blk
-
-#endif // BURSTLINKER_GIFENCODER_H
+#endif // GIF_GIFENCODER_H

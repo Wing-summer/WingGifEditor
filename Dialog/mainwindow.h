@@ -17,7 +17,6 @@
 #include <QListWidget>
 #include <QUndoStack>
 
-using namespace blk;
 DWIDGET_USE_NAMESPACE
 
 class MainWindow : public DMainWindow {
@@ -114,8 +113,6 @@ private:
   QAction *undotool, *undomenu, *redotool, *redomenu;
 
   Settings *m_settings;
-  QuantizerType m_quantizer = QuantizerType::Octree;
-  DitherType m_ditherer = DitherType::No;
   QString _windowmode;
 
 protected:

@@ -20,17 +20,71 @@
  */
 
 
-#include <cstdint>
 #include "NeuQuant.h"
 
-using namespace blk;
 
-int NeuQuant::getNetwork(int i, int j) {
+/* Network Definitions
+   ------------------- */
+
+#define maxnetpos    255
+#define netbiasshift    4            /* bias for colour values */
+#define ncycles        100            /* no. of learning cycles */
+
+/* defs for freq and bias */
+#define intbiasshift    16            /* bias for fractions */
+#define intbias        65536
+#define gammashift    10            /* gamma = 1024 */
+#define gamma    1024
+#define betashift    10
+#define beta        64    /* beta = 1/1024 */
+#define betagamma    65536
+
+/* defs for decreasing radius factor */
+#define initrad        32        /* for 256 cols, radius starts */
+#define radiusbiasshift    6            /* at 32.0 biased by 6 bits */
+#define radiusbias    64
+#define initradius    2048    /* and decreases by a */
+#define radiusdec    30            /* factor of 1/30 each cycle */
+
+/* defs for decreasing alpha factor */
+#define alphabiasshift    10            /* alpha starts at 1.0 */
+#define initalpha    1024
+int alphadec;                    /* biased by 10 bits */
+
+/* radbias and alpharadbias used for radpower calculation */
+#define radbiasshift    8
+#define radbias        256
+#define alpharadbshift  18
+#define alpharadbias    262144
+
+
+/* Types and Global Variables
+   -------------------------- */
+
+static const unsigned char *thepicture;        /* the input image itself */
+static int lengthcount;                /* lengthcount = H*W*3 */
+
+static int samplefac;                /* sampling factor 1..30 */
+
+
+typedef int pixel[4];                /* BGRc */
+static pixel network[netsize];            /* the network itself */
+
+static int netindex[256];            /* for network lookup - really 256 */
+
+static int bias[netsize];            /* bias and freq arrays for learning */
+static int freq[netsize];
+static int radpower[initrad];            /* radpower for precomputation */
+
+
+int getNetwork(int i, int j) {
     return network[i][j];
 }
 
-/* Initialise network in range (0,0,0) to (255,255,255) and set parameters */
-void NeuQuant::initnet(unsigned char *thepic, int len, int sample) {
+/* Initialise network in range (0,0,0) to (255,255,255) and set parameters
+   ----------------------------------------------------------------------- */
+
+void initnet(const unsigned char *thepic, int len, int sample) {
     int i;
     int *p;
 
@@ -46,8 +100,11 @@ void NeuQuant::initnet(unsigned char *thepic, int len, int sample) {
     }
 }
 
-/* Unbias network to give byte values 0..255 and record position i to prepare for sort */
-void NeuQuant::unbiasnet() {
+
+/* Unbias network to give byte values 0..255 and record position i to prepare for sort
+   ----------------------------------------------------------------------------------- */
+
+void unbiasnet() {
     int i, j, temp;
 
     for (i = 0; i < netsize; i++) {
@@ -62,28 +119,39 @@ void NeuQuant::unbiasnet() {
     }
 }
 
-/* Output colour dither */
-int NeuQuant::getColourMap(std::vector<ARGB> &out, uint32_t maxColorCount) {
-    int index[netsize];
-    for (int i = 0; i < netsize; i++) {
-        index[network[i][3]] = i;
-    }
-    int k = 0;
-    for (int j : index) {
-        if (k >= maxColorCount) {
-            return k;
-        }
-        auto r = static_cast<uint8_t>(network[j][0]);
-        auto g = static_cast<uint8_t>(network[j][1]);
-        auto b = static_cast<uint8_t>(network[j][2]);
-        out.emplace_back(r, g, b, k);
-        k++;
-    }
-    return k;
+
+/* Output colour map
+   ----------------- */
+
+void writecolourmap(FILE *f) {
+    int i, j;
+
+    for (i = 2; i >= 0; i--)
+        for (j = 0; j < netsize; j++)
+            putc(network[j][i], f);
 }
 
-/* Insertion sort of network and building of netindex[0..255] (to do after unbias) */
-void NeuQuant::inxbuild() {
+void getcolourmap(uint8_t *colorMap) {
+    int *index = new int[netsize];
+    for (int i = 0; i < netsize; i++)
+        index[network[i][3]] = i;
+
+    int k = 0;
+    for (int i = 0; i < netsize; i++) {
+        int j = index[i];
+        colorMap[k++] = network[j][2];
+        colorMap[k++] = network[j][1];
+        colorMap[k++] = network[j][0];
+    }
+
+    delete[] index;
+}
+
+
+/* Insertion sort of network and building of netindex[0..255] (to do after unbias)
+   ------------------------------------------------------------------------------- */
+
+void inxbuild() {
     int i, j, smallpos, smallval;
     int *p, *q;
     int previouscol, startpos;
@@ -130,8 +198,11 @@ void NeuQuant::inxbuild() {
     for (j = previouscol + 1; j < 256; j++) netindex[j] = maxnetpos; /* really 256 */
 }
 
-/* Search for BGR values 0..255 (after net is unbiased) and return colour index */
-int NeuQuant::inxsearch(int b, int g, int r) {
+
+/* Search for BGR values 0..255 (after net is unbiased) and return colour index
+   ---------------------------------------------------------------------------- */
+
+int inxsearch(int b, int g, int r) {
     int i, j, dist, a, bestd;
     int *p;
     int best;
@@ -188,8 +259,11 @@ int NeuQuant::inxsearch(int b, int g, int r) {
     return (best);
 }
 
-/* Search for biased BGR values */
-int NeuQuant::contest(int b, int g, int r) {
+
+/* Search for biased BGR values
+   ---------------------------- */
+
+int contest(int b, int g, int r) {
     /* finds closest neuron (min dist) and updates freq */
     /* finds best neuron (min dist-bias) and returns position */
     /* for frequently chosen neurons, freq[i] is high and bias[i] is negative */
@@ -209,18 +283,12 @@ int NeuQuant::contest(int b, int g, int r) {
     for (i = 0; i < netsize; i++) {
         n = network[i];
         dist = n[0] - b;
-        if (dist < 0) {
-            dist = -dist;
-        }
+        if (dist < 0) dist = -dist;
         a = n[1] - g;
-        if (a < 0) {
-            a = -a;
-        }
+        if (a < 0) a = -a;
         dist += a;
         a = n[2] - r;
-        if (a < 0) {
-            a = -a;
-        }
+        if (a < 0) a = -a;
         dist += a;
         if (dist < bestd) {
             bestd = dist;
@@ -240,8 +308,11 @@ int NeuQuant::contest(int b, int g, int r) {
     return (bestbiaspos);
 }
 
-/* Move neuron i towards biased (b,g,r) by factor alpha */
-void NeuQuant::altersingle(int alpha, int i, int b, int g, int r) {
+
+/* Move neuron i towards biased (b,g,r) by factor alpha
+   ---------------------------------------------------- */
+
+void altersingle(int alpha, int i, int b, int g, int r) {
     int *n;
 
 //	printf("New point %d: ", i);
@@ -257,19 +328,18 @@ void NeuQuant::altersingle(int alpha, int i, int b, int g, int r) {
 //  printf("%f\n", *n / 16.0);
 }
 
-/* Move adjacent neurons by precomputed alpha*(1-((i-j)^2/[r]^2)) in radpower[|i-j|] */
-void NeuQuant::alterneigh(int rad, int i, int b, int g, int r) {
+
+/* Move adjacent neurons by precomputed alpha*(1-((i-j)^2/[r]^2)) in radpower[|i-j|]
+   --------------------------------------------------------------------------------- */
+
+void alterneigh(int rad, int i, int b, int g, int r) {
     int j, k, lo, hi, a;
     int *p, *q;
 
     lo = i - rad;
-    if (lo < -1) {
-        lo = -1;
-    }
+    if (lo < -1) lo = -1;
     hi = i + rad;
-    if (hi > netsize) {
-        hi = netsize;
-    }
+    if (hi > netsize) hi = netsize;
 
     j = i + 1;
     k = i - 1;
@@ -305,12 +375,15 @@ void NeuQuant::alterneigh(int rad, int i, int b, int g, int r) {
     }
 }
 
-/* Main Learning Loop */
-void NeuQuant::learn() {
+
+/* Main Learning Loop
+   ------------------ */
+
+void learn() {
     int i, j, b, g, r;
     int radius, rad, alpha, step, delta, samplepixels;
-    unsigned char *p;
-    unsigned char *lim;
+    const unsigned char *p;
+    const unsigned char *lim;
 
     alphadec = 30 + ((samplefac - 1) / 3);
     p = thepicture;
@@ -321,26 +394,18 @@ void NeuQuant::learn() {
     radius = initradius;
 
     rad = radius >> radiusbiasshift;
-    if (rad <= 1) {
-        rad = 0;
-    }
-    for (i = 0; i < rad; i++) {
+    if (rad <= 1) rad = 0;
+    for (i = 0; i < rad; i++)
         radpower[i] = alpha * (((rad * rad - i * i) * radbias) / (rad * rad));
-    }
 
 //	fprintf(stderr,"beginning 1D learning: initial radius=%d\n", rad);
 
-    if ((lengthcount % prime1) != 0) {
-        step = 3 * prime1;
-    } else {
-        if ((lengthcount % prime2) != 0) {
-            step = 3 * prime2;
-        } else {
-            if ((lengthcount % prime3) != 0) {
-                step = 3 * prime3;
-            } else {
-                step = 3 * prime4;
-            }
+    if ((lengthcount % prime1) != 0) step = 3 * prime1;
+    else {
+        if ((lengthcount % prime2) != 0) step = 3 * prime2;
+        else {
+            if ((lengthcount % prime3) != 0) step = 3 * prime3;
+            else step = 3 * prime4;
         }
     }
 
@@ -352,26 +417,19 @@ void NeuQuant::learn() {
         j = contest(b, g, r);
 
         altersingle(alpha, j, b, g, r);
-        if (rad) {
-            alterneigh(rad, j, b, g, r); /* alter neighbours */
-        }
+        if (rad) alterneigh(rad, j, b, g, r);   /* alter neighbours */
 
         p += step;
-        if (p >= lim) {
-            p -= lengthcount;
-        }
+        if (p >= lim) p -= lengthcount;
 
         i++;
         if (i % delta == 0) {
             alpha -= alpha / alphadec;
             radius -= radius / radiusdec;
             rad = radius >> radiusbiasshift;
-            if (rad <= 1) {
-                rad = 0;
-            }
-            for (j = 0; j < rad; j++) {
+            if (rad <= 1) rad = 0;
+            for (j = 0; j < rad; j++)
                 radpower[j] = alpha * (((rad * rad - j * j) * radbias) / (rad * rad));
-            }
         }
     }
 //	fprintf(stderr,"finished 1D learning: final alpha=%f !\n",((float)alpha)/initalpha);
