@@ -752,12 +752,15 @@ bool MainWindow::saveGif(QString filename) {
   if (gifsaver.open(filename.toStdString(), uint16_t(size.width()),
                     uint16_t(size.height()), _quality, false, 0)) {
 
+    QApplication::processEvents();
+
     auto frames = gif.frames();
     auto pframe = frames.begin();
     auto eframe = frames.end();
 
     auto img = pframe->image;
 
+    QApplication::processEvents();
     gifsaver.push(GifEncoder::PIXEL_FORMAT_RGBA, img.constBits(), 0, 0,
                   img.width(), img.height(), pframe->delayTime / 10);
 
@@ -776,6 +779,7 @@ bool MainWindow::saveGif(QString filename) {
         if (memcmp(o, d, size_t(bpl))) {
           break;
         }
+        QApplication::processEvents();
       }
 
       for (y0 = ls - 1; y0 > y; y0--) {
@@ -784,6 +788,7 @@ bool MainWindow::saveGif(QString filename) {
         if (memcmp(o, d, size_t(bpl))) {
           break;
         }
+        QApplication::processEvents();
       }
 
       QTransform trans;
@@ -800,6 +805,7 @@ bool MainWindow::saveGif(QString filename) {
         if (memcmp(o, d, size_t(bpl))) {
           break;
         }
+        QApplication::processEvents();
       }
       for (x0 = ls - 1; x0 > x; x0--) {
         auto o = rlimg.constScanLine(x0);
@@ -807,6 +813,7 @@ bool MainWindow::saveGif(QString filename) {
         if (memcmp(o, d, size_t(bpl))) {
           break;
         }
+        QApplication::processEvents();
       }
 
       auto timg = img.copy(adjustImageSize(x, y, x0 - x + 1, y0 - y + 1));
@@ -816,7 +823,7 @@ bool MainWindow::saveGif(QString filename) {
     }
 
     gifsaver.close();
-    setSaved(true);
+    undo.setClean();
     return true;
   }
   return false;
@@ -825,7 +832,7 @@ bool MainWindow::saveGif(QString filename) {
 QRect MainWindow::adjustImageSize(int x, int y, int w, int h) {
   // 由于保存图像使用神经网络算法，图片有最小值限制，这里命名为 OFFSET
   // 这里为实验值
-#define OFFSET 16
+#define OFFSET 32
   if (w <= OFFSET) {
     if (x - OFFSET > 0) {
       x -= OFFSET;
@@ -908,7 +915,7 @@ void MainWindow::on_del() {
   for (auto item : imglist->selectionModel()->selectedIndexes()) {
     indices.append(item.row());
   }
-  undo.push(new RemoveFrameCommand(&gif, indices));
+  undo.push(new RemoveFrameCommand(&gif, imglist, indices));
 }
 
 void MainWindow::on_selall() {
@@ -1153,7 +1160,7 @@ void MainWindow::on_cut() {
     sel.append(frames[i.row()]);
   }
   ClipBoardHelper::setImageFrames(sel);
-  undo.push(new RemoveFrameCommand(&gif, indices));
+  undo.push(new RemoveFrameCommand(&gif, imglist, indices));
 }
 
 void MainWindow::on_paste() {

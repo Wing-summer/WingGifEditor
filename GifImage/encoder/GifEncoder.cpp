@@ -12,6 +12,8 @@
 #include <string>
 #include <vector>
 
+#include <QApplication>
+
 #define GifAddExtensionBlockFor(a, func, len, data)                            \
   GifAddExtensionBlock(&((a)->ExtensionBlockCount), &((a)->ExtensionBlocks),   \
                        func, len, data)
@@ -217,6 +219,7 @@ bool GifEncoder::close() {
 
       encodeFrame(finfo.x, finfo.y, finfo.w, finfo.h, finfo.delay, nullptr,
                   rasterBits);
+      QApplication::processEvents();
     }
   }
 

@@ -1,4 +1,5 @@
 #include "gifdecoder.h"
+#include <QApplication>
 #include <QFile>
 #include <QIODevice>
 #include <QPainter>
@@ -49,6 +50,8 @@ bool GifDecoder::load(const QString &fileName) {
   pimg.fill(Qt::transparent);
 
   for (int idx = 0; idx < gifFile->ImageCount; ++idx) {
+    QApplication::processEvents();
+
     SavedImage gifImage = gifFile->SavedImages[idx];
     int top = gifImage.ImageDesc.Top;
     int left = gifImage.ImageDesc.Left;
@@ -92,12 +95,15 @@ bool GifDecoder::load(const QString &fileName) {
           memcpy(image.scanLine(row), gifImage.RasterBits + line * width,
                  size_t(width));
           line++;
+          QApplication::processEvents();
         }
+        QApplication::processEvents();
       }
     } else {
       for (int row = 0; row < height; row++) {
         memcpy(image.scanLine(row), gifImage.RasterBits + row * width,
                size_t(width));
+        QApplication::processEvents();
       }
     }
 

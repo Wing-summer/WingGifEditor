@@ -1,8 +1,9 @@
 #include "removeframecommand.h"
 
-RemoveFrameCommand::RemoveFrameCommand(GifDecoder *helper, QVector<int> &frames,
+RemoveFrameCommand::RemoveFrameCommand(GifDecoder *helper, QListWidget *listw,
+                                       QVector<int> &frames,
                                        QUndoCommand *parent)
-    : QUndoCommand(parent), gif(helper) {
+    : QUndoCommand(parent), gif(helper), m_list(listw) {
   indices = frames;
   std::sort(indices.begin(), indices.end(), std::greater<int>());
 
@@ -16,11 +17,18 @@ void RemoveFrameCommand::undo() {
   for (auto i : indices) {
     gif->insertFrame(i, imgs[i]);
   }
-  gif->frameRefreshLabel(*indices.end());
+  auto l = indices.last();
+  gif->frameRefreshLabel(l);
+  m_list->setCurrentRow(l);
 }
 
 void RemoveFrameCommand::redo() {
   for (auto p = indices.rbegin(); p < indices.rend(); p++)
     gif->removeFrame(*p);
-  gif->frameRefreshLabel(*indices.end());
+  auto l = indices.last();
+  gif->frameRefreshLabel(l);
+  auto c = gif->frameCount();
+  if (l >= c)
+    l = c;
+  m_list->setCurrentRow(l);
 }

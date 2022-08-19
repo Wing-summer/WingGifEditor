@@ -1,12 +1,11 @@
 #include "waitingdialog.h"
 #include <DWidgetUtil>
+#include <QApplication>
 #include <QHideEvent>
 #include <QShowEvent>
 #include <QThread>
 
 WaitingDialog::WaitingDialog(DMainWindow *parent) : DDialog(parent) {
-  moveToThread(new QThread(this)); // 启用一个新线程，防止界面卡死
-
   setWindowTitle(tr("PleaseWait"));
   addSpacing(50);
   pro = new DWaterProgress(this);
