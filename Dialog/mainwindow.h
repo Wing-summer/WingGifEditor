@@ -5,9 +5,10 @@
 #include "Class/gifeditor.h"
 #include "Class/playgifmanager.h"
 #include "Class/settings.h"
+#include "Dialog/settingdialog.h"
 #include "Dialog/waitingdialog.h"
 #include "GifImage/decoder/gifdecoder.h"
-#include "GifImage/encoder/GifEncoder.h"
+#include "GifImage/encoder/gifencoder.h"
 #include "cropgifdialog.h"
 #include <DGraphicsView>
 #include <DLabel>
@@ -36,8 +37,7 @@ private:
   void setWritable(bool b);
   void showGifMessage(QString message = "");
   bool saveGif(QString filename);
-
-  QRect adjustImageSize(int x, int y, int w, int h);
+  bool reprocessImage(QString filename);
 
 private:
   void on_new_frompics();
@@ -115,8 +115,7 @@ private:
   QAction *undotool, *undomenu, *redotool, *redomenu;
 
   Settings *m_settings;
-  QString _windowmode;
-  int _quality = 10;
+  SettingResult m_settingd;
 
 protected:
   void closeEvent(QCloseEvent *event) override;

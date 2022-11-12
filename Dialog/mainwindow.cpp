@@ -34,6 +34,7 @@
 #include <QListWidgetItem>
 #include <QMessageBox>
 #include <QMimeData>
+#include <QProcess>
 #include <QRubberBand>
 #include <QSettings>
 #include <QShortcut>
@@ -584,6 +585,8 @@ MainWindow::MainWindow(DMainWindow *parent) : DMainWindow(parent) {
             CheckEnabled;
             editor->endCrop();
             this->setEditMode(true);
+            if (x < 0 || y < 0 || w < 0 || h < 0)
+              return;
             undo.push(new CropImageCommand(&gif, x, y, w, h));
             editor->fitPicEditor();
           });
@@ -632,27 +635,22 @@ MainWindow::MainWindow(DMainWindow *parent) : DMainWindow(parent) {
   ConnectShortCut(keycutpic, MainWindow::on_cutpic);
   ConnectShortCut(keyscaledelay, MainWindow::on_scaledelay);
 
-  m_settings = new Settings(this);
-
-  connect(m_settings, &Settings::sigAdjustQuality, this,
-          [=](int v) { _quality = v; });
-  connect(m_settings, &Settings::sigChangeWindowState,
-          [=](QString mode) { _windowmode = mode; });
-
-  m_settings->applySetting();
-
-  if (_windowmode == "window_normal") {
-    setWindowState(Qt::WindowState::WindowActive);
-  } else if (_windowmode == "window_maximum") {
-    setWindowState(Qt::WindowState::WindowMaximized);
-  } else if (_windowmode == "window_minimum") {
-    setWindowState(Qt::WindowState::WindowMinimized);
-  } else {
-    setWindowState(Qt::WindowState::WindowFullScreen);
-  }
-
-  m_settings->loadWindowState(this);
+  m_settings = Settings::instance();
+  m_settings->loadWindowStatus(this);
   lastusedpath = m_settings->loadFileDialogCurrent();
+  m_settingd.state = WinState(m_settings->windowState());
+  switch (m_settingd.state) {
+  case Normal:
+    break;
+  case Maximum:
+    showMaximized();
+    break;
+  case Minimum:
+    showMinimized();
+    break;
+  }
+  m_settingd.cmdline = m_settings->reprocessingCmdline();
+  m_settingd.terminal = m_settings->terminal();
 }
 
 void MainWindow::openGif(QString filename) {
@@ -746,107 +744,20 @@ void MainWindow::showGifMessage(QString message) {
 }
 
 bool MainWindow::saveGif(QString filename) {
-
   GifEncoder gifsaver;
   auto size = gif.size();
-  if (gifsaver.open(filename.toStdString(), uint16_t(size.width()),
-                    uint16_t(size.height()), _quality, false, 0)) {
-
+  if (gifsaver.open(filename, size.width(), size.height())) {
     QApplication::processEvents();
-
-    auto frames = gif.frames();
-    auto pframe = frames.begin();
-    auto eframe = frames.end();
-
-    auto img = pframe->image;
-
-    QApplication::processEvents();
-    gifsaver.push(GifEncoder::PIXEL_FORMAT_RGBA, img.constBits(), 0, 0,
-                  img.width(), img.height(), pframe->delayTime / 10);
-
-    auto lframe = pframe;
-    pframe++;
-    for (; pframe != eframe; pframe++, lframe++) {
-      img = pframe->image;
-      auto limg = lframe->image;
-      auto bpl = img.bytesPerLine();
-      auto ls = img.height();
-
-      int x, y, x0, y0;
-      for (y = 0; y < ls - 1; y++) {
-        auto o = limg.constScanLine(y);
-        auto d = img.constScanLine(y);
-        if (memcmp(o, d, size_t(bpl))) {
-          break;
-        }
-        QApplication::processEvents();
-      }
-
-      for (y0 = ls - 1; y0 > y; y0--) {
-        auto o = limg.constScanLine(y0);
-        auto d = img.constScanLine(y0);
-        if (memcmp(o, d, size_t(bpl))) {
-          break;
-        }
-        QApplication::processEvents();
-      }
-
-      QTransform trans;
-      trans.rotate(90);
-
-      auto rimg = img.transformed(trans);
-      auto rlimg = limg.transformed(trans);
-
-      bpl = rimg.bytesPerLine();
-      ls = rimg.height();
-      for (x = 0; x < ls - 1; x++) {
-        auto o = rlimg.constScanLine(x);
-        auto d = rimg.constScanLine(x);
-        if (memcmp(o, d, size_t(bpl))) {
-          break;
-        }
-        QApplication::processEvents();
-      }
-      for (x0 = ls - 1; x0 > x; x0--) {
-        auto o = rlimg.constScanLine(x0);
-        auto d = rimg.constScanLine(x0);
-        if (memcmp(o, d, size_t(bpl))) {
-          break;
-        }
-        QApplication::processEvents();
-      }
-
-      auto timg = img.copy(adjustImageSize(x, y, x0 - x + 1, y0 - y + 1));
+    auto &frames = gif.frames();
+    for (auto &frame : frames) {
+      gifsaver.push(frame.image, frame.delayTime / 10);
       QApplication::processEvents();
-      gifsaver.push(GifEncoder::PIXEL_FORMAT_RGBA, timg.constBits(), x, y,
-                    timg.width(), timg.height(), pframe->delayTime / 10);
     }
-
     gifsaver.close();
     undo.setClean();
     return true;
   }
   return false;
-}
-
-QRect MainWindow::adjustImageSize(int x, int y, int w, int h) {
-  // 由于保存图像使用神经网络算法，图片有最小值限制，这里命名为 OFFSET
-  // 这里为实验值
-#define OFFSET 32
-  if (w <= OFFSET) {
-    if (x - OFFSET > 0) {
-      x -= OFFSET;
-    }
-    w += OFFSET;
-  }
-
-  if (h <= OFFSET) {
-    if (y - OFFSET > 0) {
-      y -= OFFSET;
-    }
-    h += OFFSET;
-  }
-  return QRect(x, y, w, h);
 }
 
 void MainWindow::on_new_frompics() {
@@ -1051,8 +962,10 @@ void MainWindow::on_saveas() {
   WaitingDialog d;
   d.start(tr("SaveAsGif"));
   if (saveGif(filename)) {
-    DMessageManager::instance()->sendMessage(this, ICONRES("saveas"),
-                                             tr("SaveAsSuccess"));
+    d.setMessage(tr("Reprocessing"));
+    if (reprocessImage(filename))
+      DMessageManager::instance()->sendMessage(this, ICONRES("saveas"),
+                                               tr("SaveAsSuccess"));
     curfilename = filename;
   } else {
     DMessageManager::instance()->sendMessage(this, ICONRES("saveas"),
@@ -1116,12 +1029,13 @@ void MainWindow::on_close() {
 }
 
 void MainWindow::on_setting() {
-  DSettingsDialog *dialog = new DSettingsDialog(this);
-  m_settings->setSettingDialog(dialog);
-  dialog->updateSettings(m_settings->settings);
-  dialog->exec();
-  delete dialog;
-  m_settings->settings->sync();
+  SettingDialog dialog(m_settingd, this);
+  if (dialog.exec()) {
+    m_settingd = dialog.getResult();
+    m_settings->setWindowState(m_settingd.state);
+    m_settings->setTerminal(m_settingd.terminal);
+    m_settings->setReprocessingCmdline(m_settingd.cmdline);
+  }
 }
 
 void MainWindow::on_undo() {
@@ -1185,9 +1099,11 @@ void MainWindow::on_save() {
   WaitingDialog d;
   d.start(tr("SaveGif"));
   if (saveGif(curfilename)) {
+    d.setMessage(tr("Reprocessing"));
     undo.setClean();
-    DMessageManager::instance()->sendMessage(this, ICONRES("save"),
-                                             tr("SaveSuccess"));
+    if (reprocessImage(curfilename))
+      DMessageManager::instance()->sendMessage(this, ICONRES("save"),
+                                               tr("SaveSuccess"));
   } else {
     DMessageManager::instance()->sendMessage(this, ICONRES("save"), "SaveFail");
   }
@@ -1465,10 +1381,28 @@ void MainWindow::on_wiki() {
                                  "WingGifEditor/wiki/%E4%BB%8B%E7%BB%8D"));
 }
 
+bool MainWindow::reprocessImage(QString filename) {
+  if (m_settingd.cmdline.length()) {
+    QFileInfo info(m_settingd.terminal);
+    if (info.exists() && info.isExecutable()) {
+      if (QProcess::execute(m_settingd.terminal,
+                            {"-c", m_settingd.cmdline.arg(filename)}) < 0) {
+        QMessageBox::critical(this, tr("Error"), tr("ImagingError"));
+        return false;
+      }
+    } else {
+      DMessageManager::instance()->sendMessage(this, ICONRES("icon"),
+                                               tr("InvaildTerminal"));
+      return false;
+    }
+  }
+  return true;
+}
+
 void MainWindow::closeEvent(QCloseEvent *event) {
   player->stop();
   if (ensureSafeClose()) {
-    m_settings->saveWindowState(this);
+    m_settings->saveWindowStatus(this);
     gif.close();
     event->accept();
   } else

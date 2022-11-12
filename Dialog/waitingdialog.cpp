@@ -41,3 +41,8 @@ void WaitingDialog::stop() {
   pro->stop();
   animation->stop();
 }
+
+void WaitingDialog::setMessage(QString message) {
+  info->setText(message);
+  QApplication::processEvents();
+}

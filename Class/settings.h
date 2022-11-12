@@ -1,48 +1,39 @@
 #ifndef SETTINGS_H
 #define SETTINGS_H
 
-#include "GifImage/encoder/GifEncoder.h"
-#include <DDialog>
 #include <DMainWindow>
-#include <DSettingsDialog>
 #include <QObject>
-#include <qsettingbackend.h>
 
 DWIDGET_USE_NAMESPACE
-DCORE_USE_NAMESPACE
-DTK_USE_NAMESPACE
 
 class Settings : public QObject {
   Q_OBJECT
 public:
   explicit Settings(QObject *parent = nullptr);
-  ~Settings();
 
-  void dtkThemeWorkaround(QWidget *parent, const QString &theme);
   static Settings *instance();
 
-  void setSettingDialog(DSettingsDialog *settingsDialog);
-  void applySetting();
-  void saveWindowState(DMainWindow *wnd);
-  void loadWindowState(DMainWindow *wnd);
+  void saveWindowStatus(DMainWindow *wnd);
+  void loadWindowStatus(DMainWindow *wnd);
+
+  void setWindowState(int state);
+  int windowState();
+
   QString loadFileDialogCurrent();
   void saveFileDialogCurrent(QString path);
 
-  DSettings *settings;
+  void setTerminal(QString path);
+  QString terminal();
+
+  void setReprocessingCmdline(QString cmdline);
+  QString reprocessingCmdline();
 
 signals:
-  void sigAdjustQuality(int quality);
-  void sigChangeWindowState(QString state);
+  void sigreprocessingCmdlineChanged();
+  void sigFileDialogCurrentChanged();
 
 private:
-  DDialog *createDialog(const QString &title, const QString &content,
-                        const bool &bIsConflicts);
-
-private:
-  Dtk::Core::QSettingBackend *m_backend;
-  DSettingsDialog *m_pSettingsDialog;
   static Settings *s_pSetting;
-  DDialog *m_pDialog;
 };
 
 #endif // SETTINGS_H

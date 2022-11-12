@@ -25,6 +25,9 @@ signals:
   void selRectChanged(int x, int y, int w, int h);
   void pressCancel();
 
+protected:
+  void closeEvent(QCloseEvent *event) override;
+
 private:
   DButtonBox *btnbox;
   DSpinBox *m_x, *m_y, *m_w, *m_h;

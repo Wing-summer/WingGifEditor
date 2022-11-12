@@ -1,16 +1,16 @@
 ## WingGifEditor
 
-&emsp;&emsp;本软件是基于 QT 编写的 GIF 编辑器，采用 C++ 进行开发，目的是让 Deepin 上具有简单易用的 GIF 编辑器。`Windows`上有一个十分强大都既是 GIF 录屏工具又是强大 GIF 编辑器`ScreenToGif`。但 Linux 上只有强大的 GIF 录屏工具，但没有简单好用满足基本编辑需求的 GIF 编辑器。于是乎，我给开发了一个简易的 GIF 编辑器，它具有基本的编辑功能，简单方便。
+&emsp;&emsp;本软件是基于 QT 编写的 GIF 编辑器，采用 C++ 进行开发，目的是让 Deepin 上具有简单易用的 GIF 编辑器。`Windows`上有一个十分强大都既是 GIF 录屏工具又是强大 GIF 编辑器`ScreenToGif`。但 Linux 上只有强大的 GIF 录屏工具，但没有简单好用满足基本编辑需求带有图形界面的 GIF 编辑器。于是乎，我给开发了一个简易的 GIF 编辑器，它具有基本的编辑功能，简单方便。
 
 &emsp;&emsp;有关本软件提建议的时候不要天马行空，本软件的定位是提供简单易用满足基本需求的 GIF 编辑器，并不是像`ScreenToGif`，一是没有相关基础知识，自己一个人搞不动；二是没必要，我不想把这个软件搞个大而全，配合`Gimp`等优秀的图像编辑器作为辅助，来编辑 GIF 图像绰绰有余了。
 
 ### GIF 库
 
-&emsp;&emsp;本软件基于两个库修改定制而得，一个负责读：`QtGifImage`，另一个负责写：`GifEncoder`。
+&emsp;&emsp;本软件基于两个库修改定制而得，一个负责读：`QtGifImage`，另一个负责写：`cgif`。
 
 &emsp;&emsp;`QtGifImage`是`Qt`上的`GIF`读写库，可以将`GIF`解析为`QImage`序列，基于`giflib`。这个我改动比较大，只保留了读取部分，并与我的软件做了适配（这个库写`GIF`图片的质量有点太差），仓库 [链接](https://github.com/jiangcaiyang/QtGifImage) 。
 
-&emsp;&emsp;`GifEncoder`是一个能够提供高质量编码的`GIF`编码库，使用神经网络算法。为了实现基本的压缩，我进行略微的修改定制得到，仓库 [链接](https://github.com/xiaozhuai/GifEncoder) 。
+&emsp;&emsp;`cgif`一个快速轻量级的GIF编码器，可以创建 GIF 动画和图像，仓库 [链接](https://github.com/dloebl/cgif) 。
 
 ### 编译安装
 

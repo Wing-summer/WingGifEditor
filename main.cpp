@@ -1,6 +1,7 @@
 #include "Dialog/mainwindow.h"
 #include <DApplication>
 #include <DApplicationSettings>
+#include <DLog>
 #include <DMessageBox>
 #include <DTitlebar>
 #include <DWidgetUtil>
@@ -9,6 +10,7 @@
 #include <QTranslator>
 
 DWIDGET_USE_NAMESPACE
+DCORE_USE_NAMESPACE
 
 int main(int argc, char *argv[]) {
   //解决 root/ubuntu 主题样式走形
@@ -42,7 +44,7 @@ int main(int argc, char *argv[]) {
 
   a.setOrganizationName("WingCloud");
   a.setApplicationName("WingGifEditor");
-  a.setApplicationVersion("1.1.1");
+  a.setApplicationVersion("1.1.2");
   a.setProductIcon(QIcon(":/images/icon.png"));
   a.setProductName(QObject::tr("WingGifEditor"));
   a.setApplicationDescription(
@@ -63,6 +65,9 @@ int main(int argc, char *argv[]) {
   // 保存程序的窗口主题设置
   DApplicationSettings as;
   Q_UNUSED(as)
+
+  DLogManager::registerFileAppender();
+  DLogManager::registerConsoleAppender();
 
   MainWindow w;
 

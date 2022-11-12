@@ -17,6 +17,7 @@ public:
 
   void start(QString message);
   void stop();
+  void setMessage(QString message);
 
 private:
   DWaterProgress *pro;

@@ -85,3 +85,8 @@ void CropGifDialog::setSelRect(QRectF rect) {
   m_h->setValue(h);
   emit selRectChanged(x, y, w, h);
 }
+
+void CropGifDialog::closeEvent(QCloseEvent *event) {
+  Q_UNUSED(event);
+  emit crop(-1, -1, -1, -1);
+}

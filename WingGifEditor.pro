@@ -35,7 +35,20 @@ SOURCES += \
     UndoCommand/replaceframecommand.cpp \ 
     UndoCommand/cropimagecommand.cpp \
     Dialog/waitingdialog.cpp \
-    settingdialog.cpp \
+    GifImage/decoder/gifdecoder.cpp \
+    GifImage/decoder/giflib/dgif_lib.c \
+    GifImage/decoder/giflib/egif_lib.c \
+    GifImage/decoder/giflib/gif_err.c \
+    GifImage/decoder/giflib/gif_font.c \
+    GifImage/decoder/giflib/gif_hash.c \
+    GifImage/decoder/giflib/gifalloc.c \
+    GifImage/decoder/giflib/openbsd-reallocarray.c \
+    GifImage/decoder/giflib/quantize.c \
+    GifImage/encoder/src/cgif.c \
+    GifImage/encoder/src/cgif_raw.c \
+    GifImage/encoder/gifencoder.cpp \
+    GifImage/encoder/src/cgif_rgb.c \
+    Dialog/settingdialog.cpp \
     Class/settings.cpp
 
 RESOURCES += resources.qrc
@@ -68,6 +81,14 @@ HEADERS += Dialog/mainwindow.h \
     UndoCommand/replaceframecommand.h \ 
     UndoCommand/cropimagecommand.h \
     Dialog/waitingdialog.h \
+    GifImage/decoder/giflib/gif_hash.h \
+    GifImage/decoder/giflib/gif_lib.h \
+    GifImage/decoder/giflib/gif_lib_private.h \
+    GifImage/decoder/gifdecoder.h \
+    GifImage/encoder/inc/cgif.h \
+    GifImage/encoder/inc/cgif_raw.h \
+    GifImage/encoder/gifencoder.h \
+    Dialog/settingdialog.h \
     Class/settings.h
 
 DISTFILES +=
@@ -75,4 +96,5 @@ DISTFILES +=
 TRANSLATIONS += \
     $$PWD/lang/zh.ts
 
-include($$PWD/GifImage/WingGif.pri)
+INCLUDEPATH += $$PWD/GifImage/decoder/giflib
+INCLUDEPATH += $$PWD/GifImage/encoder/inc
