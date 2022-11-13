@@ -487,7 +487,8 @@ CGIFrgb* cgif_rgb_newgif(const CGIFrgb_Config* pConfig) {
   idxConfig.numLoops  = pConfig->numLoops;
   idxConfig.width     = pConfig->width;
   idxConfig.height    = pConfig->height;
-  idxConfig.attrFlags = CGIF_ATTR_IS_ANIMATED | CGIF_ATTR_NO_GLOBAL_TABLE;
+  idxConfig.attrFlags = CGIF_ATTR_IS_ANIMATED | CGIF_ATTR_NO_GLOBAL_TABLE ;
+  idxConfig.genFlags = pConfig->genFlags;
   pGIFrgb->pGIF       = cgif_newgif(&idxConfig);
   if(pGIFrgb->pGIF == NULL) {
     free(pGIFrgb);
@@ -513,6 +514,7 @@ cgif_result cgif_rgb_addframe(CGIFrgb* pGIF, const CGIFrgb_FrameConfig* pConfig)
   fConfig.pImageData    = malloc(pGIF->config.width * (uint32_t)pGIF->config.height);
   fConfig.delay         = pConfig->delay;
   fConfig.attrFlags     = CGIF_FRAME_ATTR_USE_LOCAL_TABLE;
+  fConfig.genFlags = pConfig->genFlags;
 
   const int sizeLCT      = rgb_to_index(pConfig->pImageData, numPixel, pGIF->config.width, pConfig->fmtChan, fConfig.pImageData, aPalette, 8, 1, &hasAlpha, pGIF->pBefImageData, pGIF->befFmtChan);
   fConfig.numLocalPaletteEntries = sizeLCT;

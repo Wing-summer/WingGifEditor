@@ -52,11 +52,13 @@ MainWindow::MainWindow(DMainWindow *parent) : DMainWindow(parent) {
   setMinimumSize(800, 600);
   setWindowTitle(tr("WingGifEditor"));
   setWindowIcon(ICONRES("icon"));
+  setAcceptDrops(true);
   auto w = new QWidget(this);
   setCentralWidget(w);
   auto vlayout = new QVBoxLayout(w);
   editor = new GifEditor(QPixmap(":/images/icon.png"), w);
   editor->setInteractive(true);
+  editor->setAcceptDrops(true);
   vlayout->addWidget(editor);
 
   imglist = new QListWidget(w);

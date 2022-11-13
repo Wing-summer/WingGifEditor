@@ -9,6 +9,8 @@ bool GifEncoder::open(QString filename, int width, int height) {
   config.path = filename.toLocal8Bit().constData();
   config.width = uint16_t(width);
   config.height = uint16_t(height);
+  config.genFlags =
+      CGIF_FRAME_GEN_USE_TRANSPARENCY | CGIF_FRAME_GEN_USE_DIFF_WINDOW;
   pGIF = cgif_rgb_newgif(&config);
   return pGIF;
 }
@@ -22,6 +24,8 @@ bool GifEncoder::push(QImage &image, int delayTime) {
   fconfig.pImageData = reinterpret_cast<uint8_t *>(
       const_cast<unsigned char *>(image.constBits()));
   fconfig.fmtChan = CGIF_CHAN_FMT_RGBA;
+  fconfig.genFlags =
+      CGIF_FRAME_GEN_USE_TRANSPARENCY | CGIF_FRAME_GEN_USE_DIFF_WINDOW;
   fconfig.delay = uint16_t(delayTime);
   cgif_rgb_addframe(pGIF, &fconfig);
   return true;
