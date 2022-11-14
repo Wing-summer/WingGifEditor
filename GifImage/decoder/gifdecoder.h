@@ -77,6 +77,8 @@ private:
   QSize getCanvasSize() const;
   int getFrameTransparentColorIndex(const QGifFrameInfoData &info) const;
 
+  QImage correctImage(QImage img);
+
 private:
   QSize canvasSize;
   int loopCount;

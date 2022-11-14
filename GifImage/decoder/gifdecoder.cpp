@@ -283,18 +283,24 @@ void GifDecoder::loadfromImages(QStringList filenames, QSize size) {
     }
     filenames.removeFirst();
   }
+
   auto oimg = img;
   auto osize = size == QSize() ? oimg.size() : size;
+
+  if (osize.width() > UINT16_MAX || osize.height() > UINT16_MAX) {
+    osize.scale(UINT16_MAX, UINT16_MAX, Qt::KeepAspectRatio);
+  }
 
   for (auto f : filenames) {
     if (img.load(f)) {
       QGifFrameInfoData frame;
-      frame.image = img.scaled(osize);
+      frame.image = correctImage(img.scaled(osize));
       frame.transparentColor = Qt::transparent;
       frame.delayTime = 40; // 40 ms
       frameInfos.append(frame);
     }
   }
+  canvasSize = osize;
   emit frameRefreshAll();
 }
 
@@ -315,6 +321,7 @@ void GifDecoder::loadfromGifs(QStringList gifs, QSize size) {
       }
     }
   }
+  canvasSize = osize;
   emit frameRefreshAll();
 }
 
@@ -322,7 +329,8 @@ bool GifDecoder::exportImages(QString folder, QString ext) {
   int index = 0;
   for (auto &frame : frameInfos) {
     auto res = frame.image.save(
-        QString("%1/winggif-%2.%3").arg(folder).arg(index++).arg(ext));
+        QString("%1/winggif-%2.%3").arg(folder).arg(index++).arg(ext),
+        ext.toLatin1().constData());
     if (!res)
       return false;
   }
@@ -480,4 +488,11 @@ GifDecoder::colorTableToColorMapObject(QVector<QRgb> colorTable) const {
   cmap->Colors = colorValues;
 
   return cmap;
+}
+
+QImage GifDecoder::correctImage(QImage img) {
+  QImage image(img.size(), QImage::Format_RGBA8888);
+  QPainter p(&image);
+  p.drawImage(image.rect(), img);
+  return image;
 }
