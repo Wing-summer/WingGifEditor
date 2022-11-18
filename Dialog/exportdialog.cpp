@@ -18,8 +18,6 @@ ExportDialog::ExportDialog(DMainWindow *parent) : DDialog(parent) {
   l->setReadOnly(true);
   connect(l, &QLineEdit::textChanged, this,
           [=] { folder->setToolTip(l->text()); });
-  connect(folder, &DFileChooserEdit::fileChoosed, this,
-          [=](const QString &fileName) { res.path = fileName; });
   addContent(folder);
   addSpacing(10);
   btnbox = new DButtonBox(this);
@@ -64,7 +62,10 @@ ExportDialog::ExportDialog(DMainWindow *parent) : DDialog(parent) {
 
 ExportResult ExportDialog::getResult() { return res; }
 
-void ExportDialog::on_accept() { done(1); }
+void ExportDialog::on_accept() {
+  res.path = folder->text();
+  done(1);
+}
 
 void ExportDialog::on_reject() { done(0); }
 
